@@ -1,0 +1,22 @@
+{
+  "SchemaVersion": "APL Sector Visual Map v1.0",
+  "Sectors": {
+    "AI": { "Normalized": "AI / Software", "EnglishLabel": "AI / Software", "ChineseLabel": "AI／軟體", "Color": "#00D8FF", "MarketTheme": "AI Infrastructure", "InsightTheme": "AI infrastructure and software leadership" },
+    "Software": { "Normalized": "AI / Software", "EnglishLabel": "AI / Software", "ChineseLabel": "AI／軟體", "Color": "#00D8FF", "MarketTheme": "AI Infrastructure", "InsightTheme": "AI infrastructure and software leadership" },
+    "AI / Software": { "Normalized": "AI / Software", "EnglishLabel": "AI / Software", "ChineseLabel": "AI／軟體", "Color": "#00D8FF", "MarketTheme": "AI Infrastructure", "InsightTheme": "AI infrastructure and software leadership" },
+    "Semiconductor": { "Normalized": "Semiconductor", "EnglishLabel": "Semiconductor", "ChineseLabel": "半導體", "Color": "#008BFF", "MarketTheme": "AI Hardware Chain", "InsightTheme": "Semiconductor-led AI hardware" },
+    "Healthcare": { "Normalized": "Healthcare / Bio", "EnglishLabel": "Healthcare / Bio", "ChineseLabel": "醫療／生技", "Color": "#00D97B", "MarketTheme": "Healthcare / Bio Rotation", "InsightTheme": "Healthcare and biotech rotation" },
+    "Bio": { "Normalized": "Healthcare / Bio", "EnglishLabel": "Healthcare / Bio", "ChineseLabel": "醫療／生技", "Color": "#00D97B", "MarketTheme": "Healthcare / Bio Rotation", "InsightTheme": "Healthcare and biotech rotation" },
+    "Healthcare / Bio": { "Normalized": "Healthcare / Bio", "EnglishLabel": "Healthcare / Bio", "ChineseLabel": "醫療／生技", "Color": "#00D97B", "MarketTheme": "Healthcare / Bio Rotation", "InsightTheme": "Healthcare and biotech rotation" },
+    "Networking": { "Normalized": "Networking / Infrastructure", "EnglishLabel": "Networking / Infrastructure", "ChineseLabel": "網路／基礎建設", "Color": "#9A62FF", "MarketTheme": "Market Leadership", "InsightTheme": "networking infrastructure demand" },
+    "Networking / Infrastructure": { "Normalized": "Networking / Infrastructure", "EnglishLabel": "Networking / Infrastructure", "ChineseLabel": "網路／基礎建設", "Color": "#9A62FF", "MarketTheme": "Market Leadership", "InsightTheme": "networking infrastructure demand" },
+    "Industrial": { "Normalized": "Industrial", "EnglishLabel": "Industrial", "ChineseLabel": "工業", "Color": "#FF9D00", "MarketTheme": "Market Leadership", "InsightTheme": "industrial and infrastructure leadership" },
+    "Consumer": { "Normalized": "Consumer", "EnglishLabel": "Consumer", "ChineseLabel": "消費", "Color": "#FFD147", "MarketTheme": "Market Leadership", "InsightTheme": "Consumer leadership" },
+    "Financial": { "Normalized": "Financial", "EnglishLabel": "Financial", "ChineseLabel": "金融", "Color": "#B8C2D6", "MarketTheme": "Market Leadership", "InsightTheme": "Financial leadership" },
+    "Energy": { "Normalized": "Energy", "EnglishLabel": "Energy", "ChineseLabel": "能源", "Color": "#8B93A6", "MarketTheme": "Market Leadership", "InsightTheme": "Energy leadership" },
+    "Materials": { "Normalized": "Materials", "EnglishLabel": "Materials", "ChineseLabel": "材料", "Color": "#8B93A6", "MarketTheme": "Market Leadership", "InsightTheme": "Materials leadership" },
+    "Automotive": { "Normalized": "Automotive", "EnglishLabel": "Automotive", "ChineseLabel": "汽車", "Color": "#8B93A6", "MarketTheme": "Market Leadership", "InsightTheme": "Automotive leadership" },
+    "Aerospace / Defense": { "Normalized": "Aerospace / Defense", "EnglishLabel": "Aerospace / Defense", "ChineseLabel": "航太／國防", "Color": "#8B93A6", "MarketTheme": "Market Leadership", "InsightTheme": "Aerospace / Defense leadership" },
+    "Others": { "Normalized": "Others", "EnglishLabel": "Others", "ChineseLabel": "其他", "Color": "#8B93A6", "MarketTheme": "Market Leadership", "InsightTheme": "Market leadership" }
+  }
+}

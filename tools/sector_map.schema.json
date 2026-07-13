@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "APL US Stock Sector Map",
+  "description": "External symbol-to-sector mapping used by APL Deep-Scan Dashboard and Social renderers.",
+  "type": "object",
+  "required": ["SchemaVersion", "DefaultSector", "Sectors", "Symbols"],
+  "additionalProperties": false,
+  "properties": {
+    "SchemaVersion": {
+      "type": "string",
+      "const": "APL Sector Map v1.0"
+    },
+    "DefaultSector": {
+      "type": "string",
+      "default": "Others"
+    },
+    "Sectors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "Symbols": {
+      "type": "object",
+      "description": "Map ticker symbol to raw sector label. Renderer normalizes related labels such as AI + Software.",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  }
+}

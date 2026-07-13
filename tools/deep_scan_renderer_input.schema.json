@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "APL Deep-Scan Renderer Input",
+  "description": "Production input contract for APL Deep-Scan Dashboard and Social renderers.",
+  "type": "object",
+  "required": ["SchemaVersion", "RendererType", "RankingCsv", "ScanDate", "SectorMapPath", "OutputPath"],
+  "additionalProperties": false,
+  "properties": {
+    "SchemaVersion": {
+      "type": "string",
+      "const": "APL Deep-Scan Renderer Input v1.0"
+    },
+    "RendererType": {
+      "type": "string",
+      "enum": ["Dashboard", "Social"]
+    },
+    "RankingCsv": {
+      "type": "string",
+      "description": "Prepared full ranking CSV with Rank, Symbol, Momentum Score, Buyability, Composite Score and related fields."
+    },
+    "SectorMapPath": {
+      "type": "string",
+      "description": "Path to tools/sector_map.json or a compatible sector map file."
+    },
+    "ScanDate": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "OutputPath": {
+      "type": "string"
+    },
+    "LogoPath": {
+      "type": "string"
+    },
+    "WeekLabel": {
+      "type": "string"
+    },
+    "ScanUniverseCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "ScanQualifiedCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "LeaderCapacity": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 30,
+      "default": 30
+    },
+    "Meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ProductionMode": {
+          "type": "string",
+          "enum": ["Deep-Scan Research Mode", "Blog Production Mode"]
+        },
+        "ProductionNote": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

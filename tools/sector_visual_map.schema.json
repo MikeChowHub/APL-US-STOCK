@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "APL Sector Visual Map",
+  "type": "object",
+  "required": ["SchemaVersion", "Sectors"],
+  "additionalProperties": false,
+  "properties": {
+    "SchemaVersion": { "type": "string", "const": "APL Sector Visual Map v1.0" },
+    "Sectors": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["Normalized", "EnglishLabel", "ChineseLabel", "Color", "MarketTheme", "InsightTheme"],
+        "additionalProperties": false,
+        "properties": {
+          "Normalized": { "type": "string", "minLength": 1 },
+          "EnglishLabel": { "type": "string", "minLength": 1 },
+          "ChineseLabel": { "type": "string", "minLength": 1 },
+          "Color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+          "MarketTheme": { "type": "string", "minLength": 1 },
+          "InsightTheme": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

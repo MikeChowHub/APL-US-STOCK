@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "APL US Stock Cover Image Brief",
+  "description": "Structured input for APL Blog Cover / SEO two-step workflow: ImageGen cinematic background first, local text overlay second.",
+  "type": "object",
+  "required": [
+    "version",
+    "scanDate",
+    "marketConclusion",
+    "capitalFlow",
+    "riskBackground",
+    "leadershipDestination",
+    "mainVisualMetaphor",
+    "composition",
+    "imageGenerationBrief",
+    "overlay"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "APL Cover Brief v1.0"
+    },
+    "scanDate": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "marketConclusion": {
+      "type": "string",
+      "description": "One clear sentence describing what the market is doing in this issue."
+    },
+    "capitalFlow": {
+      "type": "object",
+      "required": ["from", "to"],
+      "properties": {
+        "from": { "type": "string" },
+        "to": { "type": "string" }
+      }
+    },
+    "riskBackground": {
+      "type": "string"
+    },
+    "leadershipDestination": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "mainVisualMetaphor": {
+      "type": "string",
+      "description": "Single concrete cinematic scene. Not a dashboard, not an infographic."
+    },
+    "composition": {
+      "type": "object",
+      "required": ["textSafeArea", "storyArea", "rules"],
+      "properties": {
+        "textSafeArea": { "type": "string" },
+        "storyArea": { "type": "string" },
+        "crop": {
+          "type": "object",
+          "description": "Optional per-variant crop control for preserving the cinematic subject when Cover and SEO use different aspect ratios.",
+          "properties": {
+            "cover": { "$ref": "#/$defs/cropConfig" },
+            "seo": { "$ref": "#/$defs/cropConfig" }
+          },
+          "additionalProperties": false
+        },
+        "rules": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "imageGenerationBrief": {
+      "type": "object",
+      "required": ["prompt", "negativePrompt"],
+      "properties": {
+        "prompt": { "type": "string" },
+        "negativePrompt": { "type": "string" },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "overlay": {
+      "type": "object",
+      "required": ["kicker", "titleLines", "subtitle", "series", "date"],
+      "properties": {
+        "kicker": { "type": "string" },
+        "titleLines": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "maxItems": 4
+        },
+        "subtitle": { "type": "string" },
+        "series": { "type": "string" },
+        "date": { "type": "string" },
+        "footer": { "type": "string" },
+        "accentWords": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "cover": { "$ref": "#/$defs/overlayVariantConfig" },
+        "seo": { "$ref": "#/$defs/overlayVariantConfig" }
+      }
+    }
+  },
+  "$defs": {
+    "cropConfig": {
+      "type": "object",
+      "description": "Crop anchor and focal point. focalX/focalY are normalized values from 0 to 1.",
+      "properties": {
+        "anchor": {
+          "type": "string",
+          "enum": ["center", "top", "bottom", "left", "right", "top-left", "top-right", "bottom-left", "bottom-right", "custom"]
+        },
+        "focalX": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "focalY": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "overlayVariantConfig": {
+      "type": "object",
+      "description": "Optional local overlay layout controls for a specific output variant. Missing values fall back to renderer defaults.",
+      "properties": {
+        "margin": { "type": "number" },
+        "top": { "type": "number" },
+        "logoWidth": { "type": "number" },
+        "logoHeight": { "type": "number" },
+        "logoGap": { "type": "number" },
+        "kickerOffsetY": { "type": "number" },
+        "kickerHeight": { "type": "number" },
+        "titleY": { "type": "number" },
+        "titleLineHeight": { "type": "number" },
+        "subtitleGap": { "type": "number" },
+        "subtitleHeight": { "type": "number" },
+        "metaGap": { "type": "number" },
+        "metaHeight": { "type": "number" },
+        "footerY": { "type": "number" },
+        "footerHeight": { "type": "number" },
+        "textSafeHeightRatio": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 0.8
+        },
+        "fontKicker": { "type": "number" },
+        "fontTitle": { "type": "number" },
+        "fontSubtitle": { "type": "number" },
+        "fontMeta": { "type": "number" },
+        "fontFooter": { "type": "number" },
+        "trackingKicker": { "type": "number" },
+        "trackingTitle": { "type": "number" },
+        "trackingSubtitle": { "type": "number" },
+        "trackingMeta": { "type": "number" },
+        "trackingFooter": { "type": "number" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

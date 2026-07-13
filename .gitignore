@@ -1,0 +1,25 @@
+# Local Codex configuration
+.agents/
+.codex/
+
+# Generated, historical, and working data
+Archive/
+tmp/
+work/
+outputs/*
+
+# Required production asset kept in source control
+!outputs/APL_Deep_Scan_Brand_Logo_Renderer_Clean_2026-06-28.png
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+*.user
+*.suo
+*.tmp
+*.bak
+
+# Local/legacy non-production tools
+tools/_chinese_test.ps1
+tools/create_deep_scan_radar.ps1
