@@ -69,6 +69,8 @@ Minimum valid input:
 }
 ```
 
+For `CardType: TopGainers`, `Title` must be exactly `最近7日 Top Gainers`. This is a fixed cross-output title and validation must fail if wording, spacing, capitalization or a suffix differs.
+
 Required:
 
 - `Title`

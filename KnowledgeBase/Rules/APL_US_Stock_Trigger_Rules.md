@@ -4,6 +4,16 @@ This document defines the trigger system for APL US Stock production.
 
 The purpose is to prevent incorrect production flows, especially accidental full Blog production from a single Screener CSV.
 
+## CSV Input Routing Authority
+
+Codex attachment recognition and the canonical User Input → Production Action Mapping are defined in:
+
+```text
+APL_US_Stock_CSV_Input_Trigger_Rule.md
+```
+
+When an uploaded CSV unambiguously matches that Rule, Codex must enter the mapped Trigger automatically instead of asking a generic question about how to process the CSV. This changes routing behavior only; all processing boundaries below remain authoritative.
+
 ## Highest Priority Rule
 
 ```text
@@ -15,6 +25,7 @@ Any Screener CSV alone must not trigger full Blog production.
 ### Trigger
 
 ```text
+APL Breakout Screener_YYYY-MM-DD.csv
 APL Breakout Screener_YYYY-MM-DD_*.csv
 ```
 
@@ -70,6 +81,7 @@ Publishing Materials
 ### Trigger
 
 ```text
+APL Breakout Screener Cumulative_YYYY-MM-DD.csv
 APL Breakout Screener Cumulative_YYYY-MM-DD_*.csv
 ```
 
@@ -149,14 +161,17 @@ Trigger C produces the formal APL Momentum Leaders 領導股 publishing package.
 ### Allowed Outputs
 
 ```text
-Formal Blog
-Cover
-SEO Image
-Table Cards
+Formal Blog editorial manuscript (.md, text-only, no image references)
+Publish-ready Blog HTML source (.html, article content only, no publishing metadata footer)
+Cover (independent artifact)
+SEO Image (independent artifact)
+Table Cards (independent artifacts)
 WhatsApp
 Social Publishing Materials
 Archive Package
 ```
+
+The `.md` manuscript, independent `.html` source and visual artifacts share the same-date Production Package but remain separate outputs. Visual artifacts must never be embedded or referenced inside either text file. HTML article subheadings use `<h3>` and HTML article paragraphs use `<p>`. URL, Page title and Page description metadata must not be appended to the HTML source.
 
 ## Input Alone Rules
 

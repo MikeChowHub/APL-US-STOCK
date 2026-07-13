@@ -13,6 +13,29 @@ KnowledgeBase/Templates/Table_Card_Input_Contract.md
 tools/table_card_input.schema.json
 ```
 
+Daily Trigger C production uses a deterministic manifest:
+
+```text
+tools/table_card_manifest.schema.json
+```
+
+Each manifest item contains `CardType`, `InputPath`, `OutputName` and boolean `Required`. Input paths may be absolute or relative to the manifest file. CardType and OutputName must be unique.
+
+### Daily Trigger C required profile
+
+The standard daily Blog package requires these four cards:
+
+| CardType | Blog role | Required |
+|---|---|---:|
+| `ExecutiveSummary` | Key Signals | Yes |
+| `TopLeaders` | Top 3／Top 5 Leaders | Yes |
+| `TopGainers` | TradingView Top Gainers | Yes |
+| `SectorStructure` | Leadership／sector structure | Yes |
+| `MarketObservation` | Additional issue-specific observation | No |
+| `Comparison` | Optional comparison when supported by the article | No |
+
+Do not generate all six merely because the renderer supports six types. Optional cards are selected only when the approved article narrative needs them.
+
 ---
 
 ## 1. Common Style
@@ -131,10 +154,12 @@ Show recent 7-day market temperature using TradingView Top Gainers.
 
 ### Fixed Elements
 
-- title: 最近7日 Top Gainers;
+- title: `最近7日 Top Gainers` — fixed canonical title; exact wording, capitalization and spacing required;
 - source note;
 - leading sectors / companies;
 - market implication.
+
+The `TopGainers` contract and renderer must reject any other title, including titles with a `｜...` suffix. Issue-specific commentary belongs in `Subtitle`, rows or explanatory text, never in the fixed title.
 
 ### Variable Elements
 

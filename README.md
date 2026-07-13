@@ -23,7 +23,7 @@ v1.0.0 scope 包括：
 - `git.exe` 必須在 `PATH`。只安裝／登入 GitHub Desktop 不保證外部 PowerShell 可找到 Git；先執行 `git --version`。
 - .NET Framework 可載入 `System.Drawing` 與 `Microsoft.VisualBasic`。
 - 建議安裝設計文件所用字型；缺少時 renderer 會 fallback，但跨 PC 像素結果可能不同。
-- Cover／SEO 需要預先準備 cinematic background 圖及符合 schema 的 cover brief JSON；pipeline 不會生成背景圖。
+- Trigger C 由 Codex 先按正式市場文案建立符合 schema 的 Cover Brief，再使用 image generation workflow 生成無字 cinematic background。背景生成完成後，`run_daily_production.ps1` 以 `CoverBriefPath`／`CoverBackgroundPath` 接收兩項 production inputs，並由本地 renderer 疊加準確標題、日期、logo及SEO版式。PowerShell pipeline 本身不呼叫 image generation。
 - v1.0.0 唯一隨 repository 提供及支援的 production logo 是 `outputs/APL_Deep_Scan_Brand_Logo_Renderer_Clean_2026-06-28.png`。
 
 完整環境檢查、參數及 recovery 程序見 [Production Runbook](docs/PRODUCTION_RUNBOOK.md)。
@@ -37,8 +37,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run_daily_produc
   -InputCsv "<absolute-input-csv>" `
   -ScanDate "YYYY-MM-DD" `
   -WeekLabel "<week-label>" `
-  -TableCardInputPath "<absolute-table-card-json>" `
-  -TableCardType "TopLeaders" `
+  -TableCardManifestPath "<absolute-table-card-manifest-json>" `
   -CoverBriefPath "<absolute-cover-brief-json>" `
   -CoverBackgroundPath "<absolute-cinematic-background>"
 ```
@@ -56,8 +55,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run_daily_produc
   -InputCsv "<2026-07-12-baseline-input>" `
   -ScanDate "2026-07-12" `
   -WeekLabel "<baseline-week-label>" `
-  -TableCardInputPath "<baseline-table-card-json>" `
-  -TableCardType "TopLeaders" `
+  -TableCardManifestPath "<baseline-table-card-manifest-json>" `
   -CoverBriefPath "<baseline-cover-brief-json>" `
   -CoverBackgroundPath "<baseline-cinematic-background>"
 ```
@@ -66,9 +64,11 @@ Regression fixtures 屬本機測試資料，不隨 v1.0.0 repository 發布；�
 
 ## Inputs and outputs
 
-必需 inputs 是 source CSV、scan date、week label、Table Card contract JSON／type、Cover brief JSON 及 cinematic background。Sector map 與 clean logo 有 repository-relative defaults；可用明確參數覆寫，但仍受 resolved production path guard 約束。
+必需 inputs 是 source CSV、scan date、week label、Table Card contract JSON／type，以及由 Trigger C pre-production stage 產生的 Cover Brief JSON 與無字 cinematic background。預設由 Codex 根據正式市場文案建立後兩者，不應要求使用者自行設計背景；使用者亦可明確指定已核准的外部背景。Sector map 與 clean logo 有 repository-relative defaults；可用明確參數覆寫，但仍受 resolved production path guard 約束。
 
-每次成功 run 產生 ranking、Top 30、watchlist、SMA200 audit、metadata、renderer contracts、Dashboard／Social SVG、Table Card PNG、Cover／SEO PNG、renderer logs，以及包含 artifact SHA-256 的 pipeline JSONL trace。
+每次成功 run 產生 ranking、Top 30、watchlist、SMA200 audit、metadata、renderer contracts、Dashboard SVG＋1920×1080 PNG、Social SVG、Table Card PNG、Cover／SEO PNG、renderer logs，以及包含 artifact SHA-256 的 pipeline JSONL trace。
+
+日期 Production Package 的 `production-package/` 子目錄集中當日 PNG、Table Card 圖片、Blog `.md`／`.html`；其 `table-card-log/` 子目錄集中 Table Card logs、manifest及指定 supporting contracts／CSV／analysis files。SVG、其餘 contracts、SMA200、renderer logs及其他 machine records留在日期根目錄。Package relocation 必須同步 trace path migration，並保持每個 artifact bytes／SHA-256不變。
 
 ## Failure staging and recovery
 

@@ -32,83 +32,90 @@ Dashboard must not be used as Blog Cover.
 
 Social Card must not replace Blog information cards.
 
----
-
-## 2. Article Skeleton
-
-```markdown
-# [Article Title]
-
-![Hero Image](...)
-
-## Executive Summary
-
-[One concise market observation.]
-
-## Market Context
-
-[Interpret current market events through capital flow and leadership structure.]
-
-## 為什麼要看 APL Momentum Leaders 領導股？
-
-[Explain framework. Not a recommendation list.]
-
-## Deep-Scan Overview
-
-[Summarize scan results and market theme.]
-
-## 最近7日 Top Gainers
-
-[Explain short-term market temperature.]
-
-資料來源為 TradingView，排名、價格及升幅會隨市場變動。
-
-## Momentum Leaders Analysis
-
-[Explain leadership structure.]
-
-## Sector Analysis
-
-[Explain dominant sectors and capital rotation.]
-
-## Relative Volume / Market Activity
-
-[Explain activity and participation.]
-
-## Risk
-
-[Explain risks without investment advice.]
-
-## Deep-Scan Conclusion
-
-[Research-style conclusion.]
+All visual outputs are independent Production Package artifacts. None may be embedded or referenced inside the formal Blog manuscript.
 
 ---
 
-URL: https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD
+## 2. Independent Output Files
 
-Page title: [Same as article title]
+Trigger C editorial production creates two separate text artifacts:
 
-Page description: [SEO description]
+```text
+APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.md
+APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.html
 ```
 
+The `.md` file is the editorial manuscript and may retain text-only publishing metadata. The `.html` file is the publish-ready article source and contains article content only. Neither file may embed or reference images.
+
+## 3. Publish-ready HTML Skeleton
+
+```html
+<h1>[Article Title]</h1>
+
+<h3>Executive Summary</h3>
+<p>[One concise market observation.]</p>
+
+<h3>Market Context</h3>
+<p>[Interpret current market events through capital flow and leadership structure.]</p>
+
+<h3>為什麼要看 APL Momentum Leaders 領導股？</h3>
+<p>[Explain framework. Not a recommendation list.]</p>
+
+<h3>Deep-Scan Overview</h3>
+<p>[Summarize scan results and market theme.]</p>
+
+<h3>最近7日 Top Gainers</h3>
+<p>[Explain short-term market temperature.]</p>
+<p>資料來源為 TradingView，排名、價格及升幅會隨市場變動。</p>
+
+<h3>Momentum Leaders Analysis</h3>
+<p>[Explain leadership structure.]</p>
+
+<h3>Sector Analysis</h3>
+<p>[Explain dominant sectors and capital rotation.]</p>
+
+<h3>Relative Volume / Market Activity</h3>
+<p>[Explain activity and participation.]</p>
+
+<h3>Risk</h3>
+<p>[Explain risks without investment advice.]</p>
+
+<h3>Deep-Scan Conclusion</h3>
+<p>[Research-style conclusion.]</p>
+
+<h3>Call to Action</h3>
+<p>[Text-only CTA.]</p>
+
+<h3>Disclaimer</h3>
+<p>[Research disclaimer; no investment advice.]</p>
+
+```
+
+The fenced block above demonstrates the required source structure only. Write that source to `APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.html` without a surrounding Markdown code fence. Do not write it into the `.md` manuscript.
+
+The HTML file must not end with `詳細文章`, `Page title` or `Page description` paragraphs. Keep those fields outside the HTML source.
+
+`<h3>最近7日 Top Gainers</h3>` is canonical and immutable. Do not append `｜...`, a market theme or any issue-specific subtitle to this heading; place that context in the next `<p>`.
+
 ---
 
-## 3. Visual Placement
+## 4. Independent Visual Package
 
-Use visual assets as follows:
+Generate and publish visual assets separately from the Blog manuscript:
 
-- Blog Cover: Hero Image;
-- Table Cards: structured observations inside the article;
-- Dashboard: research output link or separate asset, not cover;
-- Social Card: publishing material, not article body replacement;
-- SEO Image: publishing metadata.
+- Blog Cover: independent Hero artifact;
+- Table Cards: independent structured-observation artifacts;
+- Dashboard: independent research artifact;
+- Social Card: independent publishing artifact;
+- SEO Image: independent search／share artifact.
 
 Visual selection must follow the Visual Decision Tree.
 
+Each visual must still be validated and recorded with byte size and SHA-256 in the Production Package. Do not place Markdown image syntax, HTML image elements, image filenames, image paths or image URLs in the Blog `.md` file.
+
 ---
 
-## 4. Variable Content Blocks
+## 5. Variable Content Blocks
 
 Replace the following per issue:
 
@@ -126,7 +133,7 @@ Do not insert internal production terminology into client-facing Blog text.
 
 ---
 
-## 5. Prohibited Template Usage
+## 6. Prohibited Template Usage
 
 Do not:
 
@@ -134,5 +141,10 @@ Do not:
 - paste full CSV tables into the Blog;
 - use Dashboard as Blog Cover;
 - use Social Card as article analysis;
+- embed or reference Hero Cover, Dashboard, Table Cards, SEO image, Social Card or any other image inside the Blog manuscript;
+- put HTML source inside the `.md` manuscript instead of the independent `.html` file;
+- use heading elements other than `<h3>` for HTML article sections;
+- leave HTML article prose outside `<p>`;
+- append URL, Page title or Page description metadata paragraphs to the HTML source;
 - treat APL Momentum Leaders 領導股 as investment advice;
 - include price targets or recommendations.

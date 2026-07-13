@@ -7,7 +7,7 @@ Blog Rules answer:
 - how the article should be structured;
 - how market context should be integrated;
 - what client-facing terminology must be used;
-- where visual assets are required;
+- how article text and visual artifacts must remain separated;
 - what content is prohibited.
 
 Visual styling belongs to Visual Rules and Templates.
@@ -19,8 +19,6 @@ Visual styling belongs to Visual Rules and Templates.
 Formal Blog articles should follow this reading flow:
 
 ```text
-Hero Image
-↓
 Executive Summary
 ↓
 Market Context
@@ -43,6 +41,8 @@ Deep-Scan Conclusion
 ↓
 SEO / Publishing Notes
 ```
+
+The Blog Markdown file is the formal article text manuscript. Visual artifacts are not part of this reading-flow source and must not be embedded or referenced inside it.
 
 This structure reflects the research logic:
 
@@ -134,6 +134,14 @@ Internal data source names must not appear in client-facing text.
 
 Use 最近7日 Top Gainers to explain short-term market temperature.
 
+`最近7日 Top Gainers` is the fixed canonical section title across the Blog manuscript and TopGainers Table Card. It must be emitted exactly as:
+
+```html
+<h3>最近7日 Top Gainers</h3>
+```
+
+Do not append a theme, commentary or separator such as `｜...` to this heading. Put issue-specific interpretation in the following `<p>` paragraph instead.
+
 It should help compare:
 
 ```text
@@ -181,7 +189,7 @@ sector distribution
 → market implication
 ```
 
-If structured tables are needed, use Blog Table Cards rather than dense Markdown tables.
+If structured data needs a visual treatment, generate a separate Blog Table Card artifact. Do not embed or reference that artifact inside the Blog Markdown file.
 
 ---
 
@@ -232,6 +240,8 @@ Always use:
 - `APL Deep-Scan`
 - `最近7日 Top Gainers`
 
+The capitalization, spacing and wording of `最近7日 Top Gainers` are fixed. Blog headings, Table Card contracts and renderer output must not substitute or extend this title.
+
 Do not use these internal terms in client-facing Blog text:
 
 - `APL Breakout Screener`
@@ -242,28 +252,106 @@ Do not use these internal terms in client-facing Blog text:
 
 ---
 
-## 13. Blog Images
+## 13. Blog Manuscript and Visual Artifact Separation
 
-Blog Rules define where images are required.
+The formal article manuscript filename is:
 
-Visual styling is controlled by Visual Rules and Templates.
+```text
+APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.md
+```
 
-Use images for:
+This file is the text-only editorial manuscript. It must contain only:
 
-- Hero Image;
-- structured observations;
-- Top Gainers summary;
-- Top Leaders summary;
-- sector structure;
-- market observation / implication cards.
+- article title;
+- section headings;
+- article paragraphs;
+- CTA;
+- disclaimer;
+- publishing metadata.
 
-Avoid dense Markdown tables when the content is meant for public publishing.
+It must not embed or reference any image, including:
 
-When table-like content is important for readers, convert it into a Blog Research Information Card.
+- Hero Cover;
+- Dashboard;
+- Table Cards;
+- SEO image;
+- Social Card;
+- any other PNG, SVG, JPG, JPEG, WEBP, GIF or visual asset.
+
+Prohibited image-reference forms include, but are not limited to:
+
+```text
+![alt](path-or-url)
+<img ...>
+<picture>...</picture>
+<source ...>
+background-image: ...
+direct image paths or URLs presented as article-body media references
+```
+
+Cover, Dashboard, Table Cards, SEO image and other required visuals must continue to be generated as independent artifacts in the same-date Production Package. Each visual remains subject to its own validation, no-overwrite guard, artifact tracking, byte size, SHA-256 trace and publication requirements. Their presence in the package does not authorize a reference inside the Blog `.md` manuscript.
+
+Publishing systems may associate or upload those independent artifacts outside the manuscript, but that platform action must not be serialized back into `APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.md` or its companion HTML source.
+
+### Daily Table Card completeness
+
+The standard Trigger C Production Package must publish the successful required entries in its Table Card publication manifest:
+
+- `ExecutiveSummary` — Key Signals;
+- `TopLeaders` — representative Top Leaders;
+- `TopGainers` — short-term market temperature;
+- `SectorStructure` — sector／leadership structure.
+
+`MarketObservation` and `Comparison` are optional and must not be generated without an article-specific reason. No Table Card, whether required or optional, may be referenced inside the Blog manuscript. A publishing operation outside the manuscript may use only cards recorded as `PASS` in the publication manifest.
 
 ---
 
-## 14. URL and Publishing
+## 14. HTML Source Contract
+
+The publish-ready HTML source must be delivered as a separate same-date file:
+
+```text
+APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.html
+```
+
+The `.md` manuscript and `.html` source are two independent editorial artifacts. Do not place HTML source inside the `.md` file.
+
+Required element mapping:
+
+```text
+Article title              → <h1>...</h1>
+Every section subheading   → <h3>...</h3>
+Every body paragraph       → <p>...</p>
+CTA heading                → <h3>...</h3>
+CTA copy                   → <p>...</p>
+Disclaimer heading         → <h3>...</h3>
+Disclaimer copy            → <p>...</p>
+```
+
+Rules:
+
+- every small／section heading must use lowercase HTML `<h3>` tags;
+- every prose block must be enclosed in its own lowercase HTML `<p>` tags;
+- do not use Markdown `##`／`###` headings for article content;
+- do not leave bare prose outside `<p>`;
+- do not use `<h2>`, `<h4>` or deeper heading levels for the standard article structure;
+- do not add `<img>`, `<picture>`, `<source>` or CSS image references;
+- do not append publishing metadata to the HTML source;
+- the HTML source must end with the final article／disclaimer paragraph, not URL, Page title or Page description fields.
+
+The following lines are specifically prohibited at the bottom of the HTML source:
+
+```html
+<p>詳細文章：https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD</p>
+<p>Page title：...</p>
+<p>Page description：...</p>
+```
+
+These publishing metadata values may remain in the separate `.md` manuscript or another publishing record, but they are not part of publishable article HTML.
+
+---
+
+## 15. URL and Publishing
 
 Formal Blog URL format:
 
@@ -277,7 +365,22 @@ Page description should summarize APL Momentum Leaders 領導股, market leaders
 
 ---
 
-## 15. Prohibited Blog Patterns
+## 16. Prohibited Blog Patterns
+
+### Published machine artifact immutability
+
+After the production runner publishes and traces machine-generated artifacts, the editorial stage is read-only with respect to those artifacts.
+
+```text
+Publish complete
+→ machine artifacts become immutable
+→ editorial stage reads only
+→ editorial outputs use separate files
+```
+
+Editorial work must never reopen and save, normalize encoding, normalize line endings, format, append to, or replace a machine artifact. This includes ranking CSV, Top 30 TXT／Markdown, Overview Markdown, Watchlist, SMA200 audits, metadata, runtime contracts, renderer outputs and renderer logs.
+
+Formal Blog, company business analysis, WhatsApp copy and publishing notes must be written to independent filenames. Any attempted later write to a published machine artifact must fail.
 
 Do not:
 
@@ -289,3 +392,6 @@ Do not:
 - make investment recommendations;
 - predict stock prices;
 - overload the article with data before explaining meaning.
+- embed or reference any production image artifact inside the Blog Markdown manuscript;
+- store the publish-ready HTML source inside the `.md` manuscript;
+- append URL, Page title or Page description metadata paragraphs to the independent HTML source.

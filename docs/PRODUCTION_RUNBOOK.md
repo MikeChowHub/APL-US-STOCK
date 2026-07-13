@@ -19,6 +19,8 @@ git branch --show-current
 
 `System.Drawing` 與 `Microsoft.VisualBasic` 必須可載入。字型缺失時 renderer 可 fallback，但字寬、換行與像素輸出可能不同；需要 pixel-stable release 時，所有執行 PC 應使用相同核准字型集合。
 
+Cover／SEO overlay 的指定字型為中文 `Alibaba Sans HK`、英文／數字 `Montserrat`。每次 renderer 必須以 `System.Drawing.Font.Name` 記錄 `Requested Font`、`Resolved Font` 及 status，至少涵蓋 `fontTitle`、`fontSubtitle`、`fontMeta`。Production 預設沒有 `APL_ALLOW_FONT_FALLBACK=1`：requested 與 resolved 不一致時不得靜默 fallback 或輸出檔案。受控 comparison render 才可在其獨立 process 設定 `APL_ALLOW_FONT_FALLBACK=1`，並在 overlay log 明確記錄 `WARNING`；中文 fallback 為 `Microsoft JhengHei UI`，英文／數字 fallback 為 `Arial`。
+
 ## 2. Required inputs
 
 | Parameter | Required | Meaning |
@@ -26,10 +28,11 @@ git branch --show-current
 | `InputCsv` | Yes | 原始 scoring input CSV |
 | `ScanDate` | Yes | `YYYY-MM-DD` |
 | `WeekLabel` | Yes | 顯示用週期標籤 |
-| `TableCardInputPath` | Yes | 符合 Table Card schema 的 UTF-8 JSON |
-| `TableCardType` | Yes | `ExecutiveSummary`、`TopLeaders`、`TopGainers`、`SectorStructure`、`MarketObservation` 或 `Comparison` |
-| `CoverBriefPath` | Yes | 符合 cover brief schema 的 UTF-8 JSON |
-| `CoverBackgroundPath` | Yes | 已完成的 cinematic background；overlay renderer 不負責生成它 |
+| `TableCardManifestPath` | Trigger C recommended | 符合 `tools/table_card_manifest.schema.json` 的 UTF-8 manifest；正式每日Trigger C必須列出4張required cards |
+| `TableCardInputPath` | Single-card compatibility | 單卡 backward-compatible mode的Table Card contract |
+| `TableCardType` | Single-card compatibility | 單卡 mode的renderer type |
+| `CoverBriefPath` | Yes | Codex 按正式市場文案建立、符合 cover brief schema 的 UTF-8 JSON |
+| `CoverBackgroundPath` | Yes | Codex 經 image generation workflow 生成並保存到核准 production-input path 的無字 cinematic background；overlay renderer 只負責本地後製 |
 | `OutputRoot` | No | Production 必須是 repository `outputs/`；省略即可。Regression 必須明確位於 repository `tmp/` 內 |
 | `SectorMapPath` | No | 預設 `tools/sector_map.json` |
 | `LogoPath` | No | 預設且唯一隨 v1.0.0 支援的 clean production logo |
@@ -38,9 +41,31 @@ git branch --show-current
 
 所有 production input 應放在核准、可追溯且非 `tmp/`、`prototype/`、pre-migration backup 或舊 Codex 絕對路徑的位置。JSON／CSV 使用 UTF-8。
 
-## 3. Cinematic background prerequisite
+正式Trigger C應使用 `-TableCardManifestPath`。Runner逐項Validate及Render；每張寫入JSONL trace與published `APL_Table_Card_Manifest_<ScanDate>.json`。任何`Required=true` card failure令整體pipeline fail；optional failure會記錄但不得被Blog引用。Single-card parameters只保留作backward compatibility及受控測試。
 
-執行前必須先準備能同時裁切為 Cover 1080x1350 與 SEO 1280x720 的 cinematic background。背景圖不得包含由 renderer 再疊加的標題、logo 或資訊圖表。Cover brief 的構圖、crop／focal point 與 overlay 欄位應先驗證；背景不存在或不可讀時 pipeline fail-fast。
+## 3. Cover pre-production and cinematic background
+
+`CoverBackgroundPath` 是 PowerShell runner 的必要 file input，但預設 production responsibility 不在使用者。Trigger C inputs 齊備後，Codex 必須在啟動 runner 前完成：
+
+```text
+正式市場文案／研究結論
+↓
+建立 Cover Brief JSON
+↓
+使用 image generation workflow 生成無字 cinematic background
+↓
+將 final background 保存到 Project Root 內核准且非 tmp/ 的 production-input path
+↓
+把 CoverBriefPath 與 CoverBackgroundPath 傳給 run_daily_production.ps1
+↓
+本地 renderer 疊加正式標題、日期、logo及SEO版式
+```
+
+Codex 不應要求使用者自行設計或製作背景。只有 image generation capability 不可用、生成失敗，或使用者明確指定外部核准背景時，才可停下並報告具體狀態。
+
+背景必須能同時裁切為 Cover 1080x1350 與 SEO 1280x720；上方約 35–40% 為低細節 text-safe area，主體集中於中下方。背景不得包含文字、日期、logo、ticker、table、dashboard UI、資訊卡或由 renderer 再疊加的品牌元素。Cover Brief 的構圖、crop／focal point 與 overlay 欄位應先驗證；背景不存在或不可讀時 runner 仍必須 fail-fast。
+
+Image generation 與 PowerShell runner 是兩個明確 stages：runner 不應內嵌外部生成 API，image generation 亦不得自行繪製正式文字或logo。
 
 ## 4. Production command
 
@@ -51,8 +76,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run_daily_produc
   -InputCsv "<absolute-input-csv>" `
   -ScanDate "YYYY-MM-DD" `
   -WeekLabel "<week-label>" `
-  -TableCardInputPath "<absolute-table-card-json>" `
-  -TableCardType "TopLeaders" `
+  -TableCardManifestPath "<absolute-table-card-manifest-json>" `
   -CoverBriefPath "<absolute-cover-brief-json>" `
   -CoverBackgroundPath "<absolute-cinematic-background>"
 ```
@@ -61,7 +85,13 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run_daily_produc
 
 ## 5. Step map and fail-fast behavior
 
-Runner 依序執行：ScoringRanking → WatchlistSma200Audit → BuildRendererContracts → ValidateDashboardInput → ValidateSocialInput → RenderDashboard → RenderSocialCard → ValidateTableCardInput → RenderTableCard → RenderCoverOverlay → RenderSeoOverlay → PublishArtifacts。
+Runner 依序執行：ScoringRanking → WatchlistSma200Audit → BuildRendererContracts → ValidateDashboardInput → ValidateSocialInput → RenderDashboard SVG → ExportDashboardPng → RenderSocialCard SVG → ExportSocialPng → Validate／Render Table Card manifest → RenderCoverOverlay → RenderSeoOverlay → PublishArtifacts。
+
+Dashboard production completeness要求同時發布1920×1080 SVG及PNG。PNG必須由已完成validation的SVG經`tools/convert_svg_to_png.ps1`及核准的Microsoft Edge／Google Chrome headless export產生；converter維持no-overwrite、resolved path guard、尺寸驗證及fail-fast。
+
+Social production completeness要求同時發布1080×1350 SVG及PNG。Social PNG同樣由已完成validation的SVG經`tools/convert_svg_to_png.ps1`產生，並寫入 `production-package/`。
+
+PublishArtifacts 完成後，runner 必須執行 `LockPublishedMachineArtifacts`：所有由本次 trace追蹤的 machine artifacts設為 Windows read-only，然後才計算及記錄 final bytes／SHA-256。任何 lock failure都令 run失敗。
 
 任何 child exit code 非 0、validation failure、缺失／空 artifact、path guard、no-overwrite 或 audit mismatch 都會立即停止，不會繼續 publish。Scoring／ranking 邏輯只由既有 scoring script執行，runner 不重新實作。
 
@@ -74,6 +104,29 @@ Runner 依序執行：ScoringRanking → WatchlistSma200Audit → BuildRendererC
 
 成功 run 的 JSONL 最後一筆應為 `run-complete`、`status: PASS`，並列出 published artifacts、byte size 與 SHA-256。確認日期目錄、ranking／Top 30、兩份 SMA200 audit、renderer contracts、三種 card/render outputs、Cover／SEO 及各自 logs 完整。
 
+### Date-package file layout
+
+日期 Production Package 的 `production-package/` 子目錄保留：
+
+- 當日 PNG artifacts（Dashboard、Cover、SEO及Table Card PNG）；
+- `table-card-log/` 內的 Table Card `.table-card-log.txt`、publication manifest及指定 supporting contracts／CSV／analysis files；
+- `APL_Momentum_Leaders_Market_Analysis_Blog_<ScanDate>.md`；
+- `APL_Momentum_Leaders_Market_Analysis_Blog_<ScanDate>.html`；
+- 已核准的 Dashboard input、source／ranking CSV、cumulative watchlist及 Company Business Analysis。
+
+SVG（Dashboard／Social）、其餘 contracts、SMA200、renderer logs及其他 machine records留在日期根目錄。若整理已發布 package，必須先記錄 path-only migration，再重新核對每個 artifact bytes／SHA-256；不得重新生成或改寫 artifact content。
+
+### Published machine artifact immutability
+
+```text
+Publish complete
+→ machine artifacts become immutable
+→ final bytes／SHA-256 recorded in trace
+→ any later write attempt must fail
+```
+
+Editorial stage只可 read machine artifacts，不得以 editor、formatter、encoding converter、`Set-Content`、`WriteAllText`或任何 normalization操作重存它們。Blog、company analysis、WhatsApp及其他 editorial outputs必須使用獨立新檔名。需要修復 machine artifact時，必須停止正常 editorial flow、記錄具體 trace mismatch並取得明確 remediation authority。
+
 ## 7. Regression procedure
 
 Regression authority 只可由 runner CLI 的 `-RegressionTest` 啟用。OutputRoot 必須是 Project Root 下 `tmp/` 的子目錄：
@@ -85,8 +138,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run_daily_produc
   -InputCsv "<approved-baseline-csv>" `
   -ScanDate "2026-07-12" `
   -WeekLabel "<approved-baseline-week-label>" `
-  -TableCardInputPath "<approved-baseline-table-card-json>" `
-  -TableCardType "TopLeaders" `
+  -TableCardManifestPath "<approved-baseline-table-card-manifest-json>" `
   -CoverBriefPath "<approved-baseline-cover-brief-json>" `
   -CoverBackgroundPath "<approved-baseline-background>"
 ```

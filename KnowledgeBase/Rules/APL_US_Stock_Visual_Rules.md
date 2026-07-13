@@ -79,6 +79,8 @@ ChatGPT / ImageGen is responsible for the cinematic background.
 
 Codex / local post-production is responsible only for accurate text, logo, spacing, date, and final export.
 
+For a complete Trigger C input set, Codex must first derive the Cover Brief from the approved market narrative, then invoke the image generation workflow and save the selected no-text background within the Project Root. It must not require the user to design or manufacture the normal production background. The local renderer remains the only authority for final title, date, logo and SEO composition.
+
 ### Prohibited Elements
 
 Blog Cover must not become:
@@ -279,7 +281,7 @@ Table Card must not become:
 
 ### Relationship with Other Visual Types
 
-Table Card is part of the Blog reading experience.
+Table Card supports the Blog publishing experience as an independent same-date Production Package artifact. It must not be embedded or referenced inside `APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.md`.
 
 It is not a Dashboard, not a full research export, and not a cover.
 

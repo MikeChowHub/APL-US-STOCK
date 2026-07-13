@@ -2,6 +2,8 @@
 
 This template defines the two-step production method for APL Momentum Leaders 領導股 Blog Cover and SEO visual creation.
 
+When Trigger C inputs are complete, Codex owns this two-step workflow by default. It must create the brief and generate the background from the approved market narrative; it must not redirect normal background creation to the user.
+
 It follows the XAUUSD-style workflow:
 
 ```text
@@ -30,6 +32,24 @@ Local rendering is only for accurate overlay and final export.
 
 ## 1. Production Responsibility Split
 
+### Default execution authority
+
+```text
+Approved Market Narrative
+↓
+Codex creates Cover Brief
+↓
+Codex invokes image generation workflow
+↓
+Codex saves the selected no-text background inside the Project Root
+↓
+Codex passes CoverBriefPath + CoverBackgroundPath to production runner
+↓
+Local renderer adds exact text, date, logo and SEO layout
+```
+
+The user may explicitly supply an approved external background, but that is an override, not the default prerequisite. If image generation is unavailable or fails, Codex must report that concrete blocker rather than asking the generic question of who should create the cover.
+
 ### ChatGPT / ImageGen
 
 Responsible for:
@@ -42,6 +62,8 @@ Responsible for:
 - creating concrete market environment;
 - showing capital flow, risk background, and leadership destination;
 - preserving text-safe area.
+- generating background only, with no production typography or brand asset;
+- returning a final selected bitmap that Codex copies into an approved project production-input location.
 
 Not responsible for:
 

@@ -96,6 +96,9 @@ function Assert-AplTableCardContract($Json, [string]$ExpectedCardType = '') {
     if ($cardTypes -notcontains [string]$Json.CardType) { throw "$label CardType '$($Json.CardType)' is invalid." }
     if (-not [string]::IsNullOrWhiteSpace($ExpectedCardType) -and [string]$Json.CardType -ne $ExpectedCardType) { throw "$label CardType '$($Json.CardType)' does not match expected '$ExpectedCardType'." }
   }
+  $effectiveCardType = if (-not [string]::IsNullOrWhiteSpace($ExpectedCardType)) { $ExpectedCardType } elseif ($null -ne $Json.PSObject.Properties['CardType']) { [string]$Json.CardType } else { '' }
+  $canonicalTopGainersTitle = ((-join (@(0x6700,0x8FD1,0x0037,0x65E5) | ForEach-Object { [char]$_ })) + ' Top Gainers')
+  if ($effectiveCardType -eq 'TopGainers' -and [string]$Json.Title -cne $canonicalTopGainersTitle) { throw "$label Title for TopGainers must match the canonical title exactly." }
   if ($Json.Rows -isnot [array]) { throw "$label Rows must be a JSON array." }
   $rows = @($Json.Rows)
   if ($rows.Count -lt 1 -or $rows.Count -gt 8) { throw "$label Rows must contain 1-8 rows." }
