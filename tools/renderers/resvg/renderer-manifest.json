@@ -1,0 +1,32 @@
+{
+  "name": "resvg",
+  "version": "0.47.0",
+  "platform": "windows-x64",
+  "sourceUrl": "https://github.com/linebender/resvg/releases/download/v0.47.0/resvg-win64.zip",
+  "releaseAsset": "resvg-win64.zip",
+  "releaseAssetBytes": 1440934,
+  "releaseAssetSha256": "5684E59CEAA53CE720B49EFB441B0918AE99D04E8CE3F6F753664524592D67F1",
+  "executable": "resvg.exe",
+  "executableBytes": 3392000,
+  "executableSha256": "433A7C744CFF561ED64FCF73C7C04E239D7A07AE5F0AADBF1BA8471D63707402",
+  "license": "MIT OR Apache-2.0",
+  "policy": {
+    "primaryRenderer": "resvg",
+    "autoRenderer": "resvg",
+    "chromiumFallback": "disabled-explicit-fail",
+    "fontDirectory": "Assets/Fonts",
+    "skipSystemFonts": true,
+    "dashboardFontMapping": {
+      "font-cn": "Alibaba Sans HK (weights 400 and 600 from 55/75 assets)",
+      "font-en": "Montserrat (weights 400, 500, 600 and 700)",
+      "mono": "Montserrat (weights 500 and 600; temporary repository-managed replacement)"
+    },
+    "warningPolicy": {
+      "fontFallbackWarningCount": 0,
+      "invalidGeometryWarningCount": 0,
+      "actionOnWarning": "fail-and-delete-partial-output"
+    },
+    "requiredSmokeTests": ["minimal-svg", "representative-dashboard-svg"],
+    "requiredPngValidation": ["new-file", "non-zero-bytes", "png-magic", "exact-dimensions", "system-drawing-load"]
+  }
+}
