@@ -16,6 +16,7 @@
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'renderer_production_common.ps1')
+. (Join-Path $PSScriptRoot 'dashboard_svg_geometry.ps1')
 $resolved = Resolve-AplRendererInput -ExpectedRendererType Dashboard -BoundParameters $PSBoundParameters -InputPath $InputPath -RankingCsv $RankingCsv -ScanDate $ScanDate -SectorMapPath $SectorMapPath -OutputPath $OutputPath -OutputDir $OutputDir -Root $Root -LogoPath $LogoPath -WeekLabel $WeekLabel -ScanUniverseCount $ScanUniverseCount -ScanQualifiedCount $ScanQualifiedCount -LeaderCapacity $LeaderCapacity -RegressionTest:$RegressionTest
 $Root=$resolved.ProjectRoot; $RankingCsv=$resolved.RankingCsv; $ScanDate=$resolved.ScanDate; $SectorMapPath=$resolved.SectorMapPath; $OutputDir=$resolved.OutputPath; $LogoPath=$resolved.LogoPath; $WeekLabel=$resolved.WeekLabel; $ScanUniverseCount=$resolved.ScanUniverseCount; $ScanQualifiedCount=$resolved.ScanQualifiedCount; $LeaderCapacity=$resolved.LeaderCapacity
 $raw = Import-AplRankingCsv $RankingCsv
@@ -210,7 +211,7 @@ Add '<?xml version="1.0" encoding="UTF-8"?>'
 Add '<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">'
 Add '<defs>'
 Add '<style><![CDATA['
-Add '.font-cn{font-family:"Noto Sans TC","Microsoft JhengHei UI","Microsoft JhengHei",sans-serif}.font-en{font-family:"Montserrat","Segoe UI",sans-serif}.mono{font-family:"JetBrains Mono","Consolas",monospace}.white{fill:#fff}.cyan{fill:#00D8FF}.gray{fill:#8B93A6}.ticker{fill:#fff;font-weight:800;text-anchor:middle}.score{fill:#fff;text-anchor:middle;opacity:.86}.rank{fill:#00D8FF;text-anchor:middle;font-weight:800}.panel-title{fill:#00D8FF;font-weight:800}'
+Add '.font-cn{font-family:"Alibaba Sans HK";font-weight:400}.font-cn-semibold{font-family:"Alibaba Sans HK";font-weight:600}.font-en{font-family:"Montserrat";font-weight:400}.font-en-medium{font-family:"Montserrat";font-weight:500}.font-en-semibold{font-family:"Montserrat";font-weight:600}.font-en-bold{font-family:"Montserrat";font-weight:700}.mono{font-family:"Montserrat";font-weight:500}.mono-semibold{font-family:"Montserrat";font-weight:600}.font-cn[font-weight="800"],.font-en[font-weight="800"],.mono[font-weight="800"]{font-weight:600}.font-cn[font-weight="900"],.font-en[font-weight="900"],.mono[font-weight="900"]{font-weight:700}.white{fill:#fff}.cyan{fill:#00D8FF}.gray{fill:#8B93A6}.ticker{fill:#fff;font-weight:700;text-anchor:middle}.score{fill:#fff;text-anchor:middle;opacity:.86}.rank{fill:#00D8FF;text-anchor:middle;font-weight:700}.panel-title{fill:#00D8FF;font-weight:600}'
 Add ']]></style>'
 Add '<filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
 Add '<filter id="glowStrong" x="-120%" y="-120%" width="340%" height="340%"><feGaussianBlur stdDeviation="16" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
@@ -317,27 +318,27 @@ Add "<line x1='66' y1='2' x2='66' y2='130' stroke='#00D8FF' stroke-opacity='.22'
 Add "<line x1='2' y1='66' x2='130' y2='66' stroke='#00D8FF' stroke-opacity='.22'/>"
 Add "<circle cx='66' cy='66' r='6' fill='#00D8FF' stroke='none' filter='url(#glow)'/>"
 Add "</g>"
-Add "<text x='180' y='513' class='font-en cyan' font-size='15' font-weight='900'>◎ Core Zone</text>"
+Add "<text x='180' y='513' class='font-en cyan' font-size='15' font-weight='700'>Core Zone</text>"
 Add "<text x='180' y='535' class='font-cn cyan' font-size='13' opacity='.88'>核心區</text>"
 Add "<text x='180' y='557' class='mono gray' font-size='12'>Rank 1-5</text>"
-Add "<text x='180' y='600' fill='#008BFF' class='font-en' font-size='15' font-weight='900'>◉ Watch Zone</text>"
+Add "<text x='180' y='600' fill='#008BFF' class='font-en' font-size='15' font-weight='700'>Watch Zone</text>"
 Add "<text x='180' y='622' fill='#008BFF' class='font-cn' font-size='13' opacity='.88'>觀察區</text>"
 Add "<text x='180' y='644' class='mono gray' font-size='12'>Rank 6-15</text>"
-Add "<text x='180' y='687' fill='#8B93A6' class='font-en' font-size='15' font-weight='900'>○ Observation</text>"
+Add "<text x='180' y='687' fill='#8B93A6' class='font-en' font-size='15' font-weight='700'>Observation</text>"
 Add "<text x='180' y='709' fill='#8B93A6' class='font-cn' font-size='13' opacity='.88'>追蹤區</text>"
 Add "<text x='180' y='731' class='mono gray' font-size='12'>Rank 16-30</text>"
 Add "<line x1='42' y1='748' x2='300' y2='748' stroke='#00D8FF' stroke-opacity='.18'/>"
-Add "<text x='42' y='766' class='mono cyan' font-size='10' font-weight='800'>Size→Momentum</text>"
-Add "<text x='176' y='766' class='mono cyan' font-size='10' font-weight='800'>Glow→Buyability</text>"
-Add "<text x='42' y='776' class='mono cyan' font-size='10' font-weight='800'>Border→Sector</text>"
+Add "<text x='42' y='766' class='mono cyan' font-size='10' font-weight='600'>Size / Momentum</text>"
+Add "<text x='176' y='766' class='mono cyan' font-size='10' font-weight='600'>Glow / Buyability</text>"
+Add "<text x='42' y='776' class='mono cyan' font-size='10' font-weight='600'>Border / Sector</text>"
 
 Panel 24 796 312 210 'BUYABILITY SCORE'
 $buyLegend = @(
-  @('★★★★★','8-10','Strong Buy','#00D8FF','glowStrong'),
-  @('★★★★☆','6-7','Good','#00D97B','glowMedium'),
-  @('★★★☆☆','4-5','Neutral','#008BFF','glowSoft'),
-  @('★★☆☆☆','2-3','Watch','#FF9D00','glowSoft'),
-  @('★☆☆☆☆','0-1','Extended','#FF4E5E','')
+  @('5/5','8-10','Strong Buy','#00D8FF','glowStrong'),
+  @('4/5','6-7','Good','#00D97B','glowMedium'),
+  @('3/5','4-5','Neutral','#008BFF','glowSoft'),
+  @('2/5','2-3','Watch','#FF9D00','glowSoft'),
+  @('1/5','0-1','Extended','#FF4E5E','')
 )
 $buyLegendY = 856
 foreach ($bl in $buyLegend) {
@@ -353,7 +354,7 @@ foreach ($bl in $buyLegend) {
 Add "<rect x='24' y='1018' width='312' height='52' rx='7' fill='#08131F' fill-opacity='.78' stroke='#00D8FF' stroke-opacity='.55'/>"
 Add "<g transform='translate(42 1030) scale(.85)' stroke='#00D8FF' fill='none' stroke-width='1.8' opacity='.65'><rect x='2' y='8' width='12' height='10' rx='2'/><path d='M5 8 V5 a3.5 3.5 0 0 1 7 0 v3'/></g>"
 Add "<text x='72' y='1038' class='mono cyan' font-size='13' font-weight='900'>Leader Lock</text>"
-Add "<text x='72' y='1056' class='mono gray' font-size='12'>Buyability ≥ 8</text>"
+Add "<text x='72' y='1056' class='mono gray' font-size='12'>Buyability >= 8</text>"
 
 $cx=920; $cy=540
 foreach ($r in @(90,120,220,320,380,430)) { Add "<circle cx='$cx' cy='$cy' r='$r' fill='none' stroke='#00D8FF' stroke-opacity='.15'/>" }
@@ -467,12 +468,13 @@ Add "<text x='1556' y='338' class='mono gray' font-size='12' text-anchor='middle
 $scoreY=242
 foreach ($b in $buyRows) {
   $count = [int]$b[2]
+  $barW = Get-AplValidatedDistributionWidth $count $leaderCount 186 'Buyability distribution'
   $pct = [math]::Round(([double]$count / $leaderCount) * 100, 0)
-  $barW = [math]::Round(186 * $pct / 100, 0)
-  Add "<text x='1662' y='$($scoreY+10)' fill='$($b[3])' class='font-cn' font-size='13' font-weight='800'>$(X $b[0]) <tspan class='mono'>($($b[1]))</tspan></text>"
-  Add "<text x='1848' y='$($scoreY+10)' class='mono white' font-size='14' text-anchor='end' font-weight='900'>$count 個  $pct%</text>"
+  if ($pct -lt 0 -or $pct -gt 100) { throw "Buyability distribution percentage $pct is outside 0..100." }
+  Add "<text x='1662' y='$($scoreY+10)' fill='$($b[3])' class='font-cn' font-size='13' font-weight='600'>$(X $b[0]) ($($b[1]))</text>"
+  Add "<text x='1848' y='$($scoreY+10)' class='mono white' font-size='14' text-anchor='end' font-weight='700'>$count / $pct%</text>"
   Add "<rect x='1662' y='$($scoreY+20)' width='186' height='8' rx='2' fill='#132637'/>"
-  Add "<rect x='1662' y='$($scoreY+20)' width='$barW' height='8' rx='2' fill='$($b[3])'/>"
+  if ($barW -gt 0) { Add "<rect x='1662' y='$($scoreY+20)' width='$barW' height='8' rx='2' fill='$($b[3])'/>" }
   $scoreY += 34
 }
 Add "<line x1='1484' y1='398' x2='1848' y2='398' stroke='#00D8FF' stroke-opacity='.18'/>"
@@ -481,14 +483,16 @@ Add "<text x='1518' y='426' class='mono cyan' font-size='18' font-weight='900'>S
 Add "<text x='1518' y='446' class='font-cn gray' font-size='12'>$(X $T_SECTOR_DIST)</text>"
 $barY=474
 $maxSectorCount = ($sectorCounts | Measure-Object Count -Maximum).Maximum
+$null = ConvertTo-AplRequiredFiniteDouble $maxSectorCount 'Sector distribution maxSectorCount'
+if ([double]$maxSectorCount -le 0) { throw 'Sector distribution maxSectorCount must be greater than zero.' }
 foreach ($sc in $sectorCounts) {
-  $name=$sc.Name; $count=[int]$sc.Count; $color=$sectorColors[$name]; $w=[math]::Round(126*$count/$maxSectorCount,0); $zh=SectorChinese $name; $pct=[math]::Round(([double]$count/$leaderCount)*100,0)
+  $name=$sc.Name; $count=[int]$sc.Count; $color=$sectorColors[$name]; $w=Get-AplValidatedDistributionWidth $count $maxSectorCount 126 'Sector distribution'; $zh=SectorChinese $name; $pct=[math]::Round(([double]$count/$leaderCount)*100,0)
   Add "<rect x='1484' y='$($barY-16)' width='28' height='28' rx='5' fill='#07121C' fill-opacity='.9' stroke='$color' stroke-opacity='.55'/>"
   SectorIcon $name 1488 ($barY-12) $color
   Add "<text x='1524' y='$($barY-2)' fill='$color' class='font-en' font-size='14' font-weight='900'>$(X $name)</text>"
   Add "<text x='1524' y='$($barY+16)' class='font-cn gray' font-size='12' font-weight='700'>$(X $zh)</text>"
   Add "<rect x='1648' y='$($barY+1)' width='126' height='11' rx='1.5' fill='#132637'/>"
-  Add "<rect x='1648' y='$($barY+1)' width='$w' height='11' rx='1.5' fill='$color'/>"
+  if ($w -gt 0) { Add "<rect x='1648' y='$($barY+1)' width='$w' height='11' rx='1.5' fill='$color'/>" }
   Add "<text x='1810' y='$($barY+12)' class='mono white' font-size='14' text-anchor='end' font-weight='900'>$count</text>"
   Add "<text x='1848' y='$($barY+12)' class='mono white' font-size='13' text-anchor='end' font-weight='800'>$pct%</text>"
   $barY += 50
@@ -535,7 +539,7 @@ Add "<text x='926' y='1064' class='mono gray' font-size='12'>RANK</text>"
 Add "<text x='974' y='1064' class='mono cyan' font-size='12' font-weight='800'>MOM+BUY+RV</text>"
 Add "<line x1='1130' y1='1051' x2='1130' y2='1068' stroke='#00D8FF' stroke-opacity='.25'/>"
 Add "<text x='1146' y='1064' class='mono gray' font-size='12'>DATE</text>"
-Add "<text x='1194' y='1064' class='mono white' font-size='11'>$($weekLabel.ToUpperInvariant()) / $scanDate</text>"
+Add "<text x='1194' y='1064' class='font-cn white' font-size='11'>$($weekLabel.ToUpperInvariant()) / $scanDate</text>"
 Add "</g>"
 Add '</svg>'
 
