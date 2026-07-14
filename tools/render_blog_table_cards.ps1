@@ -12,19 +12,25 @@
   [string]$OutputName = '',
   [int]$Width = 1600,
   [int]$Height = 900,
-  [switch]$RegressionTest
+  [switch]$RegressionTest,
+  [switch]$AllowUntrackedFontAssetsForSmokeTest
 )
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'renderer_production_common.ps1')
+. (Join-Path $PSScriptRoot 'repository_font_loader.ps1')
+Initialize-AplRepositoryFontRuntime -AllowUntrackedFontAssetsForSmokeTest:$AllowUntrackedFontAssetsForSmokeTest -PreviewOutputPath (Join-Path $OutDir $OutputName)
 $OutDir = Assert-AplProductionPath (Get-AplFullPath $OutDir) 'OutDir' -RegressionTest:$RegressionTest
 if (-not [string]::IsNullOrWhiteSpace($InputPath)) { $InputPath = Assert-AplProductionPath (Get-AplFullPath $InputPath) 'InputPath' -RegressionTest:$RegressionTest }
 
 Add-Type -AssemblyName System.Drawing
+$script:tableCardFontAudit = New-Object System.Collections.Generic.List[object]
+[void](Assert-AplRepositoryFontRuntime)
 
 function New-Font([string]$family, [float]$size, [System.Drawing.FontStyle]$style = [System.Drawing.FontStyle]::Regular) {
-  try { return [System.Drawing.Font]::new($family, $size, $style, [System.Drawing.GraphicsUnit]::Pixel) }
-  catch { return [System.Drawing.Font]::new('Microsoft JhengHei', $size, $style, [System.Drawing.GraphicsUnit]::Pixel) }
+  $loaded = New-AplRepositoryFont $family $size $style
+  [void]$script:tableCardFontAudit.Add($loaded)
+  return $loaded.Font
 }
 
 function ConvertTo-PlainArray($value) {
@@ -200,12 +206,12 @@ function Save-Card([string]$fileName, [string]$title, [string]$subtitle, [array]
   Draw-RoundRect $g $borderPen $panelBrush 18 18 ($Width-36) ($Height-36) 24
 
   $fontKicker = New-Font 'Montserrat' 16 ([System.Drawing.FontStyle]::Bold)
-  $fontTitle = New-Font 'Microsoft JhengHei' 34 ([System.Drawing.FontStyle]::Bold)
-  $fontSub = New-Font 'Microsoft JhengHei' 20 ([System.Drawing.FontStyle]::Regular)
-  $fontHeader = New-Font 'Microsoft JhengHei' 18 ([System.Drawing.FontStyle]::Bold)
-  $fontCell = New-Font 'Microsoft JhengHei' 22 ([System.Drawing.FontStyle]::Regular)
-  $fontCellBold = New-Font 'Microsoft JhengHei' 22 ([System.Drawing.FontStyle]::Bold)
-  $fontNote = New-Font 'Microsoft JhengHei' 15 ([System.Drawing.FontStyle]::Regular)
+  $fontTitle = New-Font 'Alibaba Sans HK' 34 ([System.Drawing.FontStyle]::Bold)
+  $fontSub = New-Font 'Alibaba Sans HK' 20 ([System.Drawing.FontStyle]::Regular)
+  $fontHeader = New-Font 'Alibaba Sans HK' 18 ([System.Drawing.FontStyle]::Bold)
+  $fontCell = New-Font 'Alibaba Sans HK' 22 ([System.Drawing.FontStyle]::Regular)
+  $fontCellBold = New-Font 'Alibaba Sans HK' 22 ([System.Drawing.FontStyle]::Bold)
+  $fontNote = New-Font 'Alibaba Sans HK' 15 ([System.Drawing.FontStyle]::Regular)
 
   Draw-TextBox $g ('APL TABLE CARD / ' + $CardType.ToUpperInvariant()) $fontKicker $cyanBrush $padding 28 ($Width - $padding*2) 24
   Draw-TextBox $g $title $fontTitle $whiteBrush $padding 58 ($Width - $padding*2) 50
@@ -303,11 +309,17 @@ $log = @(
   "Rows: $($rows.Count)",
   "Columns: $($columns.Count)",
   "Date: $metaDate",
+  "Font Asset Validation Stage: $script:AplFontStage",
+  'Font Resolution Policy: PrivateFontCollection exact internal family; Stage B additionally requires Git tracking and HEAD presence',
+  ($script:tableCardFontAudit | ForEach-Object { "Font | Requested Font: $($_.RequestedFamily) | Resolved Font: $($_.ResolvedFamily) | Font File: $($_.RelativePath) | Style: $($_.Style) | Status: PASS" }),
   'Contract: tools/table_card_input.schema.json',
   'Template: KnowledgeBase/Templates/Table_Card_Input_Contract.md',
   'Renderer role: render one structured research information card',
   'Deprecated as production input: raw CSV screenshot, full ranking dump, dashboard/radar table background'
 )
+$flatLog = New-Object System.Collections.Generic.List[string]
+foreach ($entry in $log) { foreach ($line in $entry) { [void]$flatLog.Add([string]$line) } }
+$log = @($flatLog)
 [System.IO.File]::WriteAllText($logPath, ($log -join [Environment]::NewLine), [System.Text.Encoding]::UTF8)
 [pscustomobject]@{
   CardType = $CardType

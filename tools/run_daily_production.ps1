@@ -13,6 +13,8 @@ param(
   [string]$OutputRoot = '',
   [string]$SectorMapPath = '',
   [string]$LogoPath = '',
+  [string]$PublishingArtifactsRoot = '',
+  [string]$ArtifactContractPath = '',
 
   [Parameter(Mandatory = $true, ParameterSetName = 'SingleTableCard')]
   [string]$TableCardInputPath,
@@ -39,8 +41,10 @@ param(
 $ErrorActionPreference = 'Stop'
 $ProjectRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 . (Join-Path $PSScriptRoot 'renderer_production_common.ps1')
+. (Join-Path $PSScriptRoot 'production_archive_common.ps1')
 
 if ((Get-AplFullPath $ProjectRoot) -ne (Get-AplFullPath $script:AplProjectRoot)) { throw 'Project Root resolution failed.' }
+Assert-AplScanDate $ScanDate | Out-Null
 $gitRoot = (& git -C $ProjectRoot rev-parse --show-toplevel 2>$null)
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace([string]$gitRoot)) { throw "Git Root not found for Project Root: $ProjectRoot" }
 if ((Get-AplFullPath ([string]$gitRoot)) -ne (Get-AplFullPath $ProjectRoot)) { throw "Project Root/Git Root mismatch. Project='$ProjectRoot'; Git='$gitRoot'." }
@@ -88,6 +92,12 @@ if ($RegressionTest) {
   if (-not (Test-PathInside $OutputRoot $regressionRoot)) { throw "RegressionTest OutputRoot must be inside '$regressionRoot'." }
 } elseif (-not $OutputRoot.Equals($formalOutputRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
   throw "Production OutputRoot must be '$formalOutputRoot'."
+}
+if ([string]::IsNullOrWhiteSpace($ArtifactContractPath)) { $ArtifactContractPath = Join-Path $ProjectRoot 'KnowledgeBase\Rules\APL_US_Stock_Production_Artifact_Contract.json' }
+$ArtifactContractPath = Assert-AplNoReparsePath -Path $ArtifactContractPath -AllowedRoot $ProjectRoot -RequireFile
+if (-not [string]::IsNullOrWhiteSpace($PublishingArtifactsRoot)) {
+  $publishingAllowedRoot = if ($RegressionTest) { $regressionRoot } else { Join-Path $ProjectRoot 'work' }
+  $PublishingArtifactsRoot = Assert-AplNoReparsePath -Path $PublishingArtifactsRoot -AllowedRoot $publishingAllowedRoot -RequireDirectory
 }
 
 $publishRoot = $OutputRoot
@@ -167,6 +177,7 @@ $coverOutput = Join-Path $dateOut "APL_Momentum_Leaders_Blog_Cover_${ScanDate}_1
 $coverLog = [System.IO.Path]::ChangeExtension($coverOutput, '.overlay-log.txt')
 $seoOutput = Join-Path $dateOut "APL_Momentum_Leaders_Blog_SEO_${ScanDate}_1280x720.png"
 $seoLog = [System.IO.Path]::ChangeExtension($seoOutput, '.overlay-log.txt')
+$finalAuditPath = Assert-NewArtifact (Join-Path $finalDateOut "Final_Production_Audit_${ScanDate}.json") 'FinalProductionAudit'
 
 $rootCopies = @()
 $tableCardExpectedArtifacts = @($tableCards | ForEach-Object { @($_.OutputPath,$_.LogPath) })
@@ -183,6 +194,7 @@ if (!(Test-Path -LiteralPath $OutputRoot)) { New-Item -ItemType Directory -Path 
 if (!(Test-Path -LiteralPath $logsRoot)) { New-Item -ItemType Directory -Path $logsRoot | Out-Null }
 $pipelineLog = Assert-NewArtifact (Join-Path $logsRoot "daily-production-$runId.log") 'PipelineLog'
 $tracePath = Assert-NewArtifact (Join-Path $logsRoot "daily-production-$runId.jsonl") 'PipelineTrace'
+$dailyStatePath = Assert-NewArtifact (Join-Path $logsRoot "daily-production-state-$ScanDate.json") 'DailyProductionState'
 $script:stepNumber = 0
 $script:completedArtifacts = New-Object System.Collections.Generic.List[string]
 $script:tableCardResults = New-Object System.Collections.Generic.List[object]
@@ -266,6 +278,9 @@ $svgToPngScript = Join-Path $PSScriptRoot 'convert_svg_to_png.ps1'
 $socialScript = Join-Path $PSScriptRoot 'render_deep_scan_social_card_svg.ps1'
 $tableScript = Join-Path $PSScriptRoot 'render_blog_table_cards.ps1'
 $overlayScript = Join-Path $PSScriptRoot 'render_blog_cover_overlay.ps1'
+$archiveScript = Join-Path $PSScriptRoot 'archive_daily_production.ps1'
+$artifactAuditScript = Join-Path $PSScriptRoot 'test_production_artifact_contract.ps1'
+$completionScript = Join-Path $PSScriptRoot 'complete_daily_production.ps1'
 
 $status = 'FAILED'
 try {
@@ -345,6 +360,20 @@ try {
   }
   Invoke-PipelineStep 'RenderCoverOverlay' $overlayScript @('-BriefPath',$CoverBriefPath,'-BackgroundPath',$CoverBackgroundPath,'-OutputPath',$coverOutput,'-Variant','Cover','-LogoPath',$LogoPath) @($coverOutput,$coverLog)
   Invoke-PipelineStep 'RenderSeoOverlay' $overlayScript @('-BriefPath',$CoverBriefPath,'-BackgroundPath',$CoverBackgroundPath,'-OutputPath',$seoOutput,'-Variant','SEO','-LogoPath',$LogoPath) @($seoOutput,$seoLog)
+  Complete-InternalStep 'ImportPublishingArtifacts' {
+    if ([string]::IsNullOrWhiteSpace($PublishingArtifactsRoot)) { return }
+    $publishingRootFull = Assert-AplNoReparsePath -Path $PublishingArtifactsRoot -AllowedRoot $publishingAllowedRoot -RequireDirectory
+    foreach ($item in @(Get-AplSafeFileList $publishingRootFull)) {
+      $relative = $item.FullName.Substring($publishingRootFull.Length + 1).Replace('\','/')
+      if (-not (Test-AplArchiveEligible $relative)) { continue }
+      $target = Join-Path $dateOut $relative.Replace('/','\')
+      if (Test-Path -LiteralPath $target) { throw "Publishing artifact conflicts with generated artifact: $relative" }
+      $parent = Split-Path -Parent $target
+      if (!(Test-Path -LiteralPath $parent)) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
+      Assert-AplNoReparsePath -Path $parent -AllowedRoot $dateOut -RequireDirectory | Out-Null
+      Copy-Item -LiteralPath $item.FullName -Destination $target
+    }
+  } @()
   Complete-InternalStep 'PublishArtifacts' {
     foreach ($contractPath in @($dashboardContract,$socialContract)) {
       $contract = Read-AplUtf8Json $contractPath
@@ -389,19 +418,52 @@ try {
     }
   } @()
 
-  $status = 'PASS'
   $publishedArtifacts = @($publishedPaths | ForEach-Object { $item=Get-Item -LiteralPath $_; [ordered]@{ path=$item.FullName; bytes=$item.Length; sha256=(Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash } })
-  Add-Trace @{ event='run-complete'; runId=$runId; utc=[datetime]::UtcNow.ToString('o'); status=$status; artifacts=$publishedArtifacts; pipelineLog=$pipelineLog; pipelineTrace=$tracePath }
-  Add-Log "RUN PASS $runId"
+  $auditArgs = @('-ProductionDatePath',$finalDateOut,'-ScanDate',$ScanDate,'-ContractPath',$ArtifactContractPath,'-AuditOutputPath',$finalAuditPath)
+  if ($RegressionTest) { $auditArgs += '-RegressionTest' }
+  Invoke-PipelineStep 'FinalProductionAudit' $artifactAuditScript $auditArgs @($finalAuditPath)
+  (Get-Item -LiteralPath $finalAuditPath).IsReadOnly = $true
+
+  $status = 'PRODUCTION_PASS'
+  Add-Trace @{ event='final-production-audit'; runId=$runId; utc=[datetime]::UtcNow.ToString('o'); status='PASS'; audit=$finalAuditPath; next='Archive' }
+  Add-Log "PRODUCTION PASS $runId; ARCHIVE REQUIRED"
+
+  $archiveRoot = if ($RegressionTest) { Join-Path $publishRoot '_archive' } else { Join-Path $ProjectRoot 'Archive' }
+  $archiveArgs = @('-SourceDatePath',$finalDateOut,'-ScanDate',$ScanDate,'-FinalAuditPath',$finalAuditPath,'-ArchiveRoot',$archiveRoot)
+  if ($RegressionTest) { $archiveArgs += '-RegressionTest' }
+  Invoke-PipelineStep 'ArchiveDailyProduction' $archiveScript $archiveArgs
+  $archiveDestination = Join-Path $archiveRoot (Join-Path $ScanDate.Substring(0,4) $ScanDate)
+  $archiveManifestPath = Join-Path $archiveDestination 'archive-manifest.json'
+  $archiveIndexPath = Join-Path $archiveRoot 'index.md'
+  Complete-InternalStep 'VerifyArchivePass' {
+    foreach ($requiredArchiveArtifact in @($archiveManifestPath,$archiveIndexPath)) {
+      if (!(Test-Path -LiteralPath $requiredArchiveArtifact -PathType Leaf)) { throw "Archive verification artifact missing: $requiredArchiveArtifact" }
+    }
+    $archiveAudit = Read-AplStrictJson $archiveManifestPath $archiveDestination
+    $archiveActual = @(Get-AplArchiveInventory $archiveDestination -ExcludeManifest)
+    Assert-AplArchiveManifest $archiveAudit $ScanDate 'PASS' $archiveActual | Out-Null
+    Assert-AplArchiveIndexRow $archiveIndexPath $archiveAudit $archiveRoot | Out-Null
+  } @()
+
+  $status = 'FINALIZING'
+  $completionArgs = @('-ScanDate',$ScanDate,'-FinalAuditPath',$finalAuditPath,'-ArchiveManifestPath',$archiveManifestPath,'-ArchiveIndexPath',$archiveIndexPath,'-PipelineLog',$pipelineLog,'-PipelineTrace',$tracePath,'-StatePath',$dailyStatePath)
+  if ($RegressionTest) { $completionArgs += '-RegressionTest' }
+  $completionOutput = @(& powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $completionScript @completionArgs 2>&1)
+  if ($LASTEXITCODE -ne 0) { throw "Daily production finalization failed: $($completionOutput -join ' ')" }
+  $finalState = Read-AplStrictJson $dailyStatePath $logsRoot
+  if ([string]$finalState.Status -cne 'PASS' -or $finalState.DailyProductionComplete -ne $true) { throw 'Authoritative daily production state did not reach PASS.' }
+  $status = 'PASS'
   Exit-AplNamedMutex $publishScoringMutex
   Exit-AplNamedMutex $runMutex
 } catch {
-  Add-Trace @{ event='run-complete'; runId=$runId; utc=[datetime]::UtcNow.ToString('o'); status=$status; error=$_.Exception.Message; artifacts=@($script:completedArtifacts) }
-  Add-Log "RUN FAILED $runId :: $($_.Exception.Message)"
+  if ($status -eq 'PRODUCTION_PASS') { $status = 'ARCHIVE_FAILED' }
+  elseif ($status -eq 'FINALIZING') { $status = 'FINALIZATION_FAILED' }
+  try { Add-Trace @{ event='run-complete'; runId=$runId; utc=[datetime]::UtcNow.ToString('o'); status=$status; dailyProductionComplete=$false; error=$_.Exception.Message; artifacts=@($script:completedArtifacts) } } catch {}
+  try { Add-Log "RUN FAILED $runId :: $($_.Exception.Message)" } catch {}
   Exit-AplNamedMutex $publishScoringMutex
   Exit-AplNamedMutex $runMutex
   Write-Error $_
   exit 1
 }
 
-[pscustomobject]@{ RunId=$runId; Status=$status; ProjectRoot=$ProjectRoot; OutputRoot=$publishRoot; DateOutput=$finalDateOut; PipelineLog=$pipelineLog; PipelineTrace=$tracePath; ArtifactCount=$publishedArtifacts.Count }
+[pscustomobject]@{ RunId=$runId; Status=$status; DailyProductionComplete=($status -eq 'PASS'); AuthoritativeState=$dailyStatePath; ProjectRoot=$ProjectRoot; OutputRoot=$publishRoot; DateOutput=$finalDateOut; FinalProductionAudit=$finalAuditPath; ArchiveDestination=$archiveDestination; ArchiveManifest=$archiveManifestPath; ArchiveIndex=$archiveIndexPath; PipelineLog=$pipelineLog; PipelineTrace=$tracePath; ArtifactCount=$publishedArtifacts.Count }
