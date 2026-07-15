@@ -21,6 +21,11 @@
       "font-en": "Montserrat (weights 400, 500, 600 and 700)",
       "mono": "Montserrat (weights 500 and 600; temporary repository-managed replacement)"
     },
+    "socialFontMapping": {
+      "font-cn": "Alibaba Sans HK (weights 400 and 600 from 55/75 assets)",
+      "font-en": "Montserrat (weights 400, 500, 600 and 700)",
+      "mono": "Montserrat (weights 500 and 600; temporary repository-managed replacement)"
+    },
     "warningPolicy": {
       "fontFallbackWarningCount": 0,
       "invalidGeometryWarningCount": 0,
