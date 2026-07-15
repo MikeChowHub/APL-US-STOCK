@@ -157,3 +157,54 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run_daily_produc
 ## 9. Release operation
 
 Runner 不會執行 Git stage、commit、tag 或 push。首次發布使用 GitHub Desktop：確認 repository／`main`／origin，核對 Final Audit 的精確 scope，commit 並 push `main`。Final Audit PASS 後，如 GitHub Desktop 沒有 tag UI，可在 repository root 使用 `git tag -a v1.0.0 -m "APL US Stock v1.0.0"` 及 `git push origin v1.0.0`；不需要亦不得使用 GitHub CLI (`gh`)。Archive、tmp、logs、staging 與歷史 outputs不得加入 commit。
+
+## 10. Automatic Archive and daily completion
+
+正式 daily runner 的末段固定如下，不需要等待使用者再下 Archive 指令：
+
+1. `LockPublishedMachineArtifacts`
+2. `FinalProductionAudit`
+3. `ArchiveDailyProduction`
+4. `VerifyArchivePass`
+5. `Daily Production Complete`
+
+Final audit 會建立：
+
+```text
+outputs/YYYY-MM-DD/Final_Production_Audit_YYYY-MM-DD.json
+```
+
+只有該檔案的 schema、日期及 `Status=PASS` 符合時，`tools/archive_daily_production.ps1` 才接受 Archive。正式路徑固定為：
+
+```text
+outputs/YYYY-MM-DD/
+→ Archive/YYYY/YYYY-MM-DD/
+```
+
+Archive executor 會：
+
+- 選取正式 Blog/HTML、Top 30 analysis、publishing materials、Dashboard、Social、Table Cards、Cover、SEO、manifest 與必要 audit/logs；
+- 排除 `.staging`、staging、temporary、tmp、cache、typography comparisons、diagnostics 與暫存副檔名；
+- Copy 並保留 source relative paths，不 Move／Delete source；
+- 逐檔核對 relative path、file count、bytes 與 SHA-256；
+- 寫入 `archive-manifest.json`；
+- 更新 `Archive/index.md`；
+- 只有 manifest 與 index 都通過 runner 的 `VerifyArchivePass`，才輸出 `DailyProductionComplete=True`。
+
+若 Archive 失敗，runner 保持非完成狀態，即使前段 Production 已 PASS。查看 pipeline log/trace、Final Audit 與 Archive staging 狀態後修正原因；不得以 Git Commit／Push 代替 Archive。既有 Archive 日期只在 PASS manifest 且與來源逐檔一致時可重用，不會覆蓋不同內容。
+
+Regression 使用同一 Archive executor，但 destination 被隔離在 regression `OutputRoot/_archive/`（位於 `tmp/`），不會更新正式 `Archive/`。
+
+### Legacy Archive compatibility
+
+Archive v2 marker位於 `tools/archive-v2-policy.json`，初始 `AdoptionDate` 為 `2026-07-15`。正式 index建立時：
+
+- 有受支援且逐檔驗證的 v2 manifest：`Status=PASS`；
+- adoption前且精確列於 `LegacyUnverifiedDates`、沒有 v2 manifest：`Status=LEGACY_UNVERIFIED`；
+- adoption後缺 manifest、未知舊日期缺 manifest、malformed manifest或 legacy日期冒充 v2：立即 FAIL。
+
+Index固定為 `Date | Status | Files | Bytes | Manifest | Notes`。Legacy Files／Bytes只反映當次唯讀 inventory；Manifest為 `N/A`，Notes明示 integrity not attested。不要為舊日期補造 PASS manifest，亦不要修改歷史 Archive。完整 index policy見 `docs/ARCHIVE_INDEX_POLICY.md`。
+
+驗收 checklist：`docs/FINAL_PRODUCTION_AUDIT_CHECKLIST.md`。永久規則：`KnowledgeBase/Rules/APL_US_Stock_Archive_Rules.md`。
+
+Git stage、commit、tag、push 仍是 Production workflow 以外的明確操作，runner 不會自動執行。

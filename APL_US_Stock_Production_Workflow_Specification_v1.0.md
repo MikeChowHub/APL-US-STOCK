@@ -231,7 +231,15 @@ Table Cards
 ↓
 WhatsApp / Social Publishing Materials
 ↓
-Archive
+Final Production Audit
+↓ PASS only
+Archive Copy
+↓
+SHA-256 / Size Audit
+↓
+Archive Index Update
+↓
+Daily Production Complete
 ```
 
 ## Output
@@ -253,7 +261,7 @@ Trigger C may produce:
 | Input | Watchlist | Scoring | Ranking | Top 30 | Dashboard | Social Card | Company Analysis | Blog | Cover | SEO | Table Cards | WhatsApp | Archive |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | APL Breakout Screener | Yes | No | No | No | No | No | No | No | No | No | No | No | No |
-| APL Breakout Screener Cumulative | Yes | Yes | Yes | Yes | Yes | Yes | Yes | No | No | No | No | No | Optional |
+| APL Breakout Screener Cumulative | Yes | Yes | Yes | Yes | Yes | Yes | Yes | No | No | No | No | No | Required after complete Production PASS |
 | Top Gainers only | No | No | No | No | No | No | No | No | No | No | No | No | No |
 | Market Context only | No | No | No | No | No | No | No | No | No | No | No | No | No |
 | Cumulative + Top Gainers + Market Context | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
@@ -313,5 +321,32 @@ flowchart TD
     I2 --> I5["Table Cards"]
     I2 --> I6["WhatsApp"]
     I2 --> I7["Social Publishing Materials"]
-    I7 --> I8["Archive"]
+    I7 --> I8["Final Production Audit"]
+    I8 -->|"PASS only"| I9["Archive Copy"]
+    I9 --> I10["SHA-256 / Size / File Count Audit"]
+    I10 --> I11["Archive Index Update"]
+    I11 --> I12["Archive PASS"]
+    I12 --> I13["Daily Production Complete"]
 ```
+
+---
+
+# Production Completion and Automatic Archive
+
+每次當日 Production 完整 PASS 後，workflow 必須自動執行 Archive，不等待使用者額外指示。
+
+```text
+Production PASS
+→ Final Production Audit PASS
+→ Archive/YYYY/YYYY-MM-DD copy
+→ relative path / file count / bytes / SHA-256 verification
+→ Archive/index.md update
+→ Archive PASS
+→ Daily Production Complete
+```
+
+Archive 來源固定為 `outputs/YYYY-MM-DD/`。正式檔案與必要 audit/logs 必須保留；staging、temporary inputs、cache、diagnostics 與重複中間檔必須排除。來源只 Copy，不 Move／Delete。規則細節以 `KnowledgeBase/Rules/APL_US_Stock_Archive_Rules.md` 為準。
+
+Archive v2 adoption由 tracked `tools/archive-v2-policy.json` 控制。有效 v2日期在 index標記 `PASS`；只有 adoption前且精確 allowlisted、沒有 v2 manifest的歷史目錄可標記 `LEGACY_UNVERIFIED`。Legacy inventory統計不構成完整性證明，亦不可阻擋新的有效 v2 Archive。未知舊日期或 adoption後日期缺／壞 manifest必須 fail-fast。
+
+Git Commit／Push 不得負責 Archive，Production runner 亦不自動 Commit／Push。

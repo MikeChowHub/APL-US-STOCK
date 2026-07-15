@@ -13,22 +13,16 @@ param(
 
   [string]$LogoPath = '',
   [int]$Width = 0,
-  [int]$Height = 0
+  [int]$Height = 0,
+  [switch]$AllowUntrackedFontAssetsForSmokeTest
 )
 
 $ErrorActionPreference = 'Stop'
 
 Add-Type -AssemblyName System.Drawing
-
-$script:installedFontNames = @{}
-$fontCollection = New-Object System.Drawing.Text.InstalledFontCollection
-try {
-  foreach ($family in $fontCollection.Families) { $script:installedFontNames[$family.Name] = $true }
-} finally {
-  $fontCollection.Dispose()
-}
+. (Join-Path $PSScriptRoot 'repository_font_loader.ps1')
+Initialize-AplRepositoryFontRuntime -AllowUntrackedFontAssetsForSmokeTest:$AllowUntrackedFontAssetsForSmokeTest -PreviewOutputPath $OutputPath
 $script:fontAudit = New-Object System.Collections.Generic.List[object]
-$script:allowFontFallback = ([string]$env:APL_ALLOW_FONT_FALLBACK -eq '1')
 $script:chineseFontFamily = 'Alibaba Sans HK'
 $script:latinFontFamily = 'Montserrat'
 
@@ -37,19 +31,13 @@ function Read-Utf8Json($path) {
   return ([System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8) | ConvertFrom-Json)
 }
 
-function New-TrackedFont([string]$role, [string]$requested, [string]$fallback, [float]$size, [System.Drawing.FontStyle]$style = [System.Drawing.FontStyle]::Regular) {
+function New-TrackedFont([string]$role, [string]$requested, [float]$size, [System.Drawing.FontStyle]$style = [System.Drawing.FontStyle]::Regular) {
   if ([string]::IsNullOrWhiteSpace($requested)) { throw "Requested font is required for $role." }
-  if ([string]::IsNullOrWhiteSpace($fallback) -or -not $script:installedFontNames.ContainsKey($fallback)) { throw "Approved fallback font is not installed for ${role}: $fallback" }
-  $candidate = if ($script:installedFontNames.ContainsKey($requested)) { $requested } else { $fallback }
-  $font = [System.Drawing.Font]::new($candidate, $size, $style, [System.Drawing.GraphicsUnit]::Pixel)
-  $resolved = [string]$font.Name
-  $status = if ($requested -ceq $resolved) { 'PASS' } elseif ($script:allowFontFallback) { 'WARNING' } else { 'FAIL' }
-  $record = [pscustomobject]@{ Role=$role; Requested=$requested; Resolved=$resolved; Status=$status; Size=$size; Style=[string]$style }
+  $loaded = New-AplRepositoryFont $requested $size $style
+  $font = $loaded.Font
+  $resolved = [string]$loaded.ResolvedFamily
+  $record = [pscustomobject]@{ Role=$role; Requested=$requested; Resolved=$resolved; Status='PASS'; FontFile=$loaded.RelativePath; Size=$size; Style=[string]$style }
   [void]$script:fontAudit.Add($record)
-  if ($status -eq 'FAIL') {
-    $font.Dispose()
-    throw "Font resolution failed for $role. Requested Font: $requested; Resolved Font: $resolved; Status: FAIL"
-  }
   return $font
 }
 
@@ -277,10 +265,10 @@ try {
   $logoW = [float]$layout.logoWidth
   $logoH = [float]$layout.logoHeight
   $logoGap = [float]$layout.logoGap
-  $fontKicker = New-TrackedFont 'fontKicker' $script:latinFontFamily 'Arial' ([float]$layout.fontKicker) ([System.Drawing.FontStyle]::Bold)
-  $fontTitle = New-TrackedFont 'fontTitle' $script:chineseFontFamily 'Microsoft JhengHei UI' ([float]$layout.fontTitle) ([System.Drawing.FontStyle]::Bold)
-  $fontSub = New-TrackedFont 'fontSubtitle' $script:chineseFontFamily 'Microsoft JhengHei UI' ([float]$layout.fontSubtitle) ([System.Drawing.FontStyle]::Bold)
-  $fontMeta = New-TrackedFont 'fontMeta' $script:latinFontFamily 'Arial' ([float]$layout.fontMeta) ([System.Drawing.FontStyle]::Bold)
+  $fontKicker = New-TrackedFont 'fontKicker' $script:latinFontFamily ([float]$layout.fontKicker) ([System.Drawing.FontStyle]::Bold)
+  $fontTitle = New-TrackedFont 'fontTitle' $script:chineseFontFamily ([float]$layout.fontTitle) ([System.Drawing.FontStyle]::Bold)
+  $fontSub = New-TrackedFont 'fontSubtitle' $script:chineseFontFamily ([float]$layout.fontSubtitle) ([System.Drawing.FontStyle]::Bold)
+  $fontMeta = New-TrackedFont 'fontMeta' $script:latinFontFamily ([float]$layout.fontMeta) ([System.Drawing.FontStyle]::Bold)
   $lineHeight = [float]$layout.titleLineHeight
 
   Draw-Logo $g $LogoPath $margin $top $logoW $logoH
@@ -303,7 +291,7 @@ try {
   Draw-ShadowText $g $meta $fontMeta $cyan $margin ($subY + [float]$layout.metaGap) ($Width - $margin*2) ([float]$layout.metaHeight) 'Near' ([float]$layout.trackingMeta)
 
   if ($Variant -eq 'Cover' -and -not [string]::IsNullOrWhiteSpace([string]$brief.overlay.footer)) {
-    $fontFooter = New-TrackedFont 'fontFooter' $script:chineseFontFamily 'Microsoft JhengHei UI' ([float]$layout.fontFooter) ([System.Drawing.FontStyle]::Regular)
+    $fontFooter = New-TrackedFont 'fontFooter' $script:chineseFontFamily ([float]$layout.fontFooter) ([System.Drawing.FontStyle]::Regular)
     $footerY = [float]$layout.footerY
     if ($footerY -lt 0) { $footerY = $Height + $footerY }
     Draw-ShadowText $g ([string]$brief.overlay.footer) $fontFooter $muted $margin $footerY ($Width - $margin*2) ([float]$layout.footerHeight) 'Center' ([float]$layout.trackingFooter)
@@ -338,12 +326,16 @@ $log = @(
   "Text Safe Height Ratio: $($layout.textSafeHeightRatio)",
   "Logo Box: $($layout.logoWidth)x$($layout.logoHeight)",
   "Title Font / Line Height / Y: $($layout.fontTitle) / $($layout.titleLineHeight) / $($layout.titleY)",
-  "Font Resolution Policy: $(if ($script:allowFontFallback) { 'Warning' } else { 'Fail' })",
-  @($script:fontAudit | ForEach-Object { "Font $($_.Role) | Requested Font: $($_.Requested) | Resolved Font: $($_.Resolved) | Status: $($_.Status)" }),
+  "Font Asset Validation Stage: $script:AplFontStage",
+  'Font Resolution Policy: PrivateFontCollection exact internal family; Stage B additionally requires Git tracking and HEAD presence',
+  ($script:fontAudit | ForEach-Object { "Font $($_.Role) | Requested Font: $($_.Requested) | Resolved Font: $($_.Resolved) | Font File: $($_.FontFile) | Status: $($_.Status)" }),
   'Background source rule: ImageGen cinematic background only',
   'Local renderer role: precise text/logo overlay only',
   'Deprecated as production cover source: local SVG, shape-based cinematic simulation, abstract radar cover, flow-line infographic cover'
 )
+$flatLog = New-Object System.Collections.Generic.List[string]
+foreach ($entry in $log) { foreach ($line in $entry) { [void]$flatLog.Add([string]$line) } }
+$log = @($flatLog)
 [System.IO.File]::WriteAllText($logPath, ($log -join [Environment]::NewLine), [System.Text.Encoding]::UTF8)
 
 [pscustomobject]@{
