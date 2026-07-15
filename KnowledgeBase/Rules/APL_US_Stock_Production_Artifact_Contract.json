@@ -1,0 +1,31 @@
+{
+  "SchemaVersion": "APL Production Artifact Contract v1.0",
+  "Required": [
+    {
+      "Id": "ranking-score-breakdown",
+      "Category": "Machine",
+      "Match": "ExactlyOne",
+      "Patterns": ["APL_Momentum_Score_Full_Ranking_{ScanDate}.csv", "production-package/table-card-log/APL_Momentum_Score_Full_Ranking_{ScanDate}.csv"],
+      "RequiredCsvColumns": ["Rank", "Symbol", "Composite Score", "Momentum Score", "Buyability Score", "Relative Volume Bonus"]
+    },
+    { "Id": "top-30", "Category": "Machine", "Match": "ExactlyOne", "Patterns": ["APL_Quant_Top_30_{ScanDate}.md", "production-package/table-card-log/APL_Quant_Top_30_{ScanDate}.md"] },
+    { "Id": "production-metadata", "Category": "Machine", "Match": "ExactlyOne", "Patterns": ["APL_Momentum_Leaders_Meta_{ScanDate}.json"] },
+    { "Id": "removed-sma200-audit", "Category": "Machine", "Match": "ExactlyOne", "Patterns": ["removed-below-sma200-{ScanDate}.txt"] },
+    { "Id": "retained-sma200-audit", "Category": "Machine", "Match": "ExactlyOne", "Patterns": ["retained-missing-sma200-{ScanDate}.txt"] },
+    { "Id": "publishing-notes", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["APL_Momentum_Leaders_Overview_{ScanDate}.md"] },
+    { "Id": "formal-blog", "Category": "Publishing", "Match": "AtLeastOne", "Patterns": ["production-package/APL_Momentum_Leaders_Market_Analysis_Blog_{ScanDate}.md", "production-package/APL_Momentum_Leaders_Market_Analysis_Blog_{ScanDate}.html"] },
+    { "Id": "company-business-analysis", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/table-card-log/APL_Momentum_Leaders_Top_30_Company_Business_Analysis_{ScanDate}.md"] },
+    { "Id": "social-push", "Category": "Publishing", "Match": "AtLeastOne", "Patterns": ["APL_Momentum_Leaders_WhatsApp_Post_{ScanDate}.txt", "APL_Momentum_Leaders_Telegram_Post_{ScanDate}.txt", "production-package/APL_Momentum_Leaders_WhatsApp_Post_{ScanDate}.txt", "production-package/APL_Momentum_Leaders_Telegram_Post_{ScanDate}.txt"] },
+    { "Id": "table-card-publication-manifest", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["APL_Table_Card_Manifest_{ScanDate}.json", "production-package/table-card-log/APL_Table_Card_Manifest_{ScanDate}.json"] },
+    { "Id": "dashboard-png", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["APL_DeepScan_Radar_Dashboard_Top30_{ScanDate}_1920x1080.png", "production-package/APL_DeepScan_Radar_Dashboard_Top30_{ScanDate}_1920x1080.png"] },
+    { "Id": "social-card-png", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["APL_DeepScan_Social_Card_{ScanDate}_1080x1350.png", "production-package/APL_DeepScan_Social_Card_{ScanDate}_1080x1350.png"] },
+    { "Id": "cover", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["APL_Momentum_Leaders_Blog_Cover_{ScanDate}_1080x1350.png", "production-package/APL_Momentum_Leaders_Blog_Cover_{ScanDate}_1080x1350.png"] },
+    { "Id": "seo", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["APL_Momentum_Leaders_Blog_SEO_{ScanDate}_1280x720.png", "production-package/APL_Momentum_Leaders_Blog_SEO_{ScanDate}_1280x720.png"] }
+  ],
+  "Optional": [
+    { "Id": "blog-second-format", "Category": "Publishing", "Patterns": ["production-package/APL_Momentum_Leaders_Market_Analysis_Blog_{ScanDate}.md", "production-package/APL_Momentum_Leaders_Market_Analysis_Blog_{ScanDate}.html"] },
+    { "Id": "machine-support", "Category": "Machine", "Patterns": ["*.svg", "*.overlay-log.txt", "*_Render_Log.txt", "APL_DeepScan_*_Input_{ScanDate}.json", "APL_Momentum_Leaders_Source_{ScanDate}.csv", "APL_Quant_Top_30_{ScanDate}.txt", "APL_Quant_Cumulative_Watchlist_{ScanDate}.txt", "production-package/table-card-log/*.table-card-log.txt"] },
+    { "Id": "additional-approved-publishing", "Category": "Publishing", "Patterns": ["production-package/*.png", "production-package/*.txt"] }
+  ],
+  "RequiredTableCardTypes": ["ExecutiveSummary", "TopLeaders", "TopGainers", "SectorStructure"]
+}
