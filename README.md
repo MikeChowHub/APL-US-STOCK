@@ -81,3 +81,30 @@ Pipeline 先寫入 `<OutputRoot>/.staging/<RunId>/`，所有 steps 成功後才�
 3. 建立首次 commit，例如 `Release v1.0.0`，再 Push origin。
 4. Push 完成後確認遠端 `main` 已建立且 commit 正確。
 5. 只有 Final Audit 為 PASS 後才建立 annotated tag `v1.0.0`。GitHub Desktop 用於首次 commit／push；如其版本沒有 tag UI，另在 repository root 使用 `git tag -a v1.0.0 -m "APL US Stock v1.0.0"` 及 `git push origin v1.0.0`。不使用 GitHub CLI (`gh`)；本 pipeline 不會自動 commit、tag 或 push。
+
+## Automatic Archive completion gate
+
+當日 Production 的完成狀態包含 Archive，不需要額外指示：
+
+```text
+Production PASS
+→ Final Production Audit PASS
+→ Archive Copy
+→ file count / bytes / SHA-256 audit
+→ Archive index update
+→ Archive PASS
+→ Daily Production Complete
+```
+
+- Source：`outputs/YYYY-MM-DD/`
+- Destination：`Archive/YYYY/YYYY-MM-DD/`
+- Runner：`tools/run_daily_production.ps1`
+- Archive executor：`tools/archive_daily_production.ps1`
+- Evidence：`outputs/YYYY-MM-DD/Final_Production_Audit_YYYY-MM-DD.json` 與 `Archive/YYYY/YYYY-MM-DD/archive-manifest.json`
+- Index：`Archive/index.md`
+
+Archive 採 Copy 並保留來源；不以 Move／Delete 取代。正式 Blog、HTML、Top 30 analysis、publishing materials、Dashboard、Social、Table Cards、Cover、SEO、manifest、必要 audits/logs 會保留；staging、temporary、cache、diagnostic 與指定重複中間檔會排除。
+
+Archive 是 Production workflow 的責任。Git Commit／Push 不觸發 Archive，runner 也不自動 Commit／Push。完整規則見 [Archive Rules](KnowledgeBase/Rules/APL_US_Stock_Archive_Rules.md)，操作與驗收見 [Production Runbook](docs/PRODUCTION_RUNBOOK.md) 及 [Final Production Audit Checklist](docs/FINAL_PRODUCTION_AUDIT_CHECKLIST.md)。
+
+Archive v2 adoption由 `tools/archive-v2-policy.json` 控制。既有 pre-v2日期不會被偽造為 PASS：只有 policy精確 allowlisted的歷史目錄可在 `Archive/index.md` 標示 `LEGACY_UNVERIFIED`，其 Files／Bytes只是當前唯讀 inventory，並非歷史完整性證明。新的 v2日期仍必須有有效 manifest；未知或 adoption後缺 manifest日期會 fail-fast。Index格式與維護規則見 [Archive Index Policy](docs/ARCHIVE_INDEX_POLICY.md)。
