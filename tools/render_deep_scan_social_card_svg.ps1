@@ -16,6 +16,7 @@
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'renderer_production_common.ps1')
+. (Join-Path $PSScriptRoot 'dashboard_svg_geometry.ps1')
 $resolved = Resolve-AplRendererInput -ExpectedRendererType Social -BoundParameters $PSBoundParameters -InputPath $InputPath -RankingCsv $RankingCsv -ScanDate $ScanDate -SectorMapPath $SectorMapPath -OutputPath $OutputPath -OutputDir $OutputDir -Root $Root -LogoPath $LogoPath -WeekLabel $WeekLabel -ScanUniverseCount $ScanUniverseCount -ScanQualifiedCount $ScanQualifiedCount -LeaderCapacity $LeaderCapacity -RegressionTest:$RegressionTest
 $Root=$resolved.ProjectRoot; $RankingCsv=$resolved.RankingCsv; $ScanDate=$resolved.ScanDate; $SectorMapPath=$resolved.SectorMapPath; $OutputDir=$resolved.OutputPath; $LogoPath=$resolved.LogoPath; $WeekLabel=$resolved.WeekLabel; $ScanUniverseCount=$resolved.ScanUniverseCount; $ScanQualifiedCount=$resolved.ScanQualifiedCount; $LeaderCapacity=$resolved.LeaderCapacity
 $raw = Import-AplRankingCsv $RankingCsv
@@ -138,7 +139,7 @@ $logoData=LogoData $logoPath
 Add '<?xml version="1.0" encoding="UTF-8"?>'
 Add '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">'
 Add '<defs>'
-Add '<style><![CDATA[.font-cn{font-family:"Noto Sans TC","Microsoft JhengHei UI","Microsoft JhengHei",sans-serif}.font-en{font-family:"Montserrat","Segoe UI",sans-serif}.mono{font-family:"JetBrains Mono","Consolas",monospace}.white{fill:#fff}.cyan{fill:#00D8FF}.gray{fill:#8B93A6}.ticker{fill:#fff;font-weight:900;text-anchor:middle}.score{fill:#fff;text-anchor:middle;opacity:.86}.rank{fill:#00D8FF;text-anchor:middle;font-weight:900}.panel-title{fill:#00D8FF;font-weight:900}]]></style>'
+Add '<style><![CDATA[.font-cn{font-family:"Alibaba Sans HK";font-weight:400}.font-cn-semibold{font-family:"Alibaba Sans HK";font-weight:600}.font-en{font-family:"Montserrat";font-weight:400}.font-en-medium{font-family:"Montserrat";font-weight:500}.font-en-semibold{font-family:"Montserrat";font-weight:600}.font-en-bold{font-family:"Montserrat";font-weight:700}.mono{font-family:"Montserrat";font-weight:500}.mono-semibold{font-family:"Montserrat";font-weight:600}.font-cn[font-weight="800"],.font-en[font-weight="800"],.mono[font-weight="800"]{font-weight:600}.font-cn[font-weight="900"],.font-en[font-weight="900"],.mono[font-weight="900"]{font-weight:700}.white{fill:#fff}.cyan{fill:#00D8FF}.gray{fill:#8B93A6}.ticker{fill:#fff;font-weight:700;text-anchor:middle}.score{fill:#fff;text-anchor:middle;opacity:.86}.rank{fill:#00D8FF;text-anchor:middle;font-weight:700}.panel-title{fill:#00D8FF;font-weight:600}]]></style>'
 Add '<filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
 Add '<filter id="glowStrong" x="-120%" y="-120%" width="340%" height="340%"><feGaussianBlur stdDeviation="14" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
 Add '<filter id="fogBlur" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="70"/></filter>'
@@ -259,12 +260,12 @@ Add "<text x='152' y='1196' class='mono white' font-size='32' text-anchor='middl
 Add "<text x='152' y='1219' class='mono gray' font-size='11' text-anchor='middle'>TOTAL</text>"
 $by=1120
 foreach ($b in $buyRows) {
-  $count=[int]$b[2]; $pct=[math]::Round(([double]$count/$leaderCount)*100,0)
-  $barW=[math]::Round(200*$pct/100,0)
-  Add "<text x='236' y='$by' fill='$($b[3])' class='font-cn' font-size='13.5' font-weight='900'>$(X $b[0]) <tspan class='mono'>($($b[1]))</tspan></text>"
+  $count=[int]$b[2]; $barW=Get-AplValidatedDistributionWidth $count $leaderCount 200 'Social buyability distribution'; $pct=[math]::Round(([double]$count/$leaderCount)*100,0)
+  if ($pct -lt 0 -or $pct -gt 100) { throw "Social buyability distribution percentage $pct is outside 0..100." }
+  Add "<text x='236' y='$by' fill='$($b[3])' class='font-cn' font-size='13.5' font-weight='600'>$(X $b[0]) ($($b[1]))</text>"
   Add "<text x='466' y='$by' class='mono white' font-size='13' text-anchor='end' font-weight='900'>$count / $pct%</text>"
   Add "<rect x='236' y='$($by+12)' width='200' height='9' rx='2.5' fill='#132637'/>"
-  Add "<rect x='236' y='$($by+12)' width='$barW' height='9' rx='2.5' fill='$($b[3])'/>"
+  if ($barW -gt 0) { Add "<rect x='236' y='$($by+12)' width='$barW' height='9' rx='2.5' fill='$($b[3])'/>" }
   $by += 38
 }
 
@@ -273,18 +274,20 @@ Add "<text x='554' y='1078' class='font-en cyan' font-size='21' font-weight='900
 Add "<text x='554' y='1100' class='font-cn gray' font-size='14' font-weight='700'>$(X $ZH_SECTOR_DIST)</text>"
 $barY=1124
 $maxSector=($sectorCounts | Measure-Object Count -Maximum).Maximum
+$null=ConvertTo-AplRequiredFiniteDouble $maxSector 'Social sector distribution maxSectorCount'
+if ([double]$maxSector -le 0) { throw 'Social sector distribution maxSectorCount must be greater than zero.' }
 foreach ($sc in $sectorCounts) {
   $name=$sc.Name; $count=[int]$sc.Count; $color=$sectorColors[$name]; $zh=SectorChinese $name
-  $w=[math]::Round(138*$count/$maxSector,0); $pct=[math]::Round(([double]$count/$leaderCount)*100,0)
+  $w=Get-AplValidatedDistributionWidth $count $maxSector 138 'Social sector distribution'; $pct=[math]::Round(([double]$count/$leaderCount)*100,0)
   Add "<text x='554' y='$barY' fill='$color' class='font-en' font-size='14' font-weight='900'>$(X $name)</text>"
   Add "<text x='554' y='$($barY+18)' class='font-cn gray' font-size='12' font-weight='700'>$(X $zh)</text>"
   Add "<rect x='806' y='$($barY+3)' width='138' height='12' rx='2.5' fill='#132637'/>"
-  Add "<rect x='806' y='$($barY+3)' width='$w' height='12' rx='2.5' fill='$color'/>"
+  if ($w -gt 0) { Add "<rect x='806' y='$($barY+3)' width='$w' height='12' rx='2.5' fill='$color'/>" }
   Add "<text x='1004' y='$($barY+15)' class='mono white' font-size='14' text-anchor='end' font-weight='900'>$count  $pct%</text>"
   $barY += 40
 }
 
-Add "<text x='54' y='1332' class='mono gray' font-size='11'>$weekLabel  /  $scanDate  /  APL Deep-Scan</text>"
+Add "<text x='54' y='1332' class='font-cn gray' font-size='11'>$weekLabel  /  $scanDate  /  APL Deep-Scan</text>"
 
 Add '</svg>'
 [System.IO.File]::WriteAllText($outSvg, ($svg -join [Environment]::NewLine), [System.Text.Encoding]::UTF8)
