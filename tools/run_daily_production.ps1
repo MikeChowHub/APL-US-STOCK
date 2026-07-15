@@ -42,6 +42,7 @@ $ErrorActionPreference = 'Stop'
 $ProjectRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 . (Join-Path $PSScriptRoot 'renderer_production_common.ps1')
 . (Join-Path $PSScriptRoot 'production_archive_common.ps1')
+. (Join-Path $PSScriptRoot 'table_card_bookkeeping.ps1')
 
 if ((Get-AplFullPath $ProjectRoot) -ne (Get-AplFullPath $script:AplProjectRoot)) { throw 'Project Root resolution failed.' }
 Assert-AplScanDate $ScanDate | Out-Null
@@ -207,7 +208,7 @@ function Write-TableCardPublicationManifest {
     ScanDate = $ScanDate
     SourceManifest = Split-Path $TableCardManifestPath -Leaf
     Status = if ($requiredFailed -eq 0 -and $script:tableCardResults.Count -eq $tableCards.Count) { 'PASS' } else { 'INCOMPLETE' }
-    Cards = @($script:tableCardResults)
+    Cards = (ConvertTo-AplObjectArray $script:tableCardResults)
   }
   Write-Utf8Text $tableCardResultManifest ($document | ConvertTo-Json -Depth 8)
 }
@@ -325,7 +326,7 @@ try {
   Invoke-PipelineStep 'RenderSocialCard' $socialScript (@('-InputPath',$socialContract) + $regressionArg) @($socialSvg,$socialLog)
   Invoke-PipelineStep 'ExportSocialPng' $svgToPngScript (@('-InputSvg',$socialSvg,'-OutputPng',$socialPng,'-Width','1080','-Height','1350') + $regressionArg) @($socialPng)
   foreach ($card in $tableCards) {
-    $record = [ordered]@{ CardType=$card.CardType; InputPath=$card.InputPath; InputSha256=(Get-FileHash -LiteralPath $card.InputPath -Algorithm SHA256).Hash; OutputName=$card.OutputName; Required=[bool]$card.Required; Status='PENDING'; OutputPath=$null; LogPath=$null; Bytes=$null; Sha256=$null; LogBytes=$null; LogSha256=$null; Error=$null }
+    $record = New-AplTableCardResult -Source ([pscustomobject]@{ CardType=$card.CardType; InputPath=$card.InputPath; InputSha256=(Get-FileHash -LiteralPath $card.InputPath -Algorithm SHA256).Hash; OutputName=$card.OutputName; Required=[bool]$card.Required; OutputPath=$null; LogPath=$null; Bytes=$null; Sha256=$null; LogBytes=$null; LogSha256=$null; Error=$null }) -Status PENDING
     try {
       Invoke-PipelineStep "ValidateTableCardInput[$($card.CardType)]" $validatorScript (@('-RendererType','TableCard','-TableCardInputPath',$card.InputPath,'-CardType',$card.CardType) + $regressionArg)
       Invoke-PipelineStep "RenderTableCard[$($card.CardType)]" $tableScript (@('-CardType',$card.CardType,'-OutDir',$dateOut,'-Date',$ScanDate,'-InputPath',$card.InputPath,'-OutputName',$card.OutputName) + $regressionArg) @($card.OutputPath,$card.LogPath)
@@ -344,7 +345,7 @@ try {
         }
       }
     }
-    $script:tableCardResults.Add([pscustomobject]$record)
+    Add-AplTableCardResult -Collection $script:tableCardResults -Result $record
     Write-TableCardPublicationManifest
     Add-Trace @{ event='table-card-result'; utc=[datetime]::UtcNow.ToString('o'); cardType=$card.CardType; required=[bool]$card.Required; status=$record.Status; outputName=$card.OutputName; outputPath=$record.OutputPath; bytes=$record.Bytes; sha256=$record.Sha256; error=$record.Error }
     if ($record.Status -ne 'PASS' -and $card.Required) { throw "Required Table Card '$($card.CardType)' failed: $($record.Error)" }
@@ -458,7 +459,7 @@ try {
 } catch {
   if ($status -eq 'PRODUCTION_PASS') { $status = 'ARCHIVE_FAILED' }
   elseif ($status -eq 'FINALIZING') { $status = 'FINALIZATION_FAILED' }
-  try { Add-Trace @{ event='run-complete'; runId=$runId; utc=[datetime]::UtcNow.ToString('o'); status=$status; dailyProductionComplete=$false; error=$_.Exception.Message; artifacts=@($script:completedArtifacts) } } catch {}
+  try { Add-Trace @{ event='run-complete'; runId=$runId; utc=[datetime]::UtcNow.ToString('o'); status=$status; dailyProductionComplete=$false; error=$_.Exception.Message; artifacts=[string[]]$script:completedArtifacts.ToArray() } } catch {}
   try { Add-Log "RUN FAILED $runId :: $($_.Exception.Message)" } catch {}
   Exit-AplNamedMutex $publishScoringMutex
   Exit-AplNamedMutex $runMutex
