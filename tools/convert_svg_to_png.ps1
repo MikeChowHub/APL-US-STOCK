@@ -14,12 +14,12 @@ $ErrorActionPreference='Stop'
 function Remove-PartialOutput([string]$Path) {
   if (Test-Path -LiteralPath $Path) { Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue }
 }
-function Get-RepositoryDashboardFontAudit {
+function Get-RepositoryRendererFontAudit {
   $manifestPath = Join-Path $script:AplProjectRoot 'tools\font-manifest.json'
   if (!(Test-Path -LiteralPath $manifestPath -PathType Leaf)) { throw "Repository font manifest is missing: $manifestPath" }
   $manifest = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
-  $fonts = @($manifest.Fonts | Where-Object { @($_.requiredFor) -contains 'Dashboard' })
-  if ($fonts.Count -lt 6) { throw 'Dashboard font manifest must contain the six required Alibaba Sans HK and Montserrat font assets.' }
+  $fonts = @($manifest.Fonts | Where-Object { (@($_.requiredFor) -contains 'Dashboard') -or (@($_.requiredFor) -contains 'Social') })
+  if ($fonts.Count -lt 6) { throw 'Renderer font manifest must contain the six required Alibaba Sans HK and Montserrat font assets.' }
   foreach ($font in $fonts) {
     $fontPath = Join-Path $script:AplProjectRoot ([string]$font.file)
     if (!(Test-Path -LiteralPath $fontPath -PathType Leaf)) { throw "Repository font asset is missing: $($font.file)" }
@@ -37,7 +37,7 @@ if($Renderer -eq 'Chromium') { throw 'Chromium is optional only and is disabled 
 
 $resvg=if($RendererPath){Get-AplFullPath $RendererPath}else{Join-Path $PSScriptRoot 'renderers\resvg\resvg.exe'}
 if(!(Test-Path -LiteralPath $resvg -PathType Leaf)) { throw "resvg renderer not found: $resvg" }
-$fontAudit = Get-RepositoryDashboardFontAudit
+$fontAudit = Get-RepositoryRendererFontAudit
 $fontDirectory = Join-Path $script:AplProjectRoot 'Assets\Fonts'
 $dir=[IO.Path]::GetFullPath((Split-Path $OutputPng -Parent))
 if(!(Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
