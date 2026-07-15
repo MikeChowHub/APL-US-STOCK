@@ -1,5 +1,6 @@
 $script:AplArchiveManifestSchemaVersion = 'APL Daily Archive Manifest v2.0'
 $script:AplFinalAuditSchemaVersion = 'APL Final Production Audit v2.0'
+$script:AplArchiveV2PolicySchemaVersion = 'APL Archive V2 Adoption Policy v1.0'
 
 function ConvertTo-AplArchiveObjectArray([object]$Value) {
   $items = New-Object System.Collections.Generic.List[object]
@@ -105,6 +106,36 @@ function Read-AplStrictJson([string]$Path, [string]$AllowedRoot) {
   catch { throw "Invalid JSON '$full': $($_.Exception.Message)" }
 }
 
+function Read-AplArchiveV2Policy([string]$Path, [string]$AllowedRoot) {
+  $policy = Read-AplStrictJson $Path $AllowedRoot
+  $required = @('SchemaVersion','MarkerId','AdoptionDate','LegacyUnverifiedDates')
+  foreach ($name in $required) {
+    if ($null -eq $policy.PSObject.Properties[$name]) { throw "Archive v2 policy missing '$name'." }
+  }
+  $allowed = @($required + @('Notes'))
+  foreach ($property in @($policy.PSObject.Properties.Name)) {
+    if ($allowed -notcontains [string]$property) { throw "Archive v2 policy contains unsupported property '$property'." }
+  }
+  if ([string]$policy.SchemaVersion -cne $script:AplArchiveV2PolicySchemaVersion) { throw "Unsupported Archive v2 policy SchemaVersion: $($policy.SchemaVersion)" }
+  if ([string]::IsNullOrWhiteSpace([string]$policy.MarkerId)) { throw 'Archive v2 policy MarkerId must not be empty.' }
+  $adoption = Assert-AplScanDate ([string]$policy.AdoptionDate)
+  $legacyDates = @($policy.LegacyUnverifiedDates)
+  $seen = @{}
+  foreach ($dateValue in $legacyDates) {
+    $date = [string]$dateValue
+    $parsed = Assert-AplScanDate $date
+    if ($parsed -ge $adoption) { throw "Legacy date must be earlier than AdoptionDate: $date" }
+    if ($seen.ContainsKey($date)) { throw "Duplicate LegacyUnverifiedDates entry: $date" }
+    $seen[$date] = $true
+  }
+  return $policy
+}
+
+function Test-AplLegacyUnverifiedDate([object]$Policy, [string]$ScanDate) {
+  Assert-AplScanDate $ScanDate | Out-Null
+  return (@($Policy.LegacyUnverifiedDates | Where-Object { [string]$_ -ceq $ScanDate }).Count -eq 1)
+}
+
 function Test-AplArchiveEligible([string]$RelativePath) {
   $normalized = $RelativePath.Replace('\','/')
   $segments = @($normalized.Split('/'))
@@ -205,15 +236,27 @@ function Get-AplArchiveIndexRow([string]$IndexPath, [string]$ScanDate, [string]$
   $rows = @([System.IO.File]::ReadAllLines($full, [System.Text.Encoding]::UTF8) | Where-Object { $_ -match "^\|\s*$escaped\s*\|" })
   if ($rows.Count -ne 1) { throw "Archive index must contain exactly one row for $ScanDate; found $($rows.Count)." }
   $cells = @($rows[0].Trim().Trim('|').Split('|') | ForEach-Object { $_.Trim() })
-  if ($cells.Count -ne 5) { throw "Archive index row has invalid column count for $ScanDate." }
-  return [pscustomobject]@{ ScanDate=$cells[0]; Status=$cells[1]; FileCount=[int]$cells[2]; TotalBytes=[long]$cells[3]; ManifestPath=$cells[4] }
+  if ($cells.Count -ne 6) { throw "Archive index row has invalid column count for $ScanDate." }
+  $fileCount = 0
+  $totalBytes = [long]0
+  if (-not [int]::TryParse($cells[2], [ref]$fileCount) -or $fileCount -lt 0) { throw "Archive index Files is invalid for $ScanDate." }
+  if (-not [long]::TryParse($cells[3], [ref]$totalBytes) -or $totalBytes -lt 0) { throw "Archive index Bytes is invalid for $ScanDate." }
+  return [pscustomobject]@{ ScanDate=$cells[0]; Status=$cells[1]; FileCount=$fileCount; TotalBytes=$totalBytes; ManifestPath=$cells[4]; Notes=$cells[5] }
 }
 
 function Assert-AplArchiveIndexRow([string]$IndexPath, [object]$Manifest, [string]$ArchiveRoot) {
   $row = Get-AplArchiveIndexRow $IndexPath ([string]$Manifest.ScanDate) $ArchiveRoot
   $expectedManifestPath = '{0}/{1}/archive-manifest.json' -f ([string]$Manifest.ScanDate).Substring(0,4), [string]$Manifest.ScanDate
-  if ($row.Status -cne 'PASS' -or $row.FileCount -ne [int]$Manifest.ArchiveFileCount -or $row.TotalBytes -ne [long]$Manifest.TotalBytes -or $row.ManifestPath -cne $expectedManifestPath) {
+  if ($row.Status -cne 'PASS' -or $row.FileCount -ne [int]$Manifest.ArchiveFileCount -or $row.TotalBytes -ne [long]$Manifest.TotalBytes -or $row.ManifestPath -cne $expectedManifestPath -or $row.Notes -cne 'V2 manifest verified') {
     throw "Archive index values mismatch for $($Manifest.ScanDate)."
+  }
+  return $row
+}
+
+function Assert-AplLegacyArchiveIndexRow([string]$IndexPath, [string]$ScanDate, [int]$FileCount, [long]$TotalBytes, [string]$ArchiveRoot) {
+  $row = Get-AplArchiveIndexRow $IndexPath $ScanDate $ArchiveRoot
+  if ($row.Status -cne 'LEGACY_UNVERIFIED' -or $row.FileCount -ne $FileCount -or $row.TotalBytes -ne $TotalBytes -or $row.ManifestPath -cne 'N/A' -or $row.Notes -cne 'Pre-v2 archive; inventory-only counts; integrity not attested') {
+    throw "Legacy Archive index values mismatch for $ScanDate."
   }
   return $row
 }

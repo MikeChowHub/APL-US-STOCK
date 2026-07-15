@@ -1,0 +1,13 @@
+{
+  "SchemaVersion": "APL Archive V2 Adoption Policy v1.0",
+  "MarkerId": "APL-ARCHIVE-V2-2026-07-15",
+  "AdoptionDate": "2026-07-15",
+  "LegacyUnverifiedDates": [
+    "2026-07-04",
+    "2026-07-07",
+    "2026-07-08",
+    "2026-07-09",
+    "2026-07-12"
+  ],
+  "Notes": "Only these pre-v2 directories may be indexed as LEGACY_UNVERIFIED without a v2 manifest. This policy is not an integrity attestation."
+}
