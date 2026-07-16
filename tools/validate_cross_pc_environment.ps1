@@ -43,7 +43,27 @@ try{
   $declared=@($fontManifest.Fonts|ForEach-Object{[string]$_.file})
   if(Compare-Object ($fontFiles|Sort-Object) ($declared|Sort-Object)){throw 'Font manifest does not cover every repository font exactly once.'}
   foreach($font in @($fontManifest.Fonts)){$path=Join-Path $ProjectRoot ([string]$font.file).Replace('/','\');if((Get-FileHash $path -Algorithm SHA256).Hash-cne[string]$font.sha256){throw "Font SHA mismatch: $($font.file)"}}
-  . (Join-Path $ProjectRoot 'tools\repository_font_loader.ps1');Initialize-AplRepositoryFontRuntime;[void](Assert-AplRepositoryFontRuntime);Pass 'repository fonts, SHA and internal family runtime'
+  . (Join-Path $ProjectRoot 'tools\repository_font_loader.ps1')
+  $alibabaChineseName=(-join @([char]0x963F,[char]0x91CC,[char]0x5DF4,[char]0x5DF4,[char]0x666E,[char]0x60E0,[char]0x9AD4))
+  $aliasPolicy=@{
+    Regular=@('Alibaba Sans HK 55 Regular',($alibabaChineseName+' HK 55 Regular'))
+    Bold=@('Alibaba Sans HK 75 SemiBold',($alibabaChineseName+' HK 75 SemiBold'))
+  }
+  foreach($style in @('Regular','Bold')){
+    $entry=@($fontManifest.Fonts|Where-Object{[string]$_.logicalName-ceq'Alibaba Sans HK'-and[string]$_.style-ceq$style})
+    if($entry.Count-ne 1){throw "Alibaba Sans HK $style manifest entry must be unique."}
+    $accepted=@(Get-AplAcceptedInternalFontFamilies $entry[0])
+    $expected=@($aliasPolicy[$style])
+    if($accepted.Count-ne$expected.Count){throw "Alibaba Sans HK $style accepted internal family policy count mismatch."}
+    $missingAliases=@($expected|Where-Object{$accepted-cnotcontains$_})
+    if($missingAliases.Count-ne 0){throw "Alibaba Sans HK $style accepted internal family policy mismatch: $($missingAliases-join ', ')"}
+    foreach($name in @($aliasPolicy[$style])){[void](Resolve-AplInternalFontFamily @([pscustomobject]@{Name=$name}) $entry[0] 'Alibaba Sans HK')}
+    foreach($forbidden in @('Arial','Microsoft JhengHei','Microsoft JhengHei UI','Noto Sans TC','Unknown Font')){
+      $rejected=$false;try{[void](Resolve-AplInternalFontFamily @([pscustomobject]@{Name=$forbidden}) $entry[0] 'Alibaba Sans HK')}catch{$rejected=$true}
+      if(-not$rejected){throw "Forbidden font fallback was accepted: $forbidden"}
+    }
+  }
+  Initialize-AplRepositoryFontRuntime;[void](Assert-AplRepositoryFontRuntime);Pass 'repository fonts, SHA, bilingual internal-family aliases and runtime'
 }catch{Fail $_.Exception.Message}
 try{
   $manifest=Get-Content -Raw -Encoding UTF8 (Join-Path $ProjectRoot 'tools\renderers\resvg\renderer-manifest.json')|ConvertFrom-Json;$exe=Join-Path $ProjectRoot 'tools\renderers\resvg\resvg.exe'
