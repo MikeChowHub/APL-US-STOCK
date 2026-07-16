@@ -82,7 +82,7 @@ $CoverBriefPath = Assert-InputFile $CoverBriefPath 'CoverBriefPath'
 $CoverBackgroundPath = Assert-InputFile $CoverBackgroundPath 'CoverBackgroundPath'
 if ([string]::IsNullOrWhiteSpace($SectorMapPath)) { $SectorMapPath = Join-Path $ProjectRoot 'tools\sector_map.json' }
 $SectorMapPath = Assert-InputFile $SectorMapPath 'SectorMapPath'
-if ([string]::IsNullOrWhiteSpace($LogoPath)) { $LogoPath = Join-Path $ProjectRoot 'outputs\APL_Deep_Scan_Brand_Logo_Renderer_Clean_2026-06-28.png' }
+if ([string]::IsNullOrWhiteSpace($LogoPath)) { $LogoPath = Join-Path $ProjectRoot 'Assets\Brand\APL_Deep_Scan_Brand_Logo_Renderer_Clean.png' }
 $LogoPath = Assert-InputFile $LogoPath 'LogoPath'
 
 if ([string]::IsNullOrWhiteSpace($OutputRoot)) { $OutputRoot = Join-Path $ProjectRoot 'outputs' }
@@ -109,6 +109,8 @@ try { $publishScoringMutex = Enter-AplNamedMutex ("scoring|$publishRoot|$ScanDat
 catch { Exit-AplNamedMutex $runMutex; throw }
 $OutputRoot = Join-Path $publishRoot ".staging\$runId"
 $dateOut = Join-Path $OutputRoot $ScanDate
+$productionPackage = Join-Path $dateOut 'production-package'
+$tableCardPackage = Join-Path $productionPackage 'Table Cards'
 $logsRoot = Join-Path $publishRoot 'logs'
 
 $allowedTableCardTypes = @('ExecutiveSummary','TopLeaders','TopGainers','SectorStructure','MarketObservation','Comparison')
@@ -116,7 +118,7 @@ $requiredTriggerCCards = @('ExecutiveSummary','TopLeaders','TopGainers','SectorS
 $tableCards = New-Object System.Collections.Generic.List[object]
 if ($PSCmdlet.ParameterSetName -eq 'TableCardManifest') {
   $manifest = Read-AplUtf8Json $TableCardManifestPath
-  if ($null -eq $manifest.SchemaVersion -or [string]$manifest.SchemaVersion -ne 'APL Table Card Manifest v1.0') { throw 'Table Card manifest SchemaVersion must be APL Table Card Manifest v1.0.' }
+  if ($null -eq $manifest.SchemaVersion -or [string]$manifest.SchemaVersion -ne 'APL Table Card Manifest v1.1') { throw 'Table Card manifest SchemaVersion must be APL Table Card Manifest v1.1.' }
   if ($null -eq $manifest.ScanDate -or [string]$manifest.ScanDate -ne $ScanDate) { throw "Table Card manifest ScanDate must match runner ScanDate '$ScanDate'." }
   $manifestCards = @($manifest.Cards)
   if ($manifestCards.Count -eq 0) { throw 'Table Card manifest Cards must contain at least one item.' }
@@ -124,11 +126,12 @@ if ($PSCmdlet.ParameterSetName -eq 'TableCardManifest') {
   $seenCardTypes = @{}
   $seenOutputNames = @{}
   foreach ($card in $manifestCards) {
-    foreach ($name in @('CardType','InputPath','OutputName','Required')) { if ($null -eq $card.PSObject.Properties[$name]) { throw "Table Card manifest item missing '$name'." } }
+    foreach ($name in @('CardType','InputSchemaVersion','InputPath','OutputName','Required')) { if ($null -eq $card.PSObject.Properties[$name]) { throw "Table Card manifest item missing '$name'." } }
     $cardType = [string]$card.CardType
     if ($allowedTableCardTypes -notcontains $cardType) { throw "Unsupported Table Card type in manifest: $cardType" }
     if ($seenCardTypes.ContainsKey($cardType)) { throw "Duplicate CardType in Table Card manifest: $cardType" }
     $seenCardTypes[$cardType] = $true
+    if ([string]$card.InputSchemaVersion -cne 'APL Table Card Input v1.1') { throw "Table Card manifest InputSchemaVersion must be APL Table Card Input v1.1 for '$cardType'." }
     if ($card.Required -isnot [bool]) { throw "Table Card manifest Required must be boolean for '$cardType'." }
     $outputName = [string]$card.OutputName
     if ([string]::IsNullOrWhiteSpace($outputName) -or [System.IO.Path]::IsPathRooted($outputName) -or [System.IO.Path]::GetFileName($outputName) -cne $outputName) { throw "Table Card OutputName must be a file name without directory or traversal segments: $outputName" }
@@ -139,7 +142,7 @@ if ($PSCmdlet.ParameterSetName -eq 'TableCardManifest') {
     if ([string]::IsNullOrWhiteSpace($inputValue)) { throw "Table Card InputPath is empty for '$cardType'." }
     $resolvedInput = if ([System.IO.Path]::IsPathRooted($inputValue)) { $inputValue } else { Join-Path $manifestDir $inputValue }
     $resolvedInput = Assert-InputFile $resolvedInput "TableCardInputPath[$cardType]"
-    $outputPath = Join-Path $dateOut $outputName
+    $outputPath = Join-Path $tableCardPackage $outputName
     $tableCards.Add([pscustomobject]@{ CardType=$cardType; InputPath=$resolvedInput; OutputName=$outputName; Required=[bool]$card.Required; OutputPath=$outputPath; LogPath=[System.IO.Path]::ChangeExtension($outputPath,'.table-card-log.txt') })
   }
   if (-not $RegressionTest) {
@@ -152,10 +155,10 @@ if ($PSCmdlet.ParameterSetName -eq 'TableCardManifest') {
   $safeTableType = $TableCardType -replace '[^A-Za-z0-9_-]', '_'
   if ([string]::IsNullOrWhiteSpace($TableCardOutputName)) { $TableCardOutputName = "APL_Blog_${safeTableType}_${ScanDate}.png" }
   if ([System.IO.Path]::IsPathRooted($TableCardOutputName) -or [System.IO.Path]::GetFileName($TableCardOutputName) -cne $TableCardOutputName) { throw 'TableCardOutputName must be a file name without directory or traversal segments.' }
-  $outputPath = Join-Path $dateOut $TableCardOutputName
+  $outputPath = Join-Path $tableCardPackage $TableCardOutputName
   $tableCards.Add([pscustomobject]@{ CardType=$TableCardType; InputPath=$TableCardInputPath; OutputName=$TableCardOutputName; Required=$true; OutputPath=$outputPath; LogPath=[System.IO.Path]::ChangeExtension($outputPath,'.table-card-log.txt') })
 }
-$tableCardResultManifest = if ($PSCmdlet.ParameterSetName -eq 'TableCardManifest') { Join-Path $dateOut "APL_Table_Card_Manifest_${ScanDate}.json" } else { $null }
+$tableCardResultManifest = if ($PSCmdlet.ParameterSetName -eq 'TableCardManifest') { Join-Path $tableCardPackage "APL_Table_Card_Manifest_${ScanDate}.json" } else { $null }
 
 $rankingCsv = Join-Path $dateOut "APL_Momentum_Score_Full_Ranking_$ScanDate.csv"
 $topTxt = Join-Path $dateOut "APL_Quant_Top_30_$ScanDate.txt"
@@ -169,20 +172,25 @@ $sourceCopy = Join-Path $dateOut "APL_Momentum_Leaders_Source_$ScanDate.csv"
 $dashboardContract = Join-Path $dateOut "APL_DeepScan_Dashboard_Input_$ScanDate.json"
 $socialContract = Join-Path $dateOut "APL_DeepScan_Social_Input_$ScanDate.json"
 $dashboardSvg = Join-Path $dateOut "APL_DeepScan_Radar_Dashboard_Top30_${ScanDate}_1920x1080.svg"
-$dashboardPng = Join-Path $dateOut "APL_DeepScan_Radar_Dashboard_Top30_${ScanDate}_1920x1080.png"
+$dashboardPng = Join-Path $productionPackage "APL_DeepScan_Radar_Dashboard_Top30_${ScanDate}_1920x1080.png"
 $dashboardLog = Join-Path $dateOut "APL_DeepScan_Radar_Dashboard_Top30_${ScanDate}_Render_Log.txt"
 $socialSvg = Join-Path $dateOut "APL_DeepScan_Social_Card_${ScanDate}_1080x1350.svg"
-$socialPng = Join-Path $dateOut "production-package\APL_DeepScan_Social_Card_${ScanDate}_1080x1350.png"
+$socialPng = Join-Path $productionPackage "APL_DeepScan_Social_Card_${ScanDate}_1080x1350.png"
 $socialLog = Join-Path $dateOut "APL_DeepScan_Social_Card_${ScanDate}_Render_Log.txt"
-$coverOutput = Join-Path $dateOut "APL_Momentum_Leaders_Blog_Cover_${ScanDate}_1080x1350.png"
+$coverOutput = Join-Path $productionPackage "APL_Momentum_Leaders_Blog_Cover_${ScanDate}_1080x1350.png"
 $coverLog = [System.IO.Path]::ChangeExtension($coverOutput, '.overlay-log.txt')
-$seoOutput = Join-Path $dateOut "APL_Momentum_Leaders_Blog_SEO_${ScanDate}_1280x720.png"
+$seoOutput = Join-Path $productionPackage "APL_Momentum_Leaders_Blog_SEO_${ScanDate}_1280x720.png"
 $seoLog = [System.IO.Path]::ChangeExtension($seoOutput, '.overlay-log.txt')
+$whatsAppPackage = Join-Path $productionPackage "WhatsApp_${ScanDate}.md"
+$blogMarkdownPackage = Join-Path $productionPackage "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.md"
+$blogHtmlPackage = Join-Path $productionPackage "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.html"
+$companyAnalysisPackage = Join-Path $productionPackage "table-card-log\APL_Momentum_Leaders_Top_30_Company_Business_Analysis_${ScanDate}.md"
+$productionPackageManifest = Join-Path $productionPackage "APL_Production_Package_Manifest_${ScanDate}.json"
 $finalAuditPath = Assert-NewArtifact (Join-Path $finalDateOut "Final_Production_Audit_${ScanDate}.json") 'FinalProductionAudit'
 
 $rootCopies = @()
 $tableCardExpectedArtifacts = @($tableCards | ForEach-Object { @($_.OutputPath,$_.LogPath) })
-$expectedArtifacts = @($rankingCsv,$topTxt,$topMd,$watchlistTxt,$removedAudit,$retainedAudit,$overviewMd,$metaJson,$sourceCopy,$dashboardContract,$socialContract,$dashboardSvg,$dashboardPng,$dashboardLog,$socialSvg,$socialPng,$socialLog,$coverOutput,$coverLog,$seoOutput,$seoLog) + $tableCardExpectedArtifacts + @($tableCardResultManifest | Where-Object { $_ }) + $rootCopies
+$expectedArtifacts = @($rankingCsv,$topTxt,$topMd,$watchlistTxt,$removedAudit,$retainedAudit,$overviewMd,$metaJson,$sourceCopy,$dashboardContract,$socialContract,$dashboardSvg,$dashboardPng,$dashboardLog,$socialSvg,$socialPng,$socialLog,$coverOutput,$coverLog,$seoOutput,$seoLog,$productionPackageManifest) + $tableCardExpectedArtifacts + @($tableCardResultManifest | Where-Object { $_ }) + $rootCopies
 function Get-PublishedPath([string]$StagePath) {
   $full = Get-AplFullPath $StagePath
   if ($full.StartsWith($dateOut.TrimEnd('\') + '\', [System.StringComparison]::OrdinalIgnoreCase)) { return Join-Path $finalDateOut $full.Substring($dateOut.TrimEnd('\').Length + 1) }
@@ -211,6 +219,66 @@ function Write-TableCardPublicationManifest {
     Cards = (ConvertTo-AplObjectArray $script:tableCardResults)
   }
   Write-Utf8Text $tableCardResultManifest ($document | ConvertTo-Json -Depth 8)
+}
+
+function Write-ProductionPackageManifest {
+  foreach ($forbiddenRootArtifact in @(
+    (Join-Path $dateOut (Split-Path $dashboardPng -Leaf)),
+    (Join-Path $dateOut (Split-Path $coverOutput -Leaf)),
+    (Join-Path $dateOut (Split-Path $seoOutput -Leaf)),
+    (Join-Path $dateOut (Split-Path $whatsAppPackage -Leaf))
+  )) {
+    if (Test-Path -LiteralPath $forbiddenRootArtifact) { throw "Production package artifact must not be duplicated at date root: $forbiddenRootArtifact" }
+  }
+  foreach ($card in $tableCards) {
+    $rootDuplicate = Join-Path $dateOut $card.OutputName
+    if (Test-Path -LiteralPath $rootDuplicate) { throw "Table Card must not be duplicated at date root: $rootDuplicate" }
+  }
+
+  $requiredDefinitions = New-Object System.Collections.Generic.List[object]
+  foreach ($card in $tableCards) {
+    if ($card.Required) { [void]$requiredDefinitions.Add([pscustomobject]@{ Id=("table-card-" + $card.CardType); Path=$card.OutputPath }) }
+  }
+  foreach ($definition in @(
+    [pscustomobject]@{Id='dashboard-png';Path=$dashboardPng},
+    [pscustomobject]@{Id='social-card-png';Path=$socialPng},
+    [pscustomobject]@{Id='cover';Path=$coverOutput},
+    [pscustomobject]@{Id='seo';Path=$seoOutput},
+    [pscustomobject]@{Id='whatsapp';Path=$whatsAppPackage},
+    [pscustomobject]@{Id='formal-blog-markdown';Path=$blogMarkdownPackage},
+    [pscustomobject]@{Id='formal-blog-html';Path=$blogHtmlPackage},
+    [pscustomobject]@{Id='company-business-analysis';Path=$companyAnalysisPackage}
+  )) { [void]$requiredDefinitions.Add($definition) }
+
+  $requiredRecords = New-Object System.Collections.Generic.List[object]
+  $seenIds = @{}
+  $seenPaths = @{}
+  foreach ($definition in $requiredDefinitions.ToArray()) {
+    $id = [string]$definition.Id
+    $path = Assert-AplNoReparsePath -Path ([string]$definition.Path) -AllowedRoot $productionPackage -RequireFile
+    $relative = $path.Substring($productionPackage.TrimEnd('\').Length + 1).Replace('\','/')
+    $idKey = $id.ToLowerInvariant(); $pathKey = $relative.ToLowerInvariant()
+    if ($seenIds.ContainsKey($idKey)) { throw "Duplicate required production package Id: $id" }
+    if ($seenPaths.ContainsKey($pathKey)) { throw "Duplicate required production package path: $relative" }
+    $seenIds[$idKey] = $true; $seenPaths[$pathKey] = $true
+    $item = Get-Item -LiteralPath $path
+    if ($item.Length -le 0) { throw "Required production package artifact is empty: $relative" }
+    [void]$requiredRecords.Add([pscustomobject]@{Id=$id;RelativePath=$relative;Size=[long]$item.Length;SHA256=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash})
+  }
+  $inventory = @(Get-AplArchiveInventory $productionPackage | Where-Object { $_.RelativePath -cne (Split-Path $productionPackageManifest -Leaf) })
+  $document = [ordered]@{
+    SchemaVersion = 'APL Production Package Manifest v1.0'
+    ScanDate = $ScanDate
+    Status = 'PASS'
+    PackageRoot = 'production-package'
+    RequiredCount = $requiredRecords.Count
+    FileCount = $inventory.Count
+    TotalBytes = [long](($inventory | Measure-Object Size -Sum).Sum)
+    GeneratedUtc = [datetime]::UtcNow.ToString('o')
+    Required = [object[]]$requiredRecords.ToArray()
+    Files = [object[]]@($inventory | ForEach-Object { [pscustomobject]@{RelativePath=[string]$_.RelativePath;Size=[long]$_.Size;SHA256=[string]$_.SHA256} })
+  }
+  Write-Utf8Text $productionPackageManifest ($document | ConvertTo-Json -Depth 10)
 }
 
 function Add-Trace([hashtable]$Record) {
@@ -318,6 +386,13 @@ try {
     Write-Utf8Text $socialContract (($social | ConvertTo-Json -Depth 6))
   } @($dashboardContract,$socialContract)
 
+  Complete-InternalStep 'PrepareProductionPackage' {
+    foreach ($directory in @($productionPackage,$tableCardPackage)) {
+      if (!(Test-Path -LiteralPath $directory)) { New-Item -ItemType Directory -Path $directory -Force | Out-Null }
+      Assert-AplNoReparsePath -Path $directory -AllowedRoot $dateOut -RequireDirectory | Out-Null
+    }
+  } @()
+
   $regressionArg = if ($RegressionTest) { @('-RegressionTest') } else { @() }
   Invoke-PipelineStep 'ValidateDashboardInput' $validatorScript (@('-RendererType','Dashboard','-InputPath',$dashboardContract) + $regressionArg)
   Invoke-PipelineStep 'ValidateSocialInput' $validatorScript (@('-RendererType','Social','-InputPath',$socialContract) + $regressionArg)
@@ -329,7 +404,7 @@ try {
     $record = New-AplTableCardResult -Source ([pscustomobject]@{ CardType=$card.CardType; InputPath=$card.InputPath; InputSha256=(Get-FileHash -LiteralPath $card.InputPath -Algorithm SHA256).Hash; OutputName=$card.OutputName; Required=[bool]$card.Required; OutputPath=$null; LogPath=$null; Bytes=$null; Sha256=$null; LogBytes=$null; LogSha256=$null; Error=$null }) -Status PENDING
     try {
       Invoke-PipelineStep "ValidateTableCardInput[$($card.CardType)]" $validatorScript (@('-RendererType','TableCard','-TableCardInputPath',$card.InputPath,'-CardType',$card.CardType) + $regressionArg)
-      Invoke-PipelineStep "RenderTableCard[$($card.CardType)]" $tableScript (@('-CardType',$card.CardType,'-OutDir',$dateOut,'-Date',$ScanDate,'-InputPath',$card.InputPath,'-OutputName',$card.OutputName) + $regressionArg) @($card.OutputPath,$card.LogPath)
+      Invoke-PipelineStep "RenderTableCard[$($card.CardType)]" $tableScript (@('-CardType',$card.CardType,'-OutDir',$tableCardPackage,'-Date',$ScanDate,'-InputPath',$card.InputPath,'-OutputName',$card.OutputName) + $regressionArg) @($card.OutputPath,$card.LogPath)
       $item = Get-Item -LiteralPath $card.OutputPath
       $record.Status = 'PASS'
       $record.OutputPath = Get-PublishedPath $card.OutputPath
@@ -375,7 +450,7 @@ try {
       Copy-Item -LiteralPath $item.FullName -Destination $target
     }
   } @()
-  Complete-InternalStep 'PublishArtifacts' {
+  Complete-InternalStep 'NormalizeStagedArtifacts' {
     foreach ($contractPath in @($dashboardContract,$socialContract)) {
       $contract = Read-AplUtf8Json $contractPath
       $contract.RankingCsv = Join-Path $finalDateOut (Split-Path $rankingCsv -Leaf)
@@ -404,6 +479,13 @@ try {
       }
       Write-TableCardPublicationManifest
     }
+  } @()
+
+  Complete-InternalStep 'FinalizeProductionPackageManifest' {
+    Write-ProductionPackageManifest
+  } @($productionPackageManifest)
+
+  Complete-InternalStep 'PublishArtifacts' {
     if (Test-Path -LiteralPath $finalDateOut) { throw "Final date output appeared during staging: $finalDateOut" }
     Move-Item -LiteralPath $dateOut -Destination $finalDateOut
   } @()

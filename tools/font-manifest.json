@@ -1,11 +1,13 @@
 {
   "SchemaVersion": "APL Repository Font Manifest v1.0",
   "Fonts": [
+    {"logicalName":"Alibaba Sans HK Light","file":"Assets/Fonts/AlibabaSansHK/AlibabaSansHK-45.ttf","internalFamily":"Alibaba Sans HK 45 Light","weight":300,"style":"Light","sha256":"5C26787679903337AB1671274BEAC8531381C806316F6354F9FE5D7CC95C3D9F","requiredFor":[]},
     {"logicalName":"Montserrat","file":"Assets/Fonts/Montserrat/Montserrat-Regular.ttf","internalFamily":"Montserrat","weight":400,"style":"Regular","sha256":"EF9CF99F0175BEF530B88934BD904FCF56F773CEC6FD4DFB8CCAF7CE2BBD395E","requiredFor":["Cover","SEO","TableCard","Dashboard","Social"]},
     {"logicalName":"Montserrat","file":"Assets/Fonts/Montserrat/Montserrat-Medium.ttf","internalFamily":"Montserrat Medium","weight":500,"style":"Medium","sha256":"CD161CBA3A3CDCF68AD721920FCD164C87E7B7CC9E6BAD510278C3FA378D91D2","requiredFor":["Cover","SEO","TableCard","Dashboard","Social"]},
     {"logicalName":"Montserrat","file":"Assets/Fonts/Montserrat/Montserrat-SemiBold.ttf","internalFamily":"Montserrat SemiBold","weight":600,"style":"SemiBold","sha256":"9C4DB3814875410E7D64FDC8E69676C3B84968BB15BF3ACE8B3944C59FBC56B6","requiredFor":["Cover","SEO","TableCard","Dashboard","Social"]},
     {"logicalName":"Montserrat","file":"Assets/Fonts/Montserrat/Montserrat-Bold.ttf","internalFamily":"Montserrat","weight":700,"style":"Bold","sha256":"7FA93D7DAA5C2F881A6727229C211782DE6B76008FBD6346B3D7664E8FC83F43","requiredFor":["Cover","SEO","TableCard","Dashboard","Social"]},
     {"logicalName":"Alibaba Sans HK","file":"Assets/Fonts/AlibabaSansHK/AlibabaSansHK-55.ttf","internalFamily":"Alibaba Sans HK 55 Regular","weight":400,"style":"Regular","sha256":"66B11BF496AFC9AB7A763E0A10DC502C576EA566B7710FAF4816069255326E3B","requiredFor":["Cover","SEO","TableCard","Dashboard","Social"]},
-    {"logicalName":"Alibaba Sans HK","file":"Assets/Fonts/AlibabaSansHK/AlibabaSansHK-75.ttf","internalFamily":"Alibaba Sans HK 75 SemiBold","weight":600,"style":"Bold","sha256":"9A6E2532C691902DA2EB002C5D7099030636066328482CD90BF2A5E41AE64275","requiredFor":["Cover","SEO","TableCard","Dashboard","Social"]}
+    {"logicalName":"Alibaba Sans HK","file":"Assets/Fonts/AlibabaSansHK/AlibabaSansHK-75.ttf","internalFamily":"Alibaba Sans HK 75 SemiBold","weight":600,"style":"Bold","sha256":"9A6E2532C691902DA2EB002C5D7099030636066328482CD90BF2A5E41AE64275","requiredFor":["Cover","SEO","TableCard","Dashboard","Social"]},
+    {"logicalName":"Alibaba Sans HK Heavy","file":"Assets/Fonts/AlibabaSansHK/AlibabaSansHK-95.ttf","internalFamily":"Alibaba Sans HK 55 Regular","weight":900,"style":"Heavy","sha256":"3248ACCCD00B8C09C62F239D591C5845A9126A05128F0BA2E658883FDA2542A7","requiredFor":[]}
   ]
 }

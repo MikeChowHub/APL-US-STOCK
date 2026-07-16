@@ -7,7 +7,7 @@
   "properties": {
     "SchemaVersion": {
       "type": "string",
-      "const": "APL Table Card Manifest v1.0"
+      "const": "APL Table Card Manifest v1.1"
     },
     "ScanDate": {
       "type": "string",
@@ -19,12 +19,16 @@
       "maxItems": 6,
       "items": {
         "type": "object",
-        "required": ["CardType", "InputPath", "OutputName", "Required"],
+        "required": ["CardType", "InputSchemaVersion", "InputPath", "OutputName", "Required"],
         "additionalProperties": false,
         "properties": {
           "CardType": {
             "type": "string",
             "enum": ["ExecutiveSummary", "TopLeaders", "TopGainers", "SectorStructure", "MarketObservation", "Comparison"]
+          },
+          "InputSchemaVersion": {
+            "type": "string",
+            "const": "APL Table Card Input v1.1"
           },
           "InputPath": {
             "type": "string",

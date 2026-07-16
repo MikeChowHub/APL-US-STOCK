@@ -347,6 +347,8 @@ Production PASS
 
 Archive 來源固定為 `outputs/YYYY-MM-DD/`。正式檔案與必要 audit/logs 必須保留；staging、temporary inputs、cache、diagnostics 與重複中間檔必須排除。來源只 Copy，不 Move／Delete。規則細節以 `KnowledgeBase/Rules/APL_US_Stock_Archive_Rules.md` 為準。
 
+新式Trigger C runner必須在staging原生建立`production-package/`：四張Table Card及publication manifest位於`production-package/Table Cards/`；Dashboard／Social PNG、Cover、SEO、WhatsApp、Blog Markdown／HTML及package manifest位於package根目錄。這些publishing artifacts不得在日期根目錄重複。Final Production Audit必須驗證package required mapping、完整inventory、path、bytes及SHA，Archive V2再原樣複製相對結構。已完成舊日期保持immutable，不作手動搬移或manifest backfill。
+
 Archive v2 adoption由 tracked `tools/archive-v2-policy.json` 控制。有效 v2日期在 index標記 `PASS`；只有 adoption前且精確 allowlisted、沒有 v2 manifest的歷史目錄可標記 `LEGACY_UNVERIFIED`。Legacy inventory統計不構成完整性證明，亦不可阻擋新的有效 v2 Archive。未知舊日期或 adoption後日期缺／壞 manifest必須 fail-fast。
 
 Git Commit／Push 不得負責 Archive，Production runner 亦不自動 Commit／Push。

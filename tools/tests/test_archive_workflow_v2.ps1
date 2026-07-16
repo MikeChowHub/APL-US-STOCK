@@ -3,7 +3,7 @@ param()
 
 $ErrorActionPreference = 'Stop'
 $ProjectRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
-$TestRoot = Join-Path $ProjectRoot 'tmp\archive-workflow-v2-tests'
+$TestRoot = Join-Path $ProjectRoot ("tmp\a-" + $PID)
 $ScanDate = '2040-01-02'
 $results = New-Object System.Collections.Generic.List[object]
 . (Join-Path $ProjectRoot 'tools\production_archive_common.ps1')
@@ -40,13 +40,23 @@ function New-ProductionFixture([string]$Root) {
   Write-Text (Join-Path $Root "removed-below-sma200-$ScanDate.txt") 'Symbol'
   Write-Text (Join-Path $Root "retained-missing-sma200-$ScanDate.txt") 'Symbol'
   Write-Text (Join-Path $Root "APL_Momentum_Leaders_Overview_$ScanDate.md") '# Publishing notes'
-  Write-Text (Join-Path $Root "APL_Momentum_Leaders_WhatsApp_Post_$ScanDate.txt") 'Production social push'
-  Write-Text (Join-Path $Root "APL_DeepScan_Radar_Dashboard_Top30_${ScanDate}_1920x1080.png") 'dashboard'
-  Write-Text (Join-Path $Root "APL_Momentum_Leaders_Blog_Cover_${ScanDate}_1080x1350.png") 'cover'
-  Write-Text (Join-Path $Root "APL_Momentum_Leaders_Blog_SEO_${ScanDate}_1280x720.png") 'seo'
-  Write-Text (Join-Path $Root "production-package\APL_DeepScan_Social_Card_${ScanDate}_1080x1350.png") 'social'
-  Write-Text (Join-Path $Root "production-package\APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md") '# Formal Blog'
-  Write-Text (Join-Path $Root "production-package\table-card-log\APL_Momentum_Leaders_Top_30_Company_Business_Analysis_$ScanDate.md") '# Company analysis'
+  $packageRoot = Join-Path $Root 'production-package'
+  $tableRoot = Join-Path $packageRoot 'Table Cards'
+  Write-Text (Join-Path $packageRoot "WhatsApp_$ScanDate.md") 'Production social push'
+  Write-Text (Join-Path $packageRoot "APL_DeepScan_Radar_Dashboard_Top30_${ScanDate}_1920x1080.png") 'dashboard'
+  Write-Text (Join-Path $packageRoot "APL_DeepScan_Social_Card_${ScanDate}_1080x1350.png") 'social'
+  Write-Text (Join-Path $packageRoot "APL_Momentum_Leaders_Blog_Cover_${ScanDate}_1080x1350.png") 'cover'
+  Write-Text (Join-Path $packageRoot "APL_Momentum_Leaders_Blog_SEO_${ScanDate}_1280x720.png") 'seo'
+  Write-Text (Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md") '# Formal Blog'
+  Write-Text (Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.html") '<h1>Formal Blog</h1>'
+  Write-Text (Join-Path $packageRoot "table-card-log\APL_Momentum_Leaders_Top_30_Company_Business_Analysis_$ScanDate.md") '# Company analysis'
+  $inputRoot = Join-Path (Split-Path $Root -Parent) 'semantic-inputs'
+  $semanticFixtures = @{
+    ExecutiveSummary = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"ExecutiveSummary","Title":"Executive","Rows":[{"observation":"Breadth","meaning":"Selective leadership"}]}'
+    TopLeaders = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"TopLeaders","Title":"Leaders","Rows":[{"rank":"#1","symbol":"TEST","companyName":"Test Company","coreBusiness":"Test business","mainDriver":"Relative strength","compositeScore":100}]}'
+    TopGainers = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"TopGainers","Title":"\u6700\u8fd17\u65e5 Top Gainers","Rows":[{"symbol":"TEST","companyName":"Test Company","sectorTheme":"Technology","changePct":"+10.00%"}]}'
+    SectorStructure = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"SectorStructure","Title":"Structure","Rows":[{"theme":"Technology","count":1,"direction":"Selective leadership","representativeSymbols":"TEST"}]}'
+  }
   $cards = New-Object System.Collections.Generic.List[object]
   foreach ($definition in @(
     @('ExecutiveSummary',"APL_Blog_Key_Signals_$ScanDate.png"),
@@ -54,13 +64,34 @@ function New-ProductionFixture([string]$Root) {
     @('TopGainers',"APL_Blog_TopGainers_$ScanDate.png"),
     @('SectorStructure',"APL_Blog_Structure_Map_$ScanDate.png")
   )) {
-    $path = Join-Path $Root ("production-package\" + $definition[1])
+    $path = Join-Path $tableRoot $definition[1]
     Write-Text $path ("card-" + $definition[0])
+    $inputPath = Join-Path $inputRoot ($definition[0] + '.json')
+    Write-Text $inputPath ([string]$semanticFixtures[$definition[0]])
     $item = Get-Item -LiteralPath $path
-    $cards.Add([pscustomobject]@{ CardType=$definition[0]; OutputName=$definition[1]; Required=$true; Status='PASS'; Bytes=$item.Length; Sha256=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash })
+    $cards.Add([pscustomobject]@{ CardType=$definition[0]; InputPath=$inputPath; InputSha256=(Get-FileHash -LiteralPath $inputPath -Algorithm SHA256).Hash; OutputName=$definition[1]; Required=$true; Status='PASS'; OutputPath=$path; LogPath=$null; Bytes=$item.Length; Sha256=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash; LogBytes=$null; LogSha256=$null; Error=$null })
   }
   $manifest = [ordered]@{ SchemaVersion='APL Table Card Publication Manifest v1.0'; ScanDate=$ScanDate; Status='PASS'; Cards=[object[]]$cards.ToArray() }
-  Write-Text (Join-Path $Root "APL_Table_Card_Manifest_$ScanDate.json") ($manifest | ConvertTo-Json -Depth 8)
+  Write-Text (Join-Path $tableRoot "APL_Table_Card_Manifest_$ScanDate.json") ($manifest | ConvertTo-Json -Depth 8)
+  $requiredDefinitions = @(
+    @('table-card-ExecutiveSummary',"Table Cards/APL_Blog_Key_Signals_$ScanDate.png"),
+    @('table-card-TopLeaders',"Table Cards/APL_Blog_Top5_Leaders_$ScanDate.png"),
+    @('table-card-TopGainers',"Table Cards/APL_Blog_TopGainers_$ScanDate.png"),
+    @('table-card-SectorStructure',"Table Cards/APL_Blog_Structure_Map_$ScanDate.png"),
+    @('dashboard-png',"APL_DeepScan_Radar_Dashboard_Top30_${ScanDate}_1920x1080.png"),
+    @('social-card-png',"APL_DeepScan_Social_Card_${ScanDate}_1080x1350.png"),
+    @('cover',"APL_Momentum_Leaders_Blog_Cover_${ScanDate}_1080x1350.png"),
+    @('seo',"APL_Momentum_Leaders_Blog_SEO_${ScanDate}_1280x720.png"),
+    @('whatsapp',"WhatsApp_$ScanDate.md"),
+    @('formal-blog-markdown',"APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md"),
+    @('formal-blog-html',"APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.html"),
+    @('company-business-analysis',"table-card-log/APL_Momentum_Leaders_Top_30_Company_Business_Analysis_$ScanDate.md")
+  )
+  $requiredRecords = New-Object System.Collections.Generic.List[object]
+  foreach($definition in $requiredDefinitions){$path=Join-Path $packageRoot $definition[1].Replace('/','\');$item=Get-Item -LiteralPath $path;$requiredRecords.Add([pscustomobject]@{Id=$definition[0];RelativePath=$definition[1];Size=[long]$item.Length;SHA256=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash})}
+  $inventory = @(Get-AplArchiveInventory $packageRoot)
+  $packageManifest = [ordered]@{SchemaVersion='APL Production Package Manifest v1.0';ScanDate=$ScanDate;Status='PASS';PackageRoot='production-package';RequiredCount=$requiredRecords.Count;FileCount=$inventory.Count;TotalBytes=[long](($inventory|Measure-Object Size -Sum).Sum);GeneratedUtc=[datetime]::UtcNow.ToString('o');Required=[object[]]$requiredRecords.ToArray();Files=[object[]]@(ConvertTo-AplManifestRecords $inventory)}
+  Write-Text (Join-Path $packageRoot "APL_Production_Package_Manifest_$ScanDate.json") ($packageManifest|ConvertTo-Json -Depth 10)
   Write-Text (Join-Path $Root 'cache\excluded.tmp') 'excluded'
   Write-Text (Join-Path $Root 'production-package\diagnostics\diagnostic-only.png') 'excluded'
 }
@@ -68,6 +99,20 @@ function Copy-Fixture([string]$Source, [string]$Destination) {
   if (Test-Path -LiteralPath $Destination) { Remove-Item -LiteralPath $Destination -Recurse -Force }
   New-Item -ItemType Directory -Path $Destination -Force | Out-Null
   foreach ($item in @(Get-ChildItem -LiteralPath $Source -Force)) { Copy-Item -LiteralPath $item.FullName -Destination $Destination -Recurse -Force }
+  $tableManifestPath = Join-Path $Destination "production-package\Table Cards\APL_Table_Card_Manifest_$ScanDate.json"
+  $tableManifest = Get-Content -LiteralPath $tableManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+  foreach ($card in @($tableManifest.Cards)) {
+    $card.OutputPath = Join-Path $Destination ("production-package\Table Cards\" + [string]$card.OutputName)
+  }
+  Write-Text $tableManifestPath ($tableManifest | ConvertTo-Json -Depth 10)
+  $packageRoot = Join-Path $Destination 'production-package'
+  $packageManifestPath = Join-Path $packageRoot "APL_Production_Package_Manifest_$ScanDate.json"
+  $packageManifest = Get-Content -LiteralPath $packageManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+  $packageInventory = @(Get-AplArchiveInventory $packageRoot | Where-Object { $_.RelativePath -cne "APL_Production_Package_Manifest_$ScanDate.json" })
+  $packageManifest.FileCount = $packageInventory.Count
+  $packageManifest.TotalBytes = [long](($packageInventory | Measure-Object Size -Sum).Sum)
+  $packageManifest.Files = [object[]]@(ConvertTo-AplManifestRecords $packageInventory)
+  Write-Text $packageManifestPath ($packageManifest | ConvertTo-Json -Depth 10)
 }
 
 if (Test-Path -LiteralPath $TestRoot) { Remove-Item -LiteralPath $TestRoot -Recurse -Force }
@@ -140,11 +185,30 @@ try {
   foreach ($case in @(
     @('missing-blog',"production-package\APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md"),
     @('missing-company-analysis',"production-package\table-card-log\APL_Momentum_Leaders_Top_30_Company_Business_Analysis_$ScanDate.md"),
-    @('missing-whatsapp',"APL_Momentum_Leaders_WhatsApp_Post_$ScanDate.txt")
+    @('missing-whatsapp',"production-package\WhatsApp_$ScanDate.md")
   )) {
     $variant = Join-Path $TestRoot ("negative\" + $case[0] + "\$ScanDate")
     Copy-Fixture $source $variant
     Remove-Item -LiteralPath (Join-Path $variant $case[1]) -Force
+    Invoke-ExpectExit $case[0] $auditScript @('-RegressionTest','-ProductionDatePath',$variant,'-ScanDate',$ScanDate,'-ContractPath',$contract,'-AuditOutputPath',(Join-Path $variant "Final_Production_Audit_$ScanDate.json")) 1
+  }
+
+  $duplicateVariant = Join-Path $TestRoot "negative\package-root-duplicate\$ScanDate"
+  Copy-Fixture $source $duplicateVariant
+  Copy-Item -LiteralPath (Join-Path $duplicateVariant "production-package\APL_DeepScan_Radar_Dashboard_Top30_${ScanDate}_1920x1080.png") -Destination (Join-Path $duplicateVariant "APL_DeepScan_Radar_Dashboard_Top30_${ScanDate}_1920x1080.png")
+  Invoke-ExpectExit 'package-root-duplicate' $auditScript @('-RegressionTest','-ProductionDatePath',$duplicateVariant,'-ScanDate',$ScanDate,'-ContractPath',$contract,'-AuditOutputPath',(Join-Path $duplicateVariant "Final_Production_Audit_$ScanDate.json")) 1
+
+  foreach ($case in @(
+    @('package-required-path-mismatch','RelativePath','production-package/WRONG.png'),
+    @('package-required-size-mismatch','Size',999999),
+    @('package-required-sha-mismatch','SHA256',('0' * 64))
+  )) {
+    $variant = Join-Path $TestRoot ("negative\" + $case[0] + "\$ScanDate")
+    Copy-Fixture $source $variant
+    $packageManifestPath = Join-Path $variant "production-package\APL_Production_Package_Manifest_$ScanDate.json"
+    $candidate = Get-Content -LiteralPath $packageManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    $candidate.Required[0].($case[1]) = $case[2]
+    Write-Text $packageManifestPath ($candidate | ConvertTo-Json -Depth 10)
     Invoke-ExpectExit $case[0] $auditScript @('-RegressionTest','-ProductionDatePath',$variant,'-ScanDate',$ScanDate,'-ContractPath',$contract,'-AuditOutputPath',(Join-Path $variant "Final_Production_Audit_$ScanDate.json")) 1
   }
 

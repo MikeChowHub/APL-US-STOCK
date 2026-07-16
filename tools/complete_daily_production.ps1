@@ -34,6 +34,8 @@ if (Test-Path -LiteralPath $StatePath -PathType Leaf) {
 
 $audit = Read-AplStrictJson $FinalAuditPath (Split-Path $FinalAuditPath -Parent)
 if ([string]$audit.SchemaVersion -cne $script:AplFinalAuditSchemaVersion -or [string]$audit.ScanDate -cne $ScanDate -or [string]$audit.Status -cne 'PASS') { throw 'Final Production Audit is not PASS.' }
+if ([string]$audit.ProductionPackage.Status -cne 'PASS' -or [int]$audit.ProductionPackage.RequiredCount -lt 12) { throw 'Production package audit is not PASS.' }
+if (@($audit.TableCardSemantic).Count -ne 4 -or @($audit.TableCardSemantic | Where-Object { [string]$_.Status -cne 'PASS' }).Count -gt 0) { throw 'Table Card semantic audit is not PASS.' }
 $manifest = Read-AplStrictJson $ArchiveManifestPath $archiveDatePath
 $actual = @(Get-AplArchiveInventory $archiveDatePath -ExcludeManifest)
 Assert-AplArchiveManifest $manifest $ScanDate 'PASS' $actual | Out-Null

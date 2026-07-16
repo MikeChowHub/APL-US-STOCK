@@ -60,6 +60,8 @@ An allowlisted legacy date must not contain or claim a v2 PASS manifest. Moving 
 
 來源的相對目錄結構必須保留，避免重新分類造成 trace path 與檔名歧義。
 
+新式 Trigger C output 必須包含已通過 Final Audit 的 `production-package/`。Archive V2 必須原樣保留該目錄、`Table Cards/` 子目錄及 package manifest。Archive executor不得將 package檔案攤平、重新命名或搬回日期根目錄。Final Audit未提供 `ProductionPackage.Status=PASS`及四張Table Card semantic PASS evidence時，Archive必須拒絕執行。
+
 ## 5. Exclusions
 
 不得納入：

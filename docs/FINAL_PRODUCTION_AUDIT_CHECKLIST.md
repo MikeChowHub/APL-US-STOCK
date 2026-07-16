@@ -10,6 +10,11 @@
 - [ ] Ranking、Top 30、watchlist、SMA200 audits 與 metadata 數量一致。
 - [ ] Dashboard、Social、Table Cards、Cover、SEO 的 required render/validation steps PASS。
 - [ ] Table Card publication manifest（適用時）為 PASS。
+- [ ] 每張 required Table Card 的 input SHA 與 publication manifest 一致，並通過 `APL Table Card Input v1.1` semantic contract。
+- [ ] Table Card required semantic fields 全部非空；header/display column 數與 renderer mapping 一致；score、percentage、sector/theme、direction及symbols沒有錯欄。
+- [ ] `production-package/APL_Production_Package_Manifest_<ScanDate>.json` schema/date/status PASS，required id/path集合完整且沒有重複。
+- [ ] Package manifest file count、total bytes、逐檔relative path／size／SHA與實際package一致。
+- [ ] 四張Table Card只在`production-package/Table Cards/`；Dashboard、Social、Cover、SEO及WhatsApp只在package，日期根目錄沒有重複。
 - [ ] 已發布 machine artifacts 的 bytes 與 SHA-256 和 runner 記錄一致。
 - [ ] 正式 Blog、HTML、Top 30 company analysis、publishing materials（若屬當次 Production scope）已置於日期輸出目錄。
 - [ ] Final audit 證據已寫入 `Final_Production_Audit_YYYY-MM-DD.json`，`Status=PASS`。
@@ -23,6 +28,7 @@
 - [ ] 正式 Blog/HTML、Top 30 analysis、publishing materials、Dashboard、Social、Table Cards、Cover、SEO、manifest、必要 audit/logs 已納入。
 - [ ] staging、temporary inputs、cache、diagnostics 及指定重複中間檔已排除。
 - [ ] Copy 前後 relative path、file count、每檔 bytes、每檔 SHA-256 全部一致。
+- [ ] `production-package/`及`Table Cards/`相對結構在Archive保持不變，package manifest本身亦按SHA原樣複製。
 - [ ] `archive-manifest.json` 為 PASS。
 - [ ] `Archive/index.md` 已更新。
 - [ ] `tools/archive-v2-policy.json` schema、MarkerId、AdoptionDate及 legacy allowlist有效。

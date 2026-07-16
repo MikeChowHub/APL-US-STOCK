@@ -68,6 +68,8 @@ try {
     $result.SchemaVersion = $card.SchemaVersion
     $result.CardType = $card.CardType
     $result.Rows = $card.Rows
+    $result.Columns = $card.Columns
+    $result.SemanticFields = @($card.Presentation.Columns | ForEach-Object { [string]$_.Key }) -join ','
   }
 } catch {
   $result.Status = 'FAIL'

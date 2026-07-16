@@ -65,7 +65,9 @@ Current Rule files:
 - `Rules/APL_US_Stock_Ranking_Rules.md`
 - `Rules/APL_US_Stock_Blog_Rules.md`
 - `Rules/APL_US_Stock_Visual_Rules.md`
+- `Rules/APL_US_Stock_Production_Package_Rules.md`
 - `Rules/APL_US_Stock_Archive_Rules.md`
+- `Rules/APL_US_Stock_Production_Artifact_Contract.json`
 
 Rules should not contain daily market opinions, one-off stock rankings, or single-day article content.
 

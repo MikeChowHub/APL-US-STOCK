@@ -1,0 +1,10 @@
+{
+  "SchemaVersion": "APL Brand Asset Manifest v1.0",
+  "Assets": [
+    {
+      "Id": "production-logo-clean",
+      "File": "Assets/Brand/APL_Deep_Scan_Brand_Logo_Renderer_Clean.png",
+      "SHA256": "00195DA733D1715BA82A096DBAA4A34848D1A5489A595C4F911B06E28534F669"
+    }
+  ]
+}

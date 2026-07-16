@@ -1,6 +1,6 @@
 # APL US Stock Table Card Input Contract
 
-Version: APL Table Card Input v1.0
+Version: APL Table Card Input v1.1
 
 This document defines the production input contract for APL Blog Table Cards.
 
@@ -23,7 +23,7 @@ The renderer is responsible for:
 
 - applying the APL Table Card visual style;
 - rendering one card per run;
-- using the selected CardType layout defaults when columns are omitted;
+- using the canonical CardType semantic-field-to-column mapping;
 - preserving readability at 1600×900.
 
 The renderer is not responsible for:
@@ -50,7 +50,7 @@ Comparison
 
 The command line `-CardType` is the production source of routing.
 
-The JSON input may also include `CardType` for auditability. If JSON `CardType` is present, it must match the command line `-CardType`.
+The JSON input must include `CardType`, and it must match the command line `-CardType`.
 
 ---
 
@@ -60,11 +60,16 @@ Minimum valid input:
 
 ```json
 {
-  "SchemaVersion": "APL Table Card Input v1.0",
+  "SchemaVersion": "APL Table Card Input v1.1",
   "CardType": "TopGainers",
   "Title": "最近7日 Top Gainers",
   "Rows": [
-    ["SYM", "Company", "Sector / Theme", "+12.3%"]
+    {
+      "symbol": "SYM",
+      "companyName": "Company",
+      "sectorTheme": "Technology services",
+      "changePct": "+12.30%"
+    }
   ]
 }
 ```
@@ -73,66 +78,48 @@ For `CardType: TopGainers`, `Title` must be exactly `最近7日 Top Gainers`. Th
 
 Required:
 
+- `SchemaVersion`
+- `CardType`
 - `Title`
 - `Rows`
 
 Recommended:
 
-- `SchemaVersion`
-- `CardType`
 - `Subtitle`
 - `SourceNote`
 - `Meta`
 
 Optional:
 
-- `Columns`
 - `FooterNote`
 
 ---
 
-## 4. Columns
+## 4. Canonical semantic fields and columns
 
-Columns are optional.
+`Columns` is renderer-owned and must not be supplied in v1.1 input. The renderer and validator share one mapping:
 
-If `Columns` is omitted, the renderer uses the default column structure for the selected CardType.
+- `ExecutiveSummary`: `observation`, `meaning`.
+- `TopLeaders`: `rank`, `symbol`, `companyName`, `coreBusiness`, `mainDriver`, `compositeScore`.
+- `TopGainers`: `symbol`, `companyName`, `sectorTheme`, `changePct`.
+- `SectorStructure`: `theme`, `count`, `direction`, `representativeSymbols`.
 
-Column object:
-
-```json
-{
-  "Label": "Symbol",
-  "Width": 0.15,
-  "Align": "Center",
-  "Bold": true
-}
-```
-
-Rules:
-
-- 1–5 columns only.
-- Column widths should sum to 1.0.
-- If widths do not sum to 1.0, renderer may normalize them.
-- Use fewer columns when the card is for Blog reading.
-
-Allowed alignment:
-
-```text
-Near
-Center
-Far
-```
+TopLeaders renders Score as its own column. SectorStructure renders `theme | count` in the Theme column. No positional array mapping is permitted.
 
 ---
 
 ## 5. Rows
 
-Rows must be structured arrays.
+Rows must be JSON objects with the exact named fields required by their `CardType`.
 
 Rules:
 
 - 1–8 rows.
-- Each row should match the intended column count.
+- Required values cannot be null, empty, or whitespace-only.
+- Header count must equal the renderer's mapped display-field count.
+- `compositeScore` must be numeric and cannot occupy `coreBusiness`.
+- `changePct` must be a signed percentage and cannot occupy `sectorTheme`.
+- `representativeSymbols` must be a symbol list and cannot occupy `direction`.
 - Cell content should be concise.
 - Avoid paragraph-length cells.
 - Do not include raw CSV columns that do not support the article conclusion.

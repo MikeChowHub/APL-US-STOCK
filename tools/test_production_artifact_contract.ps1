@@ -10,6 +10,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $ProjectRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 . (Join-Path $PSScriptRoot 'production_archive_common.ps1')
+. (Join-Path $PSScriptRoot 'renderer_production_common.ps1')
 
 Assert-AplScanDate $ScanDate | Out-Null
 $allowedRoot = if ($RegressionTest) { Join-Path $ProjectRoot 'tmp' } else { Join-Path $ProjectRoot 'outputs' }
@@ -44,6 +45,8 @@ function Find-Matches([object[]]$Files, [object]$Definition) {
 $safeFiles = @(Get-AplArchiveInventory $ProductionDatePath | Where-Object { $_.RelativePath -notlike 'Final_Production_Audit_*.json' })
 $requiredResults = New-Object System.Collections.Generic.List[object]
 $optionalResults = New-Object System.Collections.Generic.List[object]
+$tableCardSemanticResults = New-Object System.Collections.Generic.List[object]
+$productionPackageAudit = $null
 $classified = @{}
 $failure = $null
 try {
@@ -75,11 +78,84 @@ try {
     $record = $records[0]
     $outputName = [string]$record.OutputName
     if ([System.IO.Path]::GetFileName($outputName) -cne $outputName) { throw "Unsafe Table Card OutputName: $outputName" }
-    $outputs = @($safeFiles | Where-Object { (Split-Path $_.RelativePath -Leaf) -ceq $outputName })
+    $expectedTableRelative = "production-package/Table Cards/$outputName"
+    $outputs = @($safeFiles | Where-Object { [string]$_.RelativePath -ceq $expectedTableRelative })
     if ($outputs.Count -ne 1) { throw "Required Table Card '$type' output expected exactly once; found $($outputs.Count)." }
+    $expectedPublishedInput = Get-AplCanonicalPath (Join-Path $ProductionDatePath $expectedTableRelative.Replace('/','\'))
+    if ([string]$record.OutputPath -cne $expectedPublishedInput) { throw "Required Table Card '$type' publication manifest OutputPath is not the canonical package path." }
     if ([long]$record.Bytes -ne [long]$outputs[0].Size -or [string]$record.Sha256 -cne [string]$outputs[0].SHA256) { throw "Required Table Card '$type' size/SHA-256 mismatch." }
+    if ([string]::IsNullOrWhiteSpace([string]$record.InputPath) -or [string]::IsNullOrWhiteSpace([string]$record.InputSha256)) { throw "Required Table Card '$type' publication record is missing semantic input evidence." }
+    $semanticAllowedRoot = if ($RegressionTest) { Join-Path $ProjectRoot 'tmp' } else { Join-Path $ProjectRoot 'work' }
+    $semanticInputPath = Assert-AplNoReparsePath -Path ([string]$record.InputPath) -AllowedRoot $semanticAllowedRoot -RequireFile
+    $semanticInputSha = (Get-FileHash -LiteralPath $semanticInputPath -Algorithm SHA256).Hash
+    if ($semanticInputSha -cne [string]$record.InputSha256) { throw "Required Table Card '$type' semantic input SHA-256 mismatch." }
+    $semanticJson = Read-AplStrictJson $semanticInputPath $semanticAllowedRoot
+    $semanticContract = Assert-AplTableCardContract $semanticJson ([string]$type)
+    if ([string]$semanticContract.SchemaVersion -cne 'APL Table Card Input v1.1' -or [string]$semanticContract.CardType -cne [string]$type) { throw "Required Table Card '$type' semantic schema/type mismatch." }
+    if ([int]$semanticContract.Rows -lt 1 -or [int]$semanticContract.Columns -lt 1) { throw "Required Table Card '$type' semantic rows/columns are empty." }
+    [void]$tableCardSemanticResults.Add([pscustomobject]@{
+      CardType = [string]$type
+      Status = 'PASS'
+      SchemaVersion = [string]$semanticContract.SchemaVersion
+      InputPath = $semanticInputPath
+      InputSha256 = $semanticInputSha
+      Rows = [int]$semanticContract.Rows
+      DisplayColumns = [int]$semanticContract.Columns
+      SemanticFields = [string](@($semanticContract.Presentation.Columns | ForEach-Object { [string]$_.Key }) -join ',')
+    })
     $classified[$outputs[0].RelativePath.ToLowerInvariant()] = $true
   }
+
+  $packageManifestResult = @($requiredResults.ToArray() | Where-Object { $_.Id -eq 'production-package-manifest' })[0]
+  $packageManifestRelative = [string]$packageManifestResult.Files[0].RelativePath
+  $packageRoot = Assert-AplNoReparsePath -Path (Join-Path $ProductionDatePath 'production-package') -AllowedRoot $ProductionDatePath -RequireDirectory
+  $packageManifestPath = Assert-AplNoReparsePath -Path (Join-Path $ProductionDatePath $packageManifestRelative.Replace('/','\')) -AllowedRoot $packageRoot -RequireFile
+  $packageManifest = Read-AplStrictJson $packageManifestPath $packageRoot
+  if ([string]$packageManifest.SchemaVersion -cne 'APL Production Package Manifest v1.0' -or [string]$packageManifest.ScanDate -cne $ScanDate -or [string]$packageManifest.Status -cne 'PASS' -or [string]$packageManifest.PackageRoot -cne 'production-package') { throw 'Production package manifest schema/date/status/root mismatch.' }
+
+  $expectedPackageRequired = [ordered]@{}
+  foreach ($type in @($contract.RequiredTableCardTypes)) {
+    $record = @($tableManifest.Cards | Where-Object { [string]$_.CardType -eq [string]$type -and $_.Required -eq $true -and [string]$_.Status -eq 'PASS' })[0]
+    $expectedPackageRequired["table-card-$type"] = "Table Cards/$([string]$record.OutputName)"
+  }
+  $expectedPackageRequired['dashboard-png'] = "APL_DeepScan_Radar_Dashboard_Top30_${ScanDate}_1920x1080.png"
+  $expectedPackageRequired['social-card-png'] = "APL_DeepScan_Social_Card_${ScanDate}_1080x1350.png"
+  $expectedPackageRequired['cover'] = "APL_Momentum_Leaders_Blog_Cover_${ScanDate}_1080x1350.png"
+  $expectedPackageRequired['seo'] = "APL_Momentum_Leaders_Blog_SEO_${ScanDate}_1280x720.png"
+  $expectedPackageRequired['whatsapp'] = "WhatsApp_${ScanDate}.md"
+  $expectedPackageRequired['formal-blog-markdown'] = "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.md"
+  $expectedPackageRequired['formal-blog-html'] = "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.html"
+  $expectedPackageRequired['company-business-analysis'] = "table-card-log/APL_Momentum_Leaders_Top_30_Company_Business_Analysis_${ScanDate}.md"
+
+  $requiredPackageRecords = @($packageManifest.Required)
+  if ([int]$packageManifest.RequiredCount -ne $expectedPackageRequired.Count -or $requiredPackageRecords.Count -ne $expectedPackageRequired.Count) { throw "Production package required count mismatch. Expected=$($expectedPackageRequired.Count)." }
+  $seenPackageIds = @{}; $seenPackagePaths = @{}
+  foreach ($record in $requiredPackageRecords) {
+    foreach ($name in @('Id','RelativePath','Size','SHA256')) { if ($null -eq $record.PSObject.Properties[$name]) { throw "Production package required record missing '$name'." } }
+    $id = [string]$record.Id; $relative = [string]$record.RelativePath
+    if (-not $expectedPackageRequired.Contains($id) -or [string]$expectedPackageRequired[$id] -cne $relative) { throw "Unexpected production package required mapping: $id -> $relative" }
+    if ([System.IO.Path]::IsPathRooted($relative) -or $relative.Contains('\') -or $relative.Contains('..')) { throw "Unsafe production package RelativePath: $relative" }
+    $idKey=$id.ToLowerInvariant();$pathKey=$relative.ToLowerInvariant()
+    if ($seenPackageIds.ContainsKey($idKey) -or $seenPackagePaths.ContainsKey($pathKey)) { throw "Duplicate production package required id/path: $id -> $relative" }
+    $seenPackageIds[$idKey]=$true;$seenPackagePaths[$pathKey]=$true
+    $actualPath = Assert-AplNoReparsePath -Path (Join-Path $packageRoot $relative.Replace('/','\')) -AllowedRoot $packageRoot -RequireFile
+    $actualItem = Get-Item -LiteralPath $actualPath
+    $actualSha = (Get-FileHash -LiteralPath $actualPath -Algorithm SHA256).Hash
+    if ([long]$record.Size -ne [long]$actualItem.Length -or [string]$record.SHA256 -cne $actualSha) { throw "Production package required size/SHA-256 mismatch: $relative" }
+  }
+  foreach ($id in $expectedPackageRequired.Keys) { if (-not $seenPackageIds.ContainsKey($id.ToLowerInvariant())) { throw "Production package missing required id: $id" } }
+
+  $packageInventory = @(Get-AplArchiveInventory $packageRoot | Where-Object { $_.RelativePath -cne (Split-Path $packageManifestPath -Leaf) })
+  $declaredPackageInventory = @(Get-AplManifestInventory $packageManifest)
+  Assert-AplInventoryMatch $declaredPackageInventory $packageInventory 'Production package manifest'
+  $packageBytes = [long](($packageInventory | Measure-Object Size -Sum).Sum)
+  if ([int]$packageManifest.FileCount -ne $packageInventory.Count -or [long]$packageManifest.TotalBytes -ne $packageBytes) { throw 'Production package file count/total bytes mismatch.' }
+
+  foreach ($relative in $expectedPackageRequired.Values) {
+    $rootDuplicate = Join-Path $ProductionDatePath (Split-Path $relative -Leaf)
+    if (Test-Path -LiteralPath $rootDuplicate -PathType Leaf) { throw "Production package artifact is duplicated at date root: $rootDuplicate" }
+  }
+  $productionPackageAudit = [pscustomobject]@{Status='PASS';Manifest=$packageManifestRelative;RequiredCount=$expectedPackageRequired.Count;FileCount=$packageInventory.Count;TotalBytes=$packageBytes}
 
   foreach ($definition in $optionalDefinitions) {
     $matches = @(Find-Matches $safeFiles $definition)
@@ -104,6 +180,8 @@ $audit = [ordered]@{
   AuditedUtc = [datetime]::UtcNow.ToString('o')
   Required = [object[]]$requiredResultArray
   Optional = [object[]]$optionalResultArray
+  TableCardSemantic = [object[]]$tableCardSemanticResults.ToArray()
+  ProductionPackage = $productionPackageAudit
   UnclassifiedArtifacts = $unclassified
   ProductionFileCount = $safeFiles.Count
   ProductionBytes = [long](($safeFiles | Measure-Object Size -Sum).Sum)

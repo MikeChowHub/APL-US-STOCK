@@ -64,54 +64,6 @@ function Draw-TextBox($g, [string]$text, [System.Drawing.Font]$font, [System.Dra
   $fmt.Dispose()
 }
 
-function Get-DefaultColumns([string]$type) {
-  switch ($type) {
-    'ExecutiveSummary' {
-      return @(
-        @{ Label='Observation'; Width=0.42; Align='Near'; Bold=$true },
-        @{ Label='Meaning'; Width=0.58; Align='Near'; Bold=$false }
-      )
-    }
-    'TopLeaders' {
-      return @(
-        @{ Label='Rank'; Width=0.09; Align='Center'; Bold=$true },
-        @{ Label='Symbol'; Width=0.13; Align='Center'; Bold=$true },
-        @{ Label='Core Business'; Width=0.38; Align='Near'; Bold=$false },
-        @{ Label='Main Driver'; Width=0.40; Align='Near'; Bold=$false }
-      )
-    }
-    'TopGainers' {
-      return @(
-        @{ Label='Symbol'; Width=0.15; Align='Center'; Bold=$true },
-        @{ Label='Company'; Width=0.35; Align='Near'; Bold=$false },
-        @{ Label='Sector / Theme'; Width=0.32; Align='Near'; Bold=$false },
-        @{ Label='Change'; Width=0.18; Align='Far'; Bold=$true }
-      )
-    }
-    'SectorStructure' {
-      return @(
-        @{ Label='Theme'; Width=0.24; Align='Near'; Bold=$true },
-        @{ Label='Direction'; Width=0.34; Align='Near'; Bold=$false },
-        @{ Label='Representative Symbols'; Width=0.42; Align='Near'; Bold=$true }
-      )
-    }
-    'MarketObservation' {
-      return @(
-        @{ Label='Observation'; Width=0.38; Align='Near'; Bold=$true },
-        @{ Label='Meaning'; Width=0.37; Align='Near'; Bold=$false },
-        @{ Label='Evidence'; Width=0.25; Align='Near'; Bold=$false }
-      )
-    }
-    'Comparison' {
-      return @(
-        @{ Label='Signal'; Width=0.28; Align='Near'; Bold=$true },
-        @{ Label='What It Shows'; Width=0.34; Align='Near'; Bold=$false },
-        @{ Label='Market Meaning'; Width=0.38; Align='Near'; Bold=$false }
-      )
-    }
-  }
-}
-
 function Get-DefaultTitle([string]$type) {
   switch ($type) {
     'ExecutiveSummary' { return 'Executive Summary' }
@@ -132,41 +84,6 @@ function Read-CardInput([string]$path, [string]$json) {
     return ($json | ConvertFrom-Json)
   }
   throw 'Either InputPath or InputJson is required.'
-}
-
-function Normalize-Columns($inputColumns, [string]$type) {
-  $columns = if ($null -ne $inputColumns) { ConvertTo-PlainArray $inputColumns } else { Get-DefaultColumns $type }
-  $normalized = @()
-  foreach ($col in $columns) {
-    $label = if ($null -ne $col.Label) { [string]$col.Label } else { '' }
-    $width = if ($null -ne $col.Width) { [double]$col.Width } else { 0 }
-    $align = if ($null -ne $col.Align) { [string]$col.Align } else { 'Near' }
-    $bold = if ($null -ne $col.Bold) { [bool]$col.Bold } else { $false }
-    $normalized += [pscustomobject]@{ Label=$label; Width=$width; Align=$align; Bold=$bold }
-  }
-  $widthSum = ($normalized | Measure-Object Width -Sum).Sum
-  if ($widthSum -le 0) { throw 'Column widths must be greater than zero.' }
-  if ([math]::Abs($widthSum - 1.0) -gt 0.01) {
-    $normalized = @($normalized | ForEach-Object {
-      [pscustomobject]@{ Label=$_.Label; Width=($_.Width / $widthSum); Align=$_.Align; Bold=$_.Bold }
-    })
-  }
-  return $normalized
-}
-
-function Normalize-Rows($inputRows, [int]$columnCount) {
-  $rows = ConvertTo-PlainArray $inputRows
-  if ($rows.Count -eq 0) { throw 'Rows are required.' }
-  $normalized = @()
-  foreach ($row in $rows) {
-    $items = ConvertTo-PlainArray $row
-    $cells = @()
-    for ($i = 0; $i -lt $columnCount; $i++) {
-      $cells += if ($i -lt $items.Count -and $null -ne $items[$i]) { [string]$items[$i] } else { '' }
-    }
-    $normalized += ,$cells
-  }
-  return $normalized
 }
 
 function Get-SafeFilePart([string]$value) {
@@ -275,8 +192,8 @@ $title = if ($null -ne $card.Title -and -not [string]::IsNullOrWhiteSpace([strin
 $subtitle = if ($null -ne $card.Subtitle) { [string]$card.Subtitle } else { '' }
 $sourceNote = if ($null -ne $card.SourceNote) { [string]$card.SourceNote } else { '' }
 $footerNote = if ($null -ne $card.FooterNote) { [string]$card.FooterNote } else { '' }
-$columns = Normalize-Columns $card.Columns $CardType
-$rows = Normalize-Rows $card.Rows $columns.Count
+$columns = [object[]]$cardContract.Presentation.Columns
+$rows = [object[]]$cardContract.Presentation.Rows
 if ($rows.Count -gt 8) { throw 'Table card input Rows exceeds schema maximum 8.' }
 function Get-TradingViewSourceNote {
   $codes = @(0x8CC7,0x6599,0x4F86,0x6E90,0x70BA,0x0020,0x0054,0x0072,0x0061,0x0064,0x0069,0x006E,0x0067,0x0056,0x0069,0x0065,0x0077,0xFF0C,0x6392,0x540D,0x3001,0x50F9,0x683C,0x53CA,0x5347,0x5E45,0x6703,0x96A8,0x5E02,0x5834,0x8B8A,0x52D5,0x3002)

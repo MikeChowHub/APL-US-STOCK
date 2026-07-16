@@ -14,7 +14,7 @@ $ProjectRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
 function Read-FinalProductionAudit([string]$Path, [string]$AllowedRoot) {
   $audit = Read-AplStrictJson $Path $AllowedRoot
-  foreach ($name in @('SchemaVersion','ContractSchemaVersion','ScanDate','Status','Required','ProductionFileCount','ProductionBytes')) {
+  foreach ($name in @('SchemaVersion','ContractSchemaVersion','ScanDate','Status','Required','TableCardSemantic','ProductionPackage','ProductionFileCount','ProductionBytes')) {
     if ($null -eq $audit.PSObject.Properties[$name]) { throw "Final Production Audit missing '$name'." }
   }
   if ([string]$audit.SchemaVersion -cne $script:AplFinalAuditSchemaVersion -or [string]$audit.ContractSchemaVersion -cne 'APL Production Artifact Contract v1.0' -or [string]$audit.ScanDate -cne $ScanDate -or [string]$audit.Status -cne 'PASS') {
@@ -22,6 +22,9 @@ function Read-FinalProductionAudit([string]$Path, [string]$AllowedRoot) {
   }
   $required = @($audit.Required)
   if ($required.Count -eq 0 -or @($required | Where-Object { [string]$_.Status -ne 'PASS' }).Count -gt 0) { throw 'Final Production Audit required artifact results are incomplete.' }
+  if ([string]$audit.ProductionPackage.Status -cne 'PASS' -or [int]$audit.ProductionPackage.RequiredCount -lt 12) { throw 'Archive requires a PASS production-package semantic/integrity audit.' }
+  $semantic = @($audit.TableCardSemantic)
+  if ($semantic.Count -ne 4 -or @($semantic | Where-Object { [string]$_.Status -cne 'PASS' }).Count -gt 0) { throw 'Archive requires four PASS Table Card semantic audits.' }
   return $audit
 }
 
@@ -170,7 +173,7 @@ if (Test-Path -LiteralPath $destination) {
 }
 
 $stagingRoot = Join-Path $ArchiveRoot ".staging\$([guid]::NewGuid().ToString('N'))"
-$stagedDestination = Join-Path $stagingRoot "$year\$ScanDate"
+$stagedDestination = $stagingRoot
 New-Item -ItemType Directory -Path $stagedDestination -Force | Out-Null
 $stagingRoot = Assert-AplNoReparsePath -Path $stagingRoot -AllowedRoot $ArchiveRoot -RequireDirectory
 $stagedDestination = Assert-AplNoReparsePath -Path $stagedDestination -AllowedRoot $stagingRoot -RequireDirectory

@@ -15,17 +15,18 @@
     { "Id": "publishing-notes", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["APL_Momentum_Leaders_Overview_{ScanDate}.md"] },
     { "Id": "formal-blog", "Category": "Publishing", "Match": "AtLeastOne", "Patterns": ["production-package/APL_Momentum_Leaders_Market_Analysis_Blog_{ScanDate}.md", "production-package/APL_Momentum_Leaders_Market_Analysis_Blog_{ScanDate}.html"] },
     { "Id": "company-business-analysis", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/table-card-log/APL_Momentum_Leaders_Top_30_Company_Business_Analysis_{ScanDate}.md"] },
-    { "Id": "social-push", "Category": "Publishing", "Match": "AtLeastOne", "Patterns": ["APL_Momentum_Leaders_WhatsApp_Post_{ScanDate}.txt", "APL_Momentum_Leaders_Telegram_Post_{ScanDate}.txt", "production-package/APL_Momentum_Leaders_WhatsApp_Post_{ScanDate}.txt", "production-package/APL_Momentum_Leaders_Telegram_Post_{ScanDate}.txt"] },
-    { "Id": "table-card-publication-manifest", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["APL_Table_Card_Manifest_{ScanDate}.json", "production-package/table-card-log/APL_Table_Card_Manifest_{ScanDate}.json"] },
-    { "Id": "dashboard-png", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["APL_DeepScan_Radar_Dashboard_Top30_{ScanDate}_1920x1080.png", "production-package/APL_DeepScan_Radar_Dashboard_Top30_{ScanDate}_1920x1080.png"] },
-    { "Id": "social-card-png", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["APL_DeepScan_Social_Card_{ScanDate}_1080x1350.png", "production-package/APL_DeepScan_Social_Card_{ScanDate}_1080x1350.png"] },
-    { "Id": "cover", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["APL_Momentum_Leaders_Blog_Cover_{ScanDate}_1080x1350.png", "production-package/APL_Momentum_Leaders_Blog_Cover_{ScanDate}_1080x1350.png"] },
-    { "Id": "seo", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["APL_Momentum_Leaders_Blog_SEO_{ScanDate}_1280x720.png", "production-package/APL_Momentum_Leaders_Blog_SEO_{ScanDate}_1280x720.png"] }
+    { "Id": "social-push", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/WhatsApp_{ScanDate}.md"] },
+    { "Id": "table-card-publication-manifest", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/Table Cards/APL_Table_Card_Manifest_{ScanDate}.json"] },
+    { "Id": "production-package-manifest", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/APL_Production_Package_Manifest_{ScanDate}.json"] },
+    { "Id": "dashboard-png", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/APL_DeepScan_Radar_Dashboard_Top30_{ScanDate}_1920x1080.png"] },
+    { "Id": "social-card-png", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/APL_DeepScan_Social_Card_{ScanDate}_1080x1350.png"] },
+    { "Id": "cover", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/APL_Momentum_Leaders_Blog_Cover_{ScanDate}_1080x1350.png"] },
+    { "Id": "seo", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/APL_Momentum_Leaders_Blog_SEO_{ScanDate}_1280x720.png"] }
   ],
   "Optional": [
     { "Id": "blog-second-format", "Category": "Publishing", "Patterns": ["production-package/APL_Momentum_Leaders_Market_Analysis_Blog_{ScanDate}.md", "production-package/APL_Momentum_Leaders_Market_Analysis_Blog_{ScanDate}.html"] },
-    { "Id": "machine-support", "Category": "Machine", "Patterns": ["*.svg", "*.overlay-log.txt", "*_Render_Log.txt", "APL_DeepScan_*_Input_{ScanDate}.json", "APL_Momentum_Leaders_Source_{ScanDate}.csv", "APL_Quant_Top_30_{ScanDate}.txt", "APL_Quant_Cumulative_Watchlist_{ScanDate}.txt", "production-package/table-card-log/*.table-card-log.txt"] },
-    { "Id": "additional-approved-publishing", "Category": "Publishing", "Patterns": ["production-package/*.png", "production-package/*.txt"] }
+    { "Id": "machine-support", "Category": "Machine", "Patterns": ["*.svg", "*_Render_Log.txt", "APL_DeepScan_*_Input_{ScanDate}.json", "APL_Momentum_Leaders_Source_{ScanDate}.csv", "APL_Quant_Top_30_{ScanDate}.txt", "APL_Quant_Cumulative_Watchlist_{ScanDate}.txt", "production-package/*.overlay-log.txt", "production-package/Table Cards/*.table-card-log.txt"] },
+    { "Id": "additional-approved-publishing", "Category": "Publishing", "Patterns": ["production-package/*.png", "production-package/*.txt", "production-package/*.md", "production-package/*.html", "production-package/Table Cards/*.png"] }
   ],
   "RequiredTableCardTypes": ["ExecutiveSummary", "TopLeaders", "TopGainers", "SectorStructure"]
 }

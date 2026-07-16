@@ -82,55 +82,149 @@ function Assert-AplStringProperty($Object, [string]$Name, [string]$Label, [switc
   if ($NonEmpty -and [string]::IsNullOrWhiteSpace([string]$property.Value)) { throw "$Label property '$Name' cannot be empty." }
 }
 
+function Get-AplTableCardPresentation([object]$Json, [string]$CardType) {
+  $columns = New-Object System.Collections.Generic.List[object]
+  $displayRows = New-Object System.Collections.Generic.List[object]
+  $rowIndex = 0
+
+  switch ($CardType) {
+    'ExecutiveSummary' {
+      foreach ($column in @(
+        [pscustomobject]@{ Key='observation'; Label='Observation'; Width=0.42; Align='Near'; Bold=$true },
+        [pscustomobject]@{ Key='meaning'; Label='Meaning'; Width=0.58; Align='Near'; Bold=$false }
+      )) { [void]$columns.Add($column) }
+      foreach ($row in @($Json.Rows)) {
+        $rowIndex++
+        Assert-AplObjectProperties $row @('observation','meaning') @('observation','meaning') "Table card input ExecutiveSummary row $rowIndex"
+        foreach ($key in @('observation','meaning')) { Assert-AplStringProperty $row $key "Table card input ExecutiveSummary row $rowIndex" -Required -NonEmpty }
+        [void]$displayRows.Add([object[]]@([string]$row.observation,[string]$row.meaning))
+      }
+    }
+    'TopLeaders' {
+      foreach ($column in @(
+        [pscustomobject]@{ Key='rank'; Label='Rank'; Width=0.07; Align='Center'; Bold=$true },
+        [pscustomobject]@{ Key='symbol'; Label='Symbol'; Width=0.09; Align='Center'; Bold=$true },
+        [pscustomobject]@{ Key='companyName'; Label='Company'; Width=0.24; Align='Near'; Bold=$false },
+        [pscustomobject]@{ Key='coreBusiness'; Label='Core Business'; Width=0.19; Align='Near'; Bold=$false },
+        [pscustomobject]@{ Key='mainDriver'; Label='Main Driver'; Width=0.30; Align='Near'; Bold=$false },
+        [pscustomobject]@{ Key='compositeScore'; Label='Score'; Width=0.11; Align='Far'; Bold=$true }
+      )) { [void]$columns.Add($column) }
+      foreach ($row in @($Json.Rows)) {
+        $rowIndex++
+        $required = @('rank','symbol','companyName','coreBusiness','mainDriver','compositeScore')
+        Assert-AplObjectProperties $row $required $required "Table card input TopLeaders row $rowIndex"
+        foreach ($key in @('rank','symbol','companyName','coreBusiness','mainDriver')) { Assert-AplStringProperty $row $key "Table card input TopLeaders row $rowIndex" -Required -NonEmpty }
+        if ([string]$row.rank -notmatch '^#[1-9][0-9]*$') { throw "Table card input TopLeaders row $rowIndex rank must use '#N' only." }
+        if ([string]$row.symbol -notmatch '^[A-Z0-9][A-Z0-9.-]*$') { throw "Table card input TopLeaders row $rowIndex symbol is invalid." }
+        if (-not (Test-AplJsonNumber $row.compositeScore)) { throw "Table card input TopLeaders row $rowIndex compositeScore must be a JSON number." }
+        $score = [double]$row.compositeScore
+        if ([double]::IsNaN($score) -or [double]::IsInfinity($score)) { throw "Table card input TopLeaders row $rowIndex compositeScore must be finite." }
+        [void]$displayRows.Add([object[]]@([string]$row.rank,[string]$row.symbol,[string]$row.companyName,[string]$row.coreBusiness,[string]$row.mainDriver,$score.ToString('0.##',[Globalization.CultureInfo]::InvariantCulture)))
+      }
+    }
+    'TopGainers' {
+      foreach ($column in @(
+        [pscustomobject]@{ Key='symbol'; Label='Symbol'; Width=0.13; Align='Center'; Bold=$true },
+        [pscustomobject]@{ Key='companyName'; Label='Company'; Width=0.34; Align='Near'; Bold=$false },
+        [pscustomobject]@{ Key='sectorTheme'; Label='Sector / Theme'; Width=0.35; Align='Near'; Bold=$false },
+        [pscustomobject]@{ Key='changePct'; Label='Change'; Width=0.18; Align='Far'; Bold=$true }
+      )) { [void]$columns.Add($column) }
+      foreach ($row in @($Json.Rows)) {
+        $rowIndex++
+        $required = @('symbol','companyName','sectorTheme','changePct')
+        Assert-AplObjectProperties $row $required $required "Table card input TopGainers row $rowIndex"
+        foreach ($key in $required) { Assert-AplStringProperty $row $key "Table card input TopGainers row $rowIndex" -Required -NonEmpty }
+        if ([string]$row.symbol -notmatch '^[A-Z0-9][A-Z0-9.-]*$') { throw "Table card input TopGainers row $rowIndex symbol is invalid." }
+        if ([string]$row.sectorTheme -match '^[+-]?\d+(?:\.\d+)?%$') { throw "Table card input TopGainers row $rowIndex sectorTheme cannot contain the percentage value." }
+        if ([string]$row.changePct -notmatch '^[+-]\d+(?:\.\d{1,2})?%$') { throw "Table card input TopGainers row $rowIndex changePct must be a signed percentage." }
+        [void]$displayRows.Add([object[]]@([string]$row.symbol,[string]$row.companyName,[string]$row.sectorTheme,[string]$row.changePct))
+      }
+    }
+    'SectorStructure' {
+      foreach ($column in @(
+        [pscustomobject]@{ Key='theme,count'; Label='Theme'; Width=0.20; Align='Near'; Bold=$true },
+        [pscustomobject]@{ Key='direction'; Label='Direction'; Width=0.36; Align='Near'; Bold=$false },
+        [pscustomobject]@{ Key='representativeSymbols'; Label='Representative Symbols'; Width=0.44; Align='Near'; Bold=$true }
+      )) { [void]$columns.Add($column) }
+      foreach ($row in @($Json.Rows)) {
+        $rowIndex++
+        $required = @('theme','count','direction','representativeSymbols')
+        Assert-AplObjectProperties $row $required $required "Table card input SectorStructure row $rowIndex"
+        foreach ($key in @('theme','direction','representativeSymbols')) { Assert-AplStringProperty $row $key "Table card input SectorStructure row $rowIndex" -Required -NonEmpty }
+        if (-not (Test-AplJsonNumber $row.count) -or [double]$row.count -lt 1 -or [math]::Truncate([double]$row.count) -ne [double]$row.count) { throw "Table card input SectorStructure row $rowIndex count must be a positive integer." }
+        $symbolListPattern = '^[A-Z0-9][A-Z0-9.-]*(?:,\s*[A-Z0-9][A-Z0-9.-]*)*$'
+        if ([string]$row.representativeSymbols -notmatch $symbolListPattern) { throw "Table card input SectorStructure row $rowIndex representativeSymbols must be a comma-separated symbol list." }
+        if ([string]$row.direction -match $symbolListPattern) { throw "Table card input SectorStructure row $rowIndex direction cannot contain only symbols." }
+        [void]$displayRows.Add([object[]]@("$($row.theme) | $([int]$row.count)",[string]$row.direction,[string]$row.representativeSymbols))
+      }
+    }
+    'MarketObservation' {
+      foreach ($column in @(
+        [pscustomobject]@{ Key='observation'; Label='Observation'; Width=0.38; Align='Near'; Bold=$true },
+        [pscustomobject]@{ Key='meaning'; Label='Meaning'; Width=0.37; Align='Near'; Bold=$false },
+        [pscustomobject]@{ Key='evidence'; Label='Evidence'; Width=0.25; Align='Near'; Bold=$false }
+      )) { [void]$columns.Add($column) }
+      foreach ($row in @($Json.Rows)) {
+        $rowIndex++
+        $required = @('observation','meaning','evidence')
+        Assert-AplObjectProperties $row $required $required "Table card input MarketObservation row $rowIndex"
+        foreach ($key in $required) { Assert-AplStringProperty $row $key "Table card input MarketObservation row $rowIndex" -Required -NonEmpty }
+        [void]$displayRows.Add([object[]]@([string]$row.observation,[string]$row.meaning,[string]$row.evidence))
+      }
+    }
+    'Comparison' {
+      foreach ($column in @(
+        [pscustomobject]@{ Key='signal'; Label='Signal'; Width=0.28; Align='Near'; Bold=$true },
+        [pscustomobject]@{ Key='whatItShows'; Label='What It Shows'; Width=0.34; Align='Near'; Bold=$false },
+        [pscustomobject]@{ Key='marketMeaning'; Label='Market Meaning'; Width=0.38; Align='Near'; Bold=$false }
+      )) { [void]$columns.Add($column) }
+      foreach ($row in @($Json.Rows)) {
+        $rowIndex++
+        $required = @('signal','whatItShows','marketMeaning')
+        Assert-AplObjectProperties $row $required $required "Table card input Comparison row $rowIndex"
+        foreach ($key in $required) { Assert-AplStringProperty $row $key "Table card input Comparison row $rowIndex" -Required -NonEmpty }
+        [void]$displayRows.Add([object[]]@([string]$row.signal,[string]$row.whatItShows,[string]$row.marketMeaning))
+      }
+    }
+    default { throw "Unsupported Table Card type '$CardType'." }
+  }
+
+  foreach ($row in $displayRows.ToArray()) {
+    if (@($row).Count -ne $columns.Count) { throw "Table card input $CardType header count does not match rendered row field count." }
+    foreach ($cell in @($row)) { if ([string]::IsNullOrWhiteSpace([string]$cell)) { throw "Table card input $CardType rendered field cannot be empty." } }
+  }
+  return [pscustomobject]@{ Columns=[object[]]$columns.ToArray(); Rows=[object[]]$displayRows.ToArray() }
+}
+
 function Assert-AplTableCardContract($Json, [string]$ExpectedCardType = '') {
   $label = 'Table card input'
   $allowed = @('SchemaVersion','CardType','Title','Subtitle','Columns','Rows','SourceNote','FooterNote','Meta')
-  Assert-AplObjectProperties $Json $allowed @('SchemaVersion','Title','Rows') $label
+  Assert-AplObjectProperties $Json $allowed @('SchemaVersion','CardType','Title','Rows') $label
   Assert-AplStringProperty $Json 'SchemaVersion' $label -Required -NonEmpty
-  if ([string]$Json.SchemaVersion -ne 'APL Table Card Input v1.0') { throw "$label SchemaVersion must be 'APL Table Card Input v1.0'." }
+  if ([string]$Json.SchemaVersion -ne 'APL Table Card Input v1.1') { throw "$label SchemaVersion must be 'APL Table Card Input v1.1'." }
   Assert-AplStringProperty $Json 'Title' $label -Required -NonEmpty
   foreach ($name in @('Subtitle','SourceNote','FooterNote')) { Assert-AplStringProperty $Json $name $label }
   $cardTypes = @('ExecutiveSummary','TopLeaders','TopGainers','SectorStructure','MarketObservation','Comparison')
-  if ($null -ne $Json.PSObject.Properties['CardType']) {
-    Assert-AplStringProperty $Json 'CardType' $label -NonEmpty
-    if ($cardTypes -notcontains [string]$Json.CardType) { throw "$label CardType '$($Json.CardType)' is invalid." }
-    if (-not [string]::IsNullOrWhiteSpace($ExpectedCardType) -and [string]$Json.CardType -ne $ExpectedCardType) { throw "$label CardType '$($Json.CardType)' does not match expected '$ExpectedCardType'." }
-  }
-  $effectiveCardType = if (-not [string]::IsNullOrWhiteSpace($ExpectedCardType)) { $ExpectedCardType } elseif ($null -ne $Json.PSObject.Properties['CardType']) { [string]$Json.CardType } else { '' }
+  Assert-AplStringProperty $Json 'CardType' $label -Required -NonEmpty
+  if ($cardTypes -notcontains [string]$Json.CardType) { throw "$label CardType '$($Json.CardType)' is invalid." }
+  if (-not [string]::IsNullOrWhiteSpace($ExpectedCardType) -and [string]$Json.CardType -ne $ExpectedCardType) { throw "$label CardType '$($Json.CardType)' does not match expected '$ExpectedCardType'." }
+  $effectiveCardType = [string]$Json.CardType
   $canonicalTopGainersTitle = ((-join (@(0x6700,0x8FD1,0x0037,0x65E5) | ForEach-Object { [char]$_ })) + ' Top Gainers')
   if ($effectiveCardType -eq 'TopGainers' -and [string]$Json.Title -cne $canonicalTopGainersTitle) { throw "$label Title for TopGainers must match the canonical title exactly." }
   if ($Json.Rows -isnot [array]) { throw "$label Rows must be a JSON array." }
   $rows = @($Json.Rows)
   if ($rows.Count -lt 1 -or $rows.Count -gt 8) { throw "$label Rows must contain 1-8 rows." }
-  foreach ($row in $rows) {
-    if ($row -isnot [array]) { throw "$label row must be a JSON array." }
-    $cells = @($row)
-    if ($cells.Count -lt 1 -or $cells.Count -gt 5) { throw "$label row must contain 1-5 cells." }
-    foreach ($cell in $cells) {
-      if ($null -ne $cell -and $cell -isnot [string] -and $cell -isnot [bool] -and -not (Test-AplJsonNumber $cell)) { throw "$label row cells must be string, number, boolean, or null." }
-    }
-  }
+  foreach ($row in $rows) { if ($row -isnot [pscustomobject]) { throw "$label rows must be JSON objects with named semantic fields." } }
   if ($null -ne $Json.PSObject.Properties['Columns']) {
-    if ($Json.Columns -isnot [array]) { throw "$label Columns must be a JSON array." }
-    $columns = @($Json.Columns)
-    if ($columns.Count -lt 1 -or $columns.Count -gt 5) { throw "$label Columns must contain 1-5 items." }
-    foreach ($column in $columns) {
-      Assert-AplObjectProperties $column @('Label','Width','Align','Bold') @('Label','Width') "$label column"
-      Assert-AplStringProperty $column 'Label' "$label column" -Required -NonEmpty
-      if (-not (Test-AplJsonNumber $column.Width) -or [double]$column.Width -le 0) { throw "$label column Width must be a number greater than zero." }
-      if ($null -ne $column.PSObject.Properties['Align']) {
-        Assert-AplStringProperty $column 'Align' "$label column"
-        if (@('Near','Center','Far') -notcontains [string]$column.Align) { throw "$label column Align is invalid." }
-      }
-      if ($null -ne $column.PSObject.Properties['Bold'] -and $column.Bold -isnot [bool]) { throw "$label column Bold must be boolean." }
-    }
+    throw "$label Columns is renderer-owned for v1.1 semantic cards and must not be supplied."
   }
   if ($null -ne $Json.PSObject.Properties['Meta']) {
     Assert-AplObjectProperties $Json.Meta @('Date','Source','MarketTheme','ProductionNote') @() "$label Meta"
     foreach ($name in @('Date','Source','MarketTheme','ProductionNote')) { Assert-AplStringProperty $Json.Meta $name "$label Meta" }
     if ($null -ne $Json.Meta.PSObject.Properties['Date'] -and [string]$Json.Meta.Date -notmatch '^\d{4}-\d{2}-\d{2}$') { throw "$label Meta.Date must use YYYY-MM-DD." }
   }
-  return [pscustomobject]@{ SchemaVersion=[string]$Json.SchemaVersion; CardType=if ($null -ne $Json.CardType) { [string]$Json.CardType } else { 'not provided' }; Rows=$rows.Count }
+  $presentation = Get-AplTableCardPresentation $Json $effectiveCardType
+  return [pscustomobject]@{ SchemaVersion=[string]$Json.SchemaVersion; CardType=$effectiveCardType; Rows=$rows.Count; Columns=@($presentation.Columns).Count; Presentation=$presentation }
 }
 
 function Resolve-AplRendererInput {
@@ -222,7 +316,7 @@ function Resolve-AplRendererInput {
   if ([string]::IsNullOrWhiteSpace($SectorMapPath)) { $SectorMapPath = Join-Path $projectRoot 'tools\sector_map.json' }
   if ([string]::IsNullOrWhiteSpace($OutputPath)) { $OutputPath = $OutputDir }
   if ([string]::IsNullOrWhiteSpace($OutputPath)) { $OutputPath = Join-Path $projectRoot "outputs\$ScanDate" }
-  if ([string]::IsNullOrWhiteSpace($LogoPath)) { $LogoPath = Join-Path $projectRoot 'outputs\APL_Deep_Scan_Brand_Logo_Renderer_Clean_2026-06-28.png' }
+  if ([string]::IsNullOrWhiteSpace($LogoPath)) { $LogoPath = Join-Path $projectRoot 'Assets\Brand\APL_Deep_Scan_Brand_Logo_Renderer_Clean.png' }
   if ($LeaderCapacity -eq 0) { $LeaderCapacity = 30 }
   if ($LeaderCapacity -ne 30) { throw 'Production renderers require LeaderCapacity 30.' }
   $RankingCsv = Assert-AplProductionPath (Get-AplFullPath $RankingCsv $contractBase) 'RankingCsv' -RegressionTest:$RegressionTest

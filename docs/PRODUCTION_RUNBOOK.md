@@ -1,5 +1,7 @@
 # Production Runbook
 
+For a fresh clone or another computer, complete [Cross-PC Production Runbook](CROSS_PC_RELEASE_RUNBOOK.md) before this daily runbook.
+
 本 runbook 適用於 APL US Stock repository product v1.0.0，執行環境為 Windows PowerShell 5.1。
 
 ## 1. Preflight
@@ -35,7 +37,7 @@ Cover／SEO overlay 的指定字型為中文 `Alibaba Sans HK`、英文／數字
 | `CoverBackgroundPath` | Yes | Codex 經 image generation workflow 生成並保存到核准 production-input path 的無字 cinematic background；overlay renderer 只負責本地後製 |
 | `OutputRoot` | No | Production 必須是 repository `outputs/`；省略即可。Regression 必須明確位於 repository `tmp/` 內 |
 | `SectorMapPath` | No | 預設 `tools/sector_map.json` |
-| `LogoPath` | No | 預設且唯一隨 v1.0.0 支援的 clean production logo |
+| `LogoPath` | No | 預設為已追蹤的 `Assets/Brand/APL_Deep_Scan_Brand_Logo_Renderer_Clean.png` |
 | `TableCardOutputName` | No | 只可是單一檔名，不可含目錄或 traversal |
 | `RegressionTest` | No | 由 CLI 啟用 regression authority；不是 JSON contract property |
 
@@ -85,9 +87,9 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run_daily_produc
 
 ## 5. Step map and fail-fast behavior
 
-Runner 依序執行：ScoringRanking → WatchlistSma200Audit → BuildRendererContracts → ValidateDashboardInput → ValidateSocialInput → RenderDashboard SVG → ExportDashboardPng → RenderSocialCard SVG → ExportSocialPng → Validate／Render Table Card manifest → RenderCoverOverlay → RenderSeoOverlay → PublishArtifacts。
+Runner 依序執行：ScoringRanking → WatchlistSma200Audit → BuildRendererContracts → PrepareProductionPackage → Validate／Render Dashboard、Social及四張Table Card → RenderCoverOverlay／SEO → ImportPublishingArtifacts → NormalizeStagedArtifacts → FinalizeProductionPackageManifest → PublishArtifacts。
 
-Dashboard production completeness要求同時發布1920×1080 SVG及PNG。PNG必須由已完成validation的SVG經`tools/convert_svg_to_png.ps1`及核准的Microsoft Edge／Google Chrome headless export產生；converter維持no-overwrite、resolved path guard、尺寸驗證及fail-fast。
+Dashboard production completeness要求同時發布1920×1080 SVG及PNG。PNG必須由已完成validation的SVG經`tools/convert_svg_to_png.ps1`及repository-pinned `tools/renderers/resvg/resvg.exe`產生；converter維持no-overwrite、resolved path guard、尺寸驗證及fail-fast，且不得 fallback到browser或system fonts。
 
 Social production completeness要求同時發布1080×1350 SVG及PNG。Social PNG同樣由已完成validation的SVG經`tools/convert_svg_to_png.ps1`產生，並寫入 `production-package/`。
 
@@ -106,15 +108,17 @@ PublishArtifacts 完成後，runner 必須執行 `LockPublishedMachineArtifacts`
 
 ### Date-package file layout
 
-日期 Production Package 的 `production-package/` 子目錄保留：
+日期 Production Package 的 `production-package/` 子目錄原生保留：
 
-- 當日 PNG artifacts（Dashboard、Cover、SEO及Table Card PNG）；
-- `table-card-log/` 內的 Table Card `.table-card-log.txt`、publication manifest及指定 supporting contracts／CSV／analysis files；
+- Dashboard、Social、Cover及SEO PNG；
+- `Table Cards/` 內四張required Table Card PNG、`.table-card-log.txt`及publication manifest；
+- `WhatsApp_<ScanDate>.md`；
 - `APL_Momentum_Leaders_Market_Analysis_Blog_<ScanDate>.md`；
 - `APL_Momentum_Leaders_Market_Analysis_Blog_<ScanDate>.html`；
-- 已核准的 Dashboard input、source／ranking CSV、cumulative watchlist及 Company Business Analysis。
+- `table-card-log/`內的Company Business Analysis；
+- `APL_Production_Package_Manifest_<ScanDate>.json`，記錄required mapping及全部package files的path／size／SHA。
 
-SVG（Dashboard／Social）、其餘 contracts、SMA200、renderer logs及其他 machine records留在日期根目錄。若整理已發布 package，必須先記錄 path-only migration，再重新核對每個 artifact bytes／SHA-256；不得重新生成或改寫 artifact content。
+Dashboard／Social SVG、Dashboard input、source／ranking CSV、cumulative watchlist、SMA200 audit、其餘 contracts、renderer logs及其他machine records留在日期根目錄。Package publishing artifacts不得在日期根目錄保留副本。舊完成日期不作post-publish搬移；新結構只由下一次Step 1完整run或下一個ScanDate產生。
 
 ### Published machine artifact immutability
 
