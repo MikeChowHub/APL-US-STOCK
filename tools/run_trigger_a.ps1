@@ -157,12 +157,14 @@ $outputPath = $null
 $outputAlreadyExisted = $false
 $writesPerformed = $false
 if ($Mode -ceq 'write-output') {
-  $outputDateRoot = Join-Path $outputsRoot $scanDate
-  Assert-AplNoReparsePath -Path $outputDateRoot -AllowedRoot $ProjectRoot | Out-Null
+  $triggerAOutputsRoot = Join-Path $outputsRoot 'trigger-a'
+  $outputDateRoot = Join-Path $triggerAOutputsRoot $scanDate
+  Assert-AplNoReparsePath -Path $outputDateRoot -AllowedRoot $outputsRoot | Out-Null
   if (-not (Test-Path -LiteralPath $outputDateRoot)) {
     New-Item -ItemType Directory -Path $outputDateRoot -Force | Out-Null
   }
-  $outputDateRoot = Assert-AplNoReparsePath -Path $outputDateRoot -AllowedRoot $outputsRoot -RequireDirectory
+  $triggerAOutputsRoot = Assert-AplNoReparsePath -Path $triggerAOutputsRoot -AllowedRoot $outputsRoot -RequireDirectory
+  $outputDateRoot = Assert-AplNoReparsePath -Path $outputDateRoot -AllowedRoot $triggerAOutputsRoot -RequireDirectory
   $outputPath = Assert-AplNoReparsePath -Path (Join-Path $outputDateRoot ("APL_Quant_Cumulative_Watchlist_{0}.txt" -f $scanDate)) -AllowedRoot $outputDateRoot
 
   if (Test-Path -LiteralPath $outputPath) {

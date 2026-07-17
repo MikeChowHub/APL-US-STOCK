@@ -124,7 +124,7 @@ Trigger A must not perform or invoke:
 The daily result is:
 
 ```text
-outputs/<ScanDate>/APL_Quant_Cumulative_Watchlist_<ScanDate>.txt
+outputs/trigger-a/<ScanDate>/APL_Quant_Cumulative_Watchlist_<ScanDate>.txt
 ```
 
 The implementation must use no-overwrite behavior. An existing dated output may only be treated as an idempotent rerun after exact bytes and SHA-256 comparison; conflicting content must fail.

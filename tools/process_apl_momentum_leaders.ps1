@@ -29,7 +29,7 @@ if ($RegressionTest) {
 $dateOut = Join-Path $outputsRoot $ScanDate
 $dateArtifacts = @(
   "APL_Momentum_Score_Full_Ranking_$ScanDate.csv", "APL_Quant_Top_30_$ScanDate.txt", "APL_Quant_Top_30_$ScanDate.md",
-  "APL_Quant_Cumulative_Watchlist_$ScanDate.txt", "removed-below-sma200-$ScanDate.txt", "retained-missing-sma200-$ScanDate.txt",
+  "APL_Momentum_Leaders_Watchlist_$ScanDate.txt", "removed-below-sma200-$ScanDate.txt", "retained-missing-sma200-$ScanDate.txt",
   "APL_Momentum_Leaders_Overview_$ScanDate.md", "APL_Momentum_Leaders_Meta_$ScanDate.json", "APL_Momentum_Leaders_Source_$ScanDate.csv"
 )
 $rootArtifacts = if ($SkipRootCopies) { @() } else { @($dateArtifacts | Where-Object { $_ -ne "APL_Momentum_Leaders_Source_$ScanDate.csv" }) }
@@ -273,7 +273,7 @@ $top30 = @($full | Select-Object -First 30)
 $fullCsv = Join-Path $dateOut "APL_Momentum_Score_Full_Ranking_$ScanDate.csv"
 $topTxt = Join-Path $dateOut "APL_Quant_Top_30_$ScanDate.txt"
 $topMd = Join-Path $dateOut "APL_Quant_Top_30_$ScanDate.md"
-$cumTxt = Join-Path $dateOut "APL_Quant_Cumulative_Watchlist_$ScanDate.txt"
+$cumTxt = Join-Path $dateOut "APL_Momentum_Leaders_Watchlist_$ScanDate.txt"
 $removedBelowSma200Txt = Join-Path $dateOut "removed-below-sma200-$ScanDate.txt"
 $retainedMissingSma200Txt = Join-Path $dateOut "retained-missing-sma200-$ScanDate.txt"
 $overviewMd = Join-Path $dateOut "APL_Momentum_Leaders_Overview_$ScanDate.md"

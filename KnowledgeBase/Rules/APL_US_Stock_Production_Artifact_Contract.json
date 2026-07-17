@@ -25,7 +25,7 @@
   ],
   "Optional": [
     { "Id": "blog-second-format", "Category": "Publishing", "Patterns": ["production-package/APL_Momentum_Leaders_Market_Analysis_Blog_{ScanDate}.md", "production-package/APL_Momentum_Leaders_Market_Analysis_Blog_{ScanDate}.html"] },
-    { "Id": "machine-support", "Category": "Machine", "Patterns": ["*.svg", "*_Render_Log.txt", "APL_DeepScan_*_Input_{ScanDate}.json", "APL_Momentum_Leaders_Source_{ScanDate}.csv", "APL_Quant_Top_30_{ScanDate}.txt", "APL_Quant_Cumulative_Watchlist_{ScanDate}.txt", "production-package/*.overlay-log.txt", "production-package/Table Cards/*.table-card-log.txt"] },
+    { "Id": "machine-support", "Category": "Machine", "Patterns": ["*.svg", "*_Render_Log.txt", "APL_DeepScan_*_Input_{ScanDate}.json", "APL_Momentum_Leaders_Source_{ScanDate}.csv", "APL_Quant_Top_30_{ScanDate}.txt", "APL_Momentum_Leaders_Watchlist_{ScanDate}.txt", "production-package/*.overlay-log.txt", "production-package/Table Cards/*.table-card-log.txt"] },
     { "Id": "additional-approved-publishing", "Category": "Publishing", "Patterns": ["production-package/*.png", "production-package/*.txt", "production-package/*.md", "production-package/*.html", "production-package/Table Cards/*.png"] }
   ],
   "RequiredTableCardTypes": ["ExecutiveSummary", "TopLeaders", "TopGainers", "SectorStructure"]
