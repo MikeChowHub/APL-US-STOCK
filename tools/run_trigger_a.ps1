@@ -3,7 +3,7 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$DailyScreenerCsv,
 
-  [ValidateSet('dry-run')]
+  [ValidateSet('dry-run','write-output')]
   [string]$Mode = 'dry-run'
 )
 
@@ -35,8 +35,6 @@ function Get-ByteArraySha256([byte[]]$Bytes) {
   try { return [System.BitConverter]::ToString($algorithm.ComputeHash($Bytes)).Replace('-', '') }
   finally { $algorithm.Dispose() }
 }
-
-if ($Mode -cne 'dry-run') { throw 'Trigger A v1 supports dry-run mode only.' }
 
 $DailyScreenerCsv = Assert-AplNoReparsePath -Path $DailyScreenerCsv -AllowedRoot $ProjectRoot -RequireFile
 $outputsRoot = Join-Path $ProjectRoot 'outputs'
@@ -155,6 +153,45 @@ $previewText = ($mergedSymbols.ToArray() -join ',') + "`r`n"
 $previewBytes = Get-PreviewBytes $previewText
 $previewSha256 = Get-ByteArraySha256 $previewBytes
 
+$outputPath = $null
+$outputAlreadyExisted = $false
+$writesPerformed = $false
+if ($Mode -ceq 'write-output') {
+  $outputDateRoot = Join-Path $outputsRoot $scanDate
+  Assert-AplNoReparsePath -Path $outputDateRoot -AllowedRoot $ProjectRoot | Out-Null
+  if (-not (Test-Path -LiteralPath $outputDateRoot)) {
+    New-Item -ItemType Directory -Path $outputDateRoot -Force | Out-Null
+  }
+  $outputDateRoot = Assert-AplNoReparsePath -Path $outputDateRoot -AllowedRoot $outputsRoot -RequireDirectory
+  $outputPath = Assert-AplNoReparsePath -Path (Join-Path $outputDateRoot ("APL_Quant_Cumulative_Watchlist_{0}.txt" -f $scanDate)) -AllowedRoot $outputDateRoot
+
+  if (Test-Path -LiteralPath $outputPath) {
+    $outputPath = Assert-AplNoReparsePath -Path $outputPath -AllowedRoot $outputDateRoot -RequireFile
+    $existingSha256 = (Get-FileHash -LiteralPath $outputPath -Algorithm SHA256).Hash.ToUpperInvariant()
+    if ($existingSha256 -cne $previewSha256) {
+      throw "Trigger A output already exists with different content: $outputPath"
+    }
+    $outputAlreadyExisted = $true
+  } else {
+    $temporaryPath = Join-Path $outputDateRoot ('.{0}.{1}.tmp' -f (Split-Path $outputPath -Leaf), [guid]::NewGuid().ToString('N'))
+    try {
+      [System.IO.File]::WriteAllBytes($temporaryPath, $previewBytes)
+      $temporaryPath = Assert-AplNoReparsePath -Path $temporaryPath -AllowedRoot $outputDateRoot -RequireFile
+      $temporarySha256 = (Get-FileHash -LiteralPath $temporaryPath -Algorithm SHA256).Hash.ToUpperInvariant()
+      if ($temporarySha256 -cne $previewSha256) { throw 'Trigger A temporary output SHA256 verification failed.' }
+      Move-Item -LiteralPath $temporaryPath -Destination $outputPath
+      $writesPerformed = $true
+    } finally {
+      if ($null -ne $temporaryPath -and (Test-Path -LiteralPath $temporaryPath)) {
+        Remove-Item -LiteralPath $temporaryPath -Force
+      }
+    }
+    $outputPath = Assert-AplNoReparsePath -Path $outputPath -AllowedRoot $outputDateRoot -RequireFile
+    $outputSha256 = (Get-FileHash -LiteralPath $outputPath -Algorithm SHA256).Hash.ToUpperInvariant()
+    if ($outputSha256 -cne $previewSha256) { throw 'Trigger A final output SHA256 verification failed.' }
+  }
+}
+
 $canonicalHashAfter = (Get-FileHash -LiteralPath $canonicalPath -Algorithm SHA256).Hash
 $canonicalBytesAfter = (Get-Item -LiteralPath $canonicalPath).Length
 $manifestHashAfter = (Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash
@@ -166,24 +203,49 @@ if ($manifestHashBefore -cne $manifestHashAfter -or $manifestBytesBefore -ne $ma
   throw 'Watchlist manifest changed during dry-run.'
 }
 
-[pscustomobject]@{
-  Status = 'DRY_RUN_PASS'
-  Mode = $Mode
-  ScanDate = $scanDate
-  DailyScreenerCsv = $DailyScreenerCsv
-  CanonicalWatchlist = $canonicalPath
-  Manifest = $manifestPath
-  BaselineAsOfDate = [string]$manifest.AsOfDate
-  BaselineSymbolCount = $baselineSymbols.Count
-  DailyRowCount = $dailyRowCount
-  DailyUniqueSymbolCount = $dailySymbols.Count
-  AddedSymbolCount = $addedSymbols.Count
-  AddedSymbols = [object[]]$addedSymbols.ToArray()
-  FinalSymbolCount = $mergedSymbols.Count
-  PreviewBytes = $previewBytes.Length
-  PreviewSHA256 = $previewSha256
-  CanonicalWouldChange = ($addedSymbols.Count -gt 0)
-  WritesPerformed = $false
-  CanonicalUpdated = $false
-  ManifestUpdated = $false
+if ($Mode -ceq 'dry-run') {
+  [pscustomobject]@{
+    Status = 'DRY_RUN_PASS'
+    Mode = $Mode
+    ScanDate = $scanDate
+    DailyScreenerCsv = $DailyScreenerCsv
+    CanonicalWatchlist = $canonicalPath
+    Manifest = $manifestPath
+    BaselineAsOfDate = [string]$manifest.AsOfDate
+    BaselineSymbolCount = $baselineSymbols.Count
+    DailyRowCount = $dailyRowCount
+    DailyUniqueSymbolCount = $dailySymbols.Count
+    AddedSymbolCount = $addedSymbols.Count
+    AddedSymbols = [object[]]$addedSymbols.ToArray()
+    FinalSymbolCount = $mergedSymbols.Count
+    PreviewBytes = $previewBytes.Length
+    PreviewSHA256 = $previewSha256
+    CanonicalWouldChange = ($addedSymbols.Count -gt 0)
+    WritesPerformed = $false
+    CanonicalUpdated = $false
+    ManifestUpdated = $false
+  }
+} else {
+  [pscustomobject]@{
+    Status = 'WRITE_OUTPUT_PASS'
+    Mode = $Mode
+    ScanDate = $scanDate
+    DailyScreenerCsv = $DailyScreenerCsv
+    CanonicalWatchlist = $canonicalPath
+    Manifest = $manifestPath
+    BaselineAsOfDate = [string]$manifest.AsOfDate
+    BaselineSymbolCount = $baselineSymbols.Count
+    DailyRowCount = $dailyRowCount
+    DailyUniqueSymbolCount = $dailySymbols.Count
+    AddedSymbolCount = $addedSymbols.Count
+    AddedSymbols = [object[]]$addedSymbols.ToArray()
+    FinalSymbolCount = $mergedSymbols.Count
+    PreviewBytes = $previewBytes.Length
+    PreviewSHA256 = $previewSha256
+    OutputWatchlist = $outputPath
+    OutputAlreadyExisted = $outputAlreadyExisted
+    WritesPerformed = $writesPerformed
+    CanonicalUpdated = $false
+    ManifestUpdated = $false
+  }
 }
