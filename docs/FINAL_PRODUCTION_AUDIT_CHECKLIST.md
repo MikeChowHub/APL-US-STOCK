@@ -17,6 +17,21 @@
 - [ ] 四張Table Card只在`production-package/Table Cards/`；Dashboard、Social、Cover、SEO及WhatsApp只在package，日期根目錄沒有重複。
 - [ ] 已發布 machine artifacts 的 bytes 與 SHA-256 和 runner 記錄一致。
 - [ ] 正式 Blog、HTML、Top 30 company analysis、publishing materials（若屬當次 Production scope）已置於日期輸出目錄。
+- [ ] Blog Markdown 的 Market Context 在適用時保留 approved input 的小標題順序。
+- [ ] Blog Markdown 的 Market Context 保留所有主要市場論點；「避免 news dump」不得被用作過度壓縮理由。
+- [ ] Blog HTML 與 Markdown 的 Market Context 在小標題順序及主要論點上內容對等。
+- [ ] HTML `<h3>` 只用於主 section；`<h4>` 只出現在 Market Context 的詳細 subsection。
+- [ ] Executive Summary 仍為短版，且未取代詳細 Market Context。
+- [ ] WhatsApp 可獨立摘要，不要求逐段與 Blog Market Context 對等。
+- [ ] Trigger B 數據、ranking、sector counts 及 Top Gainers 結果沒有冒充或混入原始 Market Context。
+- [ ] 全文有唯一、當期特定的核心市場命題；沒有預設固定股票、板塊或市場結論。
+- [ ] 每個主要 section 只完成一個明確推理任務，並建立在上一節的結果之上。
+- [ ] 沒有重複結論卻未新增證據、重新由零開始解釋市場背景，或可任意交換順序的獨立 section。
+- [ ] 最近7日 Top Gainers 與 Momentum Leaders 有清楚的短線／中期資金對照。
+- [ ] Sector Analysis 由個股強勢推進至產業群組判斷。
+- [ ] Relative Volume／Market Activity 實際參與確認或質疑核心命題，而非獨立描述成交量。
+- [ ] Risk 直接提出可能推翻核心命題的條件；Deep-Scan Conclusion 回答文章開頭的市場問題，且沒有新增前文未出現的論點。
+- [ ] 移除任一主要分析 section 會令推理鏈中斷，證明各 section 不可任意交換。
 - [ ] Final audit 證據已寫入 `Final_Production_Audit_YYYY-MM-DD.json`，`Status=PASS`。
 
 ## Automatic Archive gate

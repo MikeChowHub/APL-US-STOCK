@@ -56,6 +56,43 @@ What did Deep-Scan find?
 What does it mean?
 ```
 
+### Single narrative thread
+
+Each issue must define one core market proposition. It is an issue-specific question and provisional market interpretation, not a fixed conclusion that every issue must use.
+
+The article is a continuous reasoning chain, not a set of independent short articles. Each section performs one reasoning task, builds on the conclusion of the preceding section, and should end by naturally raising the next question. Do not restart the market background in each section or repeat the same conclusion without adding evidence or analytical progress.
+
+```text
+Market Context
+→ What is the largest structural market change?
+
+為什麼要看 APL Momentum Leaders 領導股？
+→ Why is the broad index insufficient for understanding capital flow?
+
+Deep-Scan Overview
+→ Does the quantitative result show that market leadership still exists?
+
+最近7日 Top Gainers
+→ Is short-term capital defensive, rotating, or pursuing risk?
+
+Momentum Leaders Analysis
+→ Which companies and business models are receiving medium-term capital?
+
+Sector Analysis
+→ Has individual strength formed an industry group?
+
+Relative Volume / Market Activity
+→ Is the new leadership structure confirmed by volume and market participation?
+
+Risk
+→ What could disprove the interpretation?
+
+Deep-Scan Conclusion
+→ What answers the opening market question, and what is the next confirmation signal?
+```
+
+If the section order can be exchanged without changing the reasoning, or if removing a major section leaves the reasoning intact, the narrative chain has failed.
+
 ---
 
 ## 2. Executive Summary
@@ -77,6 +114,10 @@ It should answer:
 
 Market Context must explain the market environment before introducing the APL framework.
 
+Market Context is the Blog's detailed market-analysis section. It must not be compressed into a single-paragraph summary merely because the input is long.
+
+It must state the issue's largest structural market change and establish the core market proposition that the following sections test.
+
 It should answer:
 
 - current market condition;
@@ -85,7 +126,29 @@ It should answer:
 - risk background;
 - how the context relates to APL Momentum Leaders 領導股.
 
-Market Context must not become a news dump.
+When the approved `market-context.md` contains multiple subheadings and paragraphs, the Blog Markdown and companion HTML must preserve:
+
+- the original subheading order;
+- the semantic meaning of each subheading;
+- all major market arguments and their causal relationships.
+
+Editorial wording may be lightly reorganized for clarity, but it must not remove a major market-background argument. Executive Summary is a separate short-form observation and must not replace Market Context.
+
+Trigger B data, ranking results, sector counts and 最近7日 Top Gainers results must not be presented as if they were source Market Context. Those inputs belong in their own Blog sections and may only be related back to the market background through editorial analysis.
+
+Blog Markdown and Blog HTML must remain content-equivalent for Market Context: they must preserve the same subheading order and major arguments. WhatsApp is an independent social summary and is not required to retain each detailed Market Context subsection.
+
+`Market Context must not become a news dump` means do not pile up unconnected headlines or repeat individual news items without analysis. It does not permit removal of an already organized, market-logical detailed context.
+
+### Market Context hierarchy
+
+The Blog's main `Market Context` section remains Markdown H2 and HTML `<h3>`. Within that section only:
+
+- Market Context subsections use Markdown H3;
+- the corresponding HTML subsections use `<h4>`;
+- each prose block remains its own paragraph.
+
+No other Blog section may use arbitrary `<h4>` headings.
 
 Daily news should be interpreted through the lens of capital flow and leadership structure.
 
@@ -94,6 +157,8 @@ Daily news should be interpreted through the lens of capital flow and leadership
 ## 4. 為什麼要看 APL Momentum Leaders 領導股？
 
 This section explains the framework for readers who are new to APL.
+
+It must continue directly from Market Context: explain why a broad market index alone cannot reveal the capital shift identified above.
 
 Required message:
 
@@ -116,6 +181,8 @@ The purpose is to understand where market leadership is forming.
 
 This section summarizes the current Deep-Scan result.
 
+It must not be a list of numbers. Explain how the quantitative evidence supports or challenges the core market proposition, then lead into whether short-term capital selection agrees with it.
+
 It may include:
 
 - scan universe;
@@ -133,6 +200,8 @@ Internal data source names must not appear in client-facing text.
 ## 6. 最近7日 Top Gainers
 
 Use 最近7日 Top Gainers to explain short-term market temperature.
+
+It must contrast short-term price leadership with the medium-term Momentum Leaders structure, then lead into where medium-term capital is actually moving. Do not describe it as an independent market story.
 
 `最近7日 Top Gainers` is the fixed canonical section title across the Blog manuscript and TopGainers Table Card. It must be emitted exactly as:
 
@@ -164,6 +233,8 @@ Top Gainers must not be treated as stock recommendations.
 
 This section explains what the APL Momentum Leaders 領導股 structure reveals.
 
+It must answer which companies, business models or new directions are receiving medium-term capital, then lead into whether their strength has formed an industry group.
+
 It should focus on:
 
 - leadership quality;
@@ -179,6 +250,8 @@ Do not simply list stocks one by one.
 ## 8. Sector Analysis
 
 Sector Analysis should explain why certain sectors dominate the current scan.
+
+It must move from individual-stock strength to an industry-group judgment, then lead into whether volume and participation confirm that group.
 
 It should connect:
 
@@ -197,6 +270,8 @@ If structured data needs a visual treatment, generate a separate Blog Table Card
 
 Relative Volume should be interpreted as market activity, not as a standalone buy signal.
 
+It must be evidence that confirms or questions the new leadership structure, then lead into its vulnerabilities and the Risk section.
+
 Explain whether capital participation is broad, concentrated, or selective.
 
 ---
@@ -204,6 +279,8 @@ Explain whether capital participation is broad, concentrated, or selective.
 ## 10. Risk
 
 Risk section is mandatory.
+
+It must directly test conditions that could disprove the core proposition; unrelated generic risks are not sufficient. Its closing should lead to the final market judgment.
 
 It should discuss:
 
@@ -225,6 +302,8 @@ Do not imply certainty.
 ## 11. Deep-Scan Conclusion
 
 The conclusion should summarize the market state and identify what deserves continued observation.
+
+It must answer the Market Context question that opened the article, integrate only prior evidence and identify the next confirmation signal. Do not introduce a new argument.
 
 It should not repeat the whole article.
 
@@ -330,11 +409,12 @@ Disclaimer copy            → <p>...</p>
 
 Rules:
 
-- every small／section heading must use lowercase HTML `<h3>` tags;
+- every main／section heading must use lowercase HTML `<h3>` tags;
+- `<h4>` is allowed only for Market Context subsections that correspond to detailed Markdown H3 subsections; all other Blog sections must not use `<h4>`;
 - every prose block must be enclosed in its own lowercase HTML `<p>` tags;
-- do not use Markdown `##`／`###` headings for article content;
+- do not use Markdown `##`／`###` headings inside the HTML source;
 - do not leave bare prose outside `<p>`;
-- do not use `<h2>`, `<h4>` or deeper heading levels for the standard article structure;
+- do not use `<h2>` or heading levels deeper than `<h4>`; do not use `<h4>` outside Market Context subsections;
 - do not add `<img>`, `<picture>`, `<source>` or CSS image references;
 - do not append publishing metadata to the HTML source;
 - the HTML source must end with the final article／disclaimer paragraph, not URL, Page title or Page description fields.

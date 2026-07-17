@@ -18,7 +18,53 @@ Do not use this template for Trigger A or Trigger B alone.
 
 ---
 
-## 1. Required References
+## 1. Narrative chain
+
+Before drafting, define one issue-specific core market proposition. It is editorial guidance only and must not appear as a labelled field in the formal Blog.
+
+```text
+Market Context
+→ What is the largest structural market change?
+
+為什麼要看 APL Momentum Leaders 領導股？
+→ Why is the broad index insufficient for understanding capital flow?
+
+Deep-Scan Overview
+→ Does quantitative evidence show leadership still exists?
+
+最近7日 Top Gainers
+→ Is short-term capital defensive, rotating, or pursuing risk?
+
+Momentum Leaders Analysis
+→ Which companies and business models are receiving medium-term capital?
+
+Sector Analysis
+→ Has individual strength formed an industry group?
+
+Relative Volume / Market Activity
+→ Is the leadership structure confirmed by volume and market participation?
+
+Risk
+→ What could disprove the interpretation?
+
+Deep-Scan Conclusion
+→ What answers the opening question, and what is the next confirmation signal?
+```
+
+Use the following private editorial guidance for every major section; do not display these labels in the formal Blog:
+
+- 本期核心命題；
+- 上一節已確認什麼；
+- 本節需要回答什麼；
+- 本節使用哪些證據；
+- 本節得到什麼結論；
+- 下一節需要驗證什麼。
+
+Each section completes one reasoning task, begins with an issue-specific transition from the preceding conclusion, and ends by naturally introducing the next question. Sections must not be independently exchangeable.
+
+---
+
+## 2. Required References
 
 Before writing, apply:
 
@@ -36,7 +82,7 @@ All visual outputs are independent Production Package artifacts. None may be emb
 
 ---
 
-## 2. Independent Output Files
+## 3. Independent Output Files
 
 Trigger C editorial production creates two separate text artifacts:
 
@@ -47,7 +93,27 @@ APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.html
 
 The `.md` file is the editorial manuscript and may retain text-only publishing metadata. The `.html` file is the publish-ready article source and contains article content only. Neither file may embed or reference images.
 
-## 3. Publish-ready HTML Skeleton
+## 4. Market Context detailed structure
+
+Executive Summary remains one concise market observation. Market Context is a detailed section and may contain multiple subsections and paragraphs without a fixed word limit.
+
+Use this Markdown structure when the approved Market Context has multiple headings:
+
+```markdown
+## Market Context
+
+### [市場背景小標題一]
+
+[一或多個段落。]
+
+### [市場背景小標題二]
+
+[一或多個段落。]
+```
+
+Preserve the approved input's subsection order and major arguments. Blog Markdown and HTML must retain the same subsection order and major arguments. Do not substitute Executive Summary, Trigger B data, rankings, sector counts or Top Gainers results for the detailed Market Context. WhatsApp may use an independent summary. End this section by showing why the broad index alone cannot answer the capital-flow question.
+
+## 5. Publish-ready HTML Skeleton
 
 ```html
 <h1>[Article Title]</h1>
@@ -56,32 +122,37 @@ The `.md` file is the editorial manuscript and may retain text-only publishing m
 <p>[One concise market observation.]</p>
 
 <h3>Market Context</h3>
-<p>[Interpret current market events through capital flow and leadership structure.]</p>
+
+<h4>[市場背景小標題一]</h4>
+<p>[One or more paragraphs interpreting this market background through capital flow and leadership structure.]</p>
+
+<h4>[市場背景小標題二]</h4>
+<p>[One or more paragraphs preserving the next major market argument.]</p>
 
 <h3>為什麼要看 APL Momentum Leaders 領導股？</h3>
-<p>[Explain framework. Not a recommendation list.]</p>
+<p>[Transition from Market Context: explain why the broad index cannot reveal the capital shift, then explain the framework. End by asking whether the quantitative evidence still shows leadership. Not a recommendation list.]</p>
 
 <h3>Deep-Scan Overview</h3>
-<p>[Summarize scan results and market theme.]</p>
+<p>[Transition from framework to evidence: explain what the quantitative results support or challenge in the core proposition, not only the counts. End by asking whether short-term capital selection is consistent.]</p>
 
 <h3>最近7日 Top Gainers</h3>
-<p>[Explain short-term market temperature.]</p>
+<p>[Transition from overview: contrast short-term price leadership with medium-term leadership, then ask where medium-term capital is actually moving.]</p>
 <p>資料來源為 TradingView，排名、價格及升幅會隨市場變動。</p>
 
 <h3>Momentum Leaders Analysis</h3>
-<p>[Explain leadership structure.]</p>
+<p>[Transition from short-term comparison: explain which companies and business models receive medium-term capital, then ask whether they form an industry group.]</p>
 
 <h3>Sector Analysis</h3>
-<p>[Explain dominant sectors and capital rotation.]</p>
+<p>[Transition from individual leaders: determine whether the strength forms an industry group, then ask whether participation confirms it.]</p>
 
 <h3>Relative Volume / Market Activity</h3>
-<p>[Explain activity and participation.]</p>
+<p>[Transition from group structure: use volume and participation to confirm or question the leadership thesis, then identify its vulnerabilities.]</p>
 
 <h3>Risk</h3>
-<p>[Explain risks without investment advice.]</p>
+<p>[Transition from participation evidence: identify conditions that could disprove the core proposition, then lead to the final judgment without investment advice.]</p>
 
 <h3>Deep-Scan Conclusion</h3>
-<p>[Research-style conclusion.]</p>
+<p>[Return to the Market Context opening question; integrate only prior evidence and state the next confirmation signal without adding a new argument.]</p>
 
 <h3>Call to Action</h3>
 <p>[Text-only CTA.]</p>
@@ -99,7 +170,7 @@ The HTML file must not end with `詳細文章`, `Page title` or `Page descriptio
 
 ---
 
-## 4. Independent Visual Package
+## 6. Independent Visual Package
 
 Generate and publish visual assets separately from the Blog manuscript:
 
@@ -115,7 +186,7 @@ Each visual must still be validated and recorded with byte size and SHA-256 in t
 
 ---
 
-## 5. Variable Content Blocks
+## 7. Variable Content Blocks
 
 Replace the following per issue:
 
@@ -133,7 +204,7 @@ Do not insert internal production terminology into client-facing Blog text.
 
 ---
 
-## 6. Prohibited Template Usage
+## 8. Prohibited Template Usage
 
 Do not:
 
@@ -143,7 +214,7 @@ Do not:
 - use Social Card as article analysis;
 - embed or reference Hero Cover, Dashboard, Table Cards, SEO image, Social Card or any other image inside the Blog manuscript;
 - put HTML source inside the `.md` manuscript instead of the independent `.html` file;
-- use heading elements other than `<h3>` for HTML article sections;
+- use `<h4>` outside Market Context subsections; main HTML sections remain `<h3>`;
 - leave HTML article prose outside `<p>`;
 - append URL, Page title or Page description metadata paragraphs to the HTML source;
 - treat APL Momentum Leaders 領導股 as investment advice;
