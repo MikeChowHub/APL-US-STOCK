@@ -92,22 +92,44 @@ foreach ($value in @($baselineText -split ',')) {
 }
 if ($baselineSymbols.Count -ne [int]$manifest.SymbolCount) { throw 'Canonical watchlist symbol count does not match manifest.' }
 
-$dailyRows = @(Import-Csv -LiteralPath $DailyScreenerCsv -Encoding UTF8)
-if ($dailyRows.Count -eq 0) { throw 'Daily Screener CSV contains no data rows.' }
-$symbolColumns = @($dailyRows[0].PSObject.Properties.Name | Where-Object { [string]$_ -ceq 'Symbol' })
-if ($symbolColumns.Count -ne 1) { throw 'Daily Screener CSV must contain exactly one Symbol column.' }
-
 $dailySymbols = New-Object System.Collections.Generic.List[string]
 $dailySeen = @{}
-$dailyRowNumber = 1
-foreach ($row in $dailyRows) {
-  $dailyRowNumber++
-  $symbol = ConvertTo-CanonicalSymbol $row.Symbol "Daily Screener row $dailyRowNumber"
-  if (-not $dailySeen.ContainsKey($symbol)) {
-    $dailySeen[$symbol] = $true
-    [void]$dailySymbols.Add($symbol)
+$dailyRowCount = 0
+Add-Type -AssemblyName Microsoft.VisualBasic
+$csvParser = New-Object Microsoft.VisualBasic.FileIO.TextFieldParser -ArgumentList @($DailyScreenerCsv, [System.Text.Encoding]::UTF8, $true)
+try {
+  $csvParser.TextFieldType = [Microsoft.VisualBasic.FileIO.FieldType]::Delimited
+  $csvParser.SetDelimiters(',')
+  $csvParser.HasFieldsEnclosedInQuotes = $true
+  $csvParser.TrimWhiteSpace = $false
+  if ($csvParser.EndOfData) { throw 'Daily Screener CSV is empty.' }
+  $headers = @($csvParser.ReadFields())
+  $symbolIndexes = @(
+    for ($i = 0; $i -lt $headers.Count; $i++) {
+      $header = ([string]$headers[$i]).TrimStart([char]0xFEFF)
+      if ($header -ceq 'Symbol') { $i }
+    }
+  )
+  if ($symbolIndexes.Count -ne 1) { throw 'Daily Screener CSV must contain exactly one Symbol column.' }
+  $symbolIndex = [int]$symbolIndexes[0]
+  while (-not $csvParser.EndOfData) {
+    $dailyRowCount++
+    try { $fields = @($csvParser.ReadFields()) }
+    catch [Microsoft.VisualBasic.FileIO.MalformedLineException] {
+      throw "Daily Screener row $($dailyRowCount + 1) is malformed CSV: $($_.Exception.Message)"
+    }
+    if ($symbolIndex -ge $fields.Count) { throw "Daily Screener row $($dailyRowCount + 1) is missing the Symbol field." }
+    $symbol = ConvertTo-CanonicalSymbol $fields[$symbolIndex] "Daily Screener row $($dailyRowCount + 1)"
+    if (-not $dailySeen.ContainsKey($symbol)) {
+      $dailySeen[$symbol] = $true
+      [void]$dailySymbols.Add($symbol)
+    }
   }
+} finally {
+  $csvParser.Close()
+  $csvParser.Dispose()
 }
+if ($dailyRowCount -eq 0) { throw 'Daily Screener CSV contains no data rows.' }
 
 $mergedSymbols = New-Object System.Collections.Generic.List[string]
 $mergedSeen = @{}
@@ -153,7 +175,7 @@ if ($manifestHashBefore -cne $manifestHashAfter -or $manifestBytesBefore -ne $ma
   Manifest = $manifestPath
   BaselineAsOfDate = [string]$manifest.AsOfDate
   BaselineSymbolCount = $baselineSymbols.Count
-  DailyRowCount = $dailyRows.Count
+  DailyRowCount = $dailyRowCount
   DailyUniqueSymbolCount = $dailySymbols.Count
   AddedSymbolCount = $addedSymbols.Count
   AddedSymbols = [object[]]$addedSymbols.ToArray()
