@@ -1,0 +1,15 @@
+{
+  "artifact_type": "cover|seo",
+  "native_size": {
+    "width": 0,
+    "height": 0
+  },
+  "aspect_ratio": "",
+  "tolerance": 0.001,
+  "source_sha256": "",
+  "provider": "",
+  "workflow": "",
+  "generation_time": "",
+  "capture_stage": "",
+  "transformation": "none"
+}

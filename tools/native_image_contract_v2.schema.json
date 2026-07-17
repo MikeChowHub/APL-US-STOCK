@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "APL Native Image Artifact Contract v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "native_size",
+    "aspect_ratio",
+    "tolerance",
+    "source_sha256",
+    "provider",
+    "workflow",
+    "generation_time",
+    "capture_stage",
+    "transformation"
+  ],
+  "properties": {
+    "artifact_type": { "type": "string", "enum": ["cover", "seo"] },
+    "native_size": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "aspect_ratio": { "type": "string", "enum": ["4:5", "16:9"] },
+    "tolerance": { "type": "number", "const": 0.001 },
+    "source_sha256": { "type": "string", "pattern": "^[0-9A-F]{64}$" },
+    "provider": { "type": "string", "minLength": 1 },
+    "workflow": { "type": "string", "minLength": 1 },
+    "generation_time": { "type": "string", "format": "date-time" },
+    "capture_stage": { "type": "string", "const": "ImmediateGenerationOutput" },
+    "transformation": { "type": "string", "const": "none" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "artifact_type": { "const": "cover" } },
+        "required": ["artifact_type"]
+      },
+      "then": {
+        "properties": { "aspect_ratio": { "const": "4:5" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "artifact_type": { "const": "seo" } },
+        "required": ["artifact_type"]
+      },
+      "then": {
+        "properties": { "aspect_ratio": { "const": "16:9" } }
+      }
+    }
+  ]
+}

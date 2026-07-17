@@ -85,6 +85,12 @@ After Trigger B scoring, the cumulative TradingView Watchlist should be sorted u
 
 Trigger A does not sort by Composite Score unless score data already exists and the user explicitly requests it.
 
+## Repository-Managed Runtime Baseline
+
+Trigger A must use `Assets/ReferenceData/Watchlists/APL_Quant_Cumulative_Watchlist.txt` as the canonical previous cumulative watchlist. Its provenance, as-of date, symbol count, bytes, and SHA-256 are defined by the adjacent `watchlist-manifest.json`.
+
+`Archive/` is immutable historical evidence and must not be used as a Trigger A runtime dependency. `outputs/` contains generated results and must not be used as a Trigger A runtime dependency. A fresh clone must obtain its approved previous cumulative watchlist from the repository-managed ReferenceData baseline rather than discovering or selecting files from either directory.
+
 ## Implementation Status
 
 The SMA200 removal rule is implemented in Trigger B processing.
