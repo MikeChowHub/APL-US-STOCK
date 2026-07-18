@@ -18,7 +18,7 @@ Trigger C editorial preparation is a required stage between verified Trigger B o
 
 Editorial completion requires both Blog formats to contain the ten mandatory analysis sections with substantive issue-specific content, detailed Market Context derived from the approved market-topic input, current Trigger B numbers, current Top Gainers evidence, a continuous reasoning chain, a responsive conclusion, a substantive WhatsApp summary and non-empty Company Business Analysis. Template placeholders, test sentences, summary shells and headings without analysis are not publishing artifacts.
 
-`tools/validate_managed_inputs.ps1` is the fail-closed executable gate. It creates `APL_Editorial_Completion_Audit_<ScanDate>.json` only after content, source evidence and Markdown／HTML equivalence pass. Mechanical Production completion without this PASS evidence is not publishable completion.
+`tools/validate_managed_inputs.ps1` is the fail-closed executable gate. It creates `APL_Editorial_Completion_Audit_<ScanDate>.json` v1.1 only after content, source evidence, Markdown／HTML equivalence, Table Card source integrity and distinct native-composition integrity pass. `tools/run_daily_production.ps1` must invoke this gate before scoring and must then prove that its newly generated Trigger B ranking is byte-identical to the ranking used during editorial preparation. Mechanical Production completion without this PASS evidence is not publishable completion.
 
 Formal completion is:
 
@@ -399,6 +399,8 @@ The standard Trigger C Production Package must publish the successful required e
 - `SectorStructure` — sector／leadership structure.
 
 `MarketObservation` and `Comparison` are optional and must not be generated without an article-specific reason. No Table Card, whether required or optional, may be referenced inside the Blog manuscript. A publishing operation outside the manuscript may use only cards recorded as `PASS` in the publication manifest.
+
+Required Table Cards are source-bound publishing evidence, not free-form illustrations. `TopLeaders` must reproduce the current Trigger B ranking rows in rank order with matching symbols, company identities and Composite Scores; `TopGainers` must reproduce the current Top Gainers CSV order with matching symbols, company identities and percentage changes; `SectorStructure` representative symbols must belong to the current Trigger B Top 30; and `ExecutiveSummary` must state the current universe, qualified and leader counts. Any mismatch is a managed-input preflight failure and Production must not start.
 
 ---
 

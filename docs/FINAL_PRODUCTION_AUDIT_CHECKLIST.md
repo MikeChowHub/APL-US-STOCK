@@ -34,6 +34,11 @@
 - [ ] Table Card publication manifest（適用時）為 PASS。
 - [ ] 每張 required Table Card 的 input SHA 與 publication manifest 一致，並通過 `APL Table Card Input v1.1` semantic contract。
 - [ ] Table Card required semantic fields 全部非空；header/display column 數與 renderer mapping 一致；score、percentage、sector/theme、direction及symbols沒有錯欄。
+- [ ] `TopLeaders`逐列rank／symbol／company identity／Composite Score與當次Trigger B full ranking一致；不得以其他日期或人工選股替代。
+- [ ] `TopGainers`逐列symbol／company identity／change percentage與當次TradingView Top Gainers CSV一致；重複的非Symbol header不影響核對。
+- [ ] `SectorStructure`每個representative symbol均存在於當次Trigger B Top 30，沒有跨群組重複或虛構代表股；`ExecutiveSummary`包含當次universe／qualified／leaders數字。
+- [ ] Editorial Completion Audit為v1.1、`ProductionReadiness=true`，14個source roles的relative path／bytes／SHA-256完整且唯一，Table Card及native composition integrity checks全部PASS。
+- [ ] Runner trace顯示`ManagedInputPreflight`在`ScoringRanking`之前PASS，並在其後完成`VerifyTriggerBEvidence`；正式run不可只依賴人工先行preflight。
 - [ ] `production-package/APL_Production_Package_Manifest_<ScanDate>.json` schema/date/status PASS，required id/path集合完整且沒有重複。
 - [ ] Package manifest file count、total bytes、逐檔relative path／size／SHA與實際package一致。
 - [ ] 四張Table Card只在`production-package/Table Cards/`；Dashboard、Social、Cover、SEO及WhatsApp只在package，日期根目錄沒有重複。

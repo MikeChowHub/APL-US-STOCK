@@ -37,12 +37,18 @@ v1.0.0 scope 包括：
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run_daily_production.ps1 `
   -InputCsv "<absolute-input-csv>" `
+  -TopGainersCsvPath "<absolute-top-gainers-csv>" `
+  -MarketContextPath "<absolute-market-context-md>" `
+  -TriggerBMetaPath "<absolute-managed-trigger-b-meta>" `
   -ScanDate "YYYY-MM-DD" `
   -WeekLabel "<week-label>" `
   -TableCardManifestPath "<absolute-table-card-manifest-json>" `
   -CoverBriefPath "<absolute-cover-brief-json>" `
   -CoverBackgroundPath "<absolute-native-cover-background>" `
-  -SeoBackgroundPath "<absolute-native-seo-background>"
+  -SeoBackgroundPath "<absolute-native-seo-background>" `
+  -CoverNativeContractPath "<absolute-cover-native-contract>" `
+  -SeoNativeContractPath "<absolute-seo-native-contract>" `
+  -PublishingArtifactsRoot "<absolute-managed-publishing-root>"
 ```
 
 Production output root 固定為 `outputs/`。成功後 artifacts 位於 `outputs/<ScanDate>/`，logs 位於 `outputs/logs/`。同日期正式 artifacts 已存在時，pipeline 會在寫入前拒絕覆蓋。
@@ -68,7 +74,7 @@ Regression fixtures 屬本機測試資料，不隨 v1.0.0 repository 發布；�
 
 ## Inputs and outputs
 
-必需 inputs 是 source CSV、scan date、week label、Table Card contract JSON／type，以及由 Trigger C pre-production stage 產生的 Cover Brief JSON 與無字 cinematic background。預設由 Codex 根據正式市場文案建立後兩者，不應要求使用者自行設計背景；使用者亦可明確指定已核准的外部背景。Sector map 與 clean logo 有 repository-relative defaults；可用明確參數覆寫，但仍受 resolved production path guard 約束。
+正式Daily Production必需 inputs 是 cumulative source CSV、Top Gainers CSV、Market Context、Trigger B metadata／ranking evidence、四張Table Card manifest／semantic inputs、完整publishing root、Cover Brief、兩張不同native backgrounds及兩份native composition records。Runner會先自行執行managed-input preflight，再重算Trigger B並核對ranking SHA；獨立preflight不能繞過這個gate。Sector map與clean logo有repository-relative defaults，仍受resolved production path guard約束。
 
 每次成功 run 產生 ranking、Top 30、watchlist、SMA200 audit、metadata、renderer contracts、Dashboard／Social SVG、正式 `production-package/`、renderer logs，以及包含 artifact SHA-256 的 pipeline JSONL trace。
 

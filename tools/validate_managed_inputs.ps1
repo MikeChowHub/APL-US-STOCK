@@ -182,6 +182,82 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
   return [pscustomobject]@{MandatorySections=[string[]]$mandatory.Keys;Sections=$sections;TriggerBMeta=$meta;TopGainers=[string[]]$topSymbols;MarkdownTitle=$mdTitle}
 }
 
+function Get-AplUniqueCsvColumnIndex($Csv,[string]$Name){
+  $indexes=@(for($i=0;$i-lt$Csv.Headers.Count;$i++){if(([string]$Csv.Headers[$i]).TrimStart([char]0xFEFF)-ceq$Name){$i}})
+  if($indexes.Count-ne1){throw "CSV must contain exactly one '$Name' column."}
+  return [int]$indexes[0]
+}
+
+function ConvertTo-AplInvariantDouble($Value,[string]$Label){
+  $number=0.0
+  if(-not[double]::TryParse(([string]$Value).Trim(),[Globalization.NumberStyles]::Float,[Globalization.CultureInfo]::InvariantCulture,[ref]$number)){throw "$Label must be a valid invariant number."}
+  return [double]$number
+}
+
+function ConvertTo-AplCompanyIdentity([string]$Value){
+  $ignored=@('INC','INCORPORATED','CORP','CORPORATION','CO','COMPANY','COMPANIES','LTD','LIMITED','PLC','HOLDING','HOLDINGS','GROUP','THE')
+  $tokens=@(($Value.ToUpperInvariant()-replace'[^A-Z0-9]+',' ').Trim()-split'\s+'|Where-Object{$_-and$ignored-cnotcontains$_})
+  return ($tokens-join'')
+}
+
+function Assert-AplCompanyIdentity([string]$Actual,[string]$Expected,[string]$Label){
+  $actualKey=ConvertTo-AplCompanyIdentity $Actual;$expectedKey=ConvertTo-AplCompanyIdentity $Expected
+  if($actualKey.Length-lt2-or$expectedKey.Length-lt2-or(-not$actualKey.StartsWith($expectedKey,[StringComparison]::Ordinal)-and-not$expectedKey.StartsWith($actualKey,[StringComparison]::Ordinal))){throw "$Label company identity does not match its source."}
+}
+
+function Assert-AplTableCardSourceIntegrity($Cards,$Meta,[string]$TopGainersPath,[string]$AllowedRoot){
+  $rankingPath=Assert-AplNoReparsePath -Path ([string]$Meta.fullRankingCsv) -AllowedRoot $AllowedRoot -RequireFile
+  $ranking=@(Import-Csv -LiteralPath $rankingPath)
+  if($ranking.Count-lt30){throw 'Trigger B full ranking has fewer than 30 rows for Table Card source validation.'}
+
+  $executive=$Cards['ExecutiveSummary'].Json
+  $executiveText=(@($executive.Rows|ForEach-Object{"$($_.observation) $($_.meaning)"})-join' ')
+  foreach($field in @('universe','qualified','leaders')){
+    $value=[string]$Meta.$field
+    if($executiveText-cnotmatch('(?<![0-9])'+[regex]::Escape($value)+'(?![0-9])')){throw "ExecutiveSummary does not match Trigger B metadata field: $field=$value"}
+  }
+
+  $leaderRows=@($Cards['TopLeaders'].Json.Rows)
+  if($leaderRows.Count-lt1-or$leaderRows.Count-gt$ranking.Count){throw 'TopLeaders card row count is invalid.'}
+  for($i=0;$i-lt$leaderRows.Count;$i++){
+    $expected=$ranking[$i];$actual=$leaderRows[$i];$expectedRank=$i+1
+    if(([string]$actual.rank).TrimStart('#')-cne[string]$expectedRank){throw "TopLeaders row $($i+1) rank does not match Trigger B ranking."}
+    if(([string]$actual.symbol).Trim().ToUpperInvariant()-cne([string]$expected.Symbol).Trim().ToUpperInvariant()){throw "TopLeaders row $($i+1) symbol does not match Trigger B ranking."}
+    Assert-AplCompanyIdentity ([string]$actual.companyName) ([string]$expected.Name) "TopLeaders row $($i+1)"
+    $actualScore=ConvertTo-AplInvariantDouble $actual.compositeScore "TopLeaders row $($i+1) compositeScore"
+    $expectedScore=ConvertTo-AplInvariantDouble $expected.'Composite Score' "Trigger B ranking row $($i+1) Composite Score"
+    if([Math]::Abs($actualScore-$expectedScore)-gt0.005){throw "TopLeaders row $($i+1) compositeScore does not match Trigger B ranking."}
+  }
+
+  $topCsv=Read-AplTradingViewCsv $TopGainersPath
+  $descriptionIndex=Get-AplUniqueCsvColumnIndex $topCsv 'Description'
+  $changeIndex=Get-AplUniqueCsvColumnIndex $topCsv 'Price change %, 1 day'
+  $gainerRows=@($Cards['TopGainers'].Json.Rows)
+  if($gainerRows.Count-lt1-or$gainerRows.Count-gt$topCsv.Rows.Count){throw 'TopGainers card row count is invalid.'}
+  for($i=0;$i-lt$gainerRows.Count;$i++){
+    $source=$topCsv.Rows[$i];$actual=$gainerRows[$i]
+    if(([string]$actual.symbol).Trim().ToUpperInvariant()-cne([string]$source[$topCsv.SymbolIndex]).Trim().ToUpperInvariant()){throw "TopGainers row $($i+1) symbol does not match source CSV."}
+    Assert-AplCompanyIdentity ([string]$actual.companyName) ([string]$source[$descriptionIndex]) "TopGainers row $($i+1)"
+    $actualChange=ConvertTo-AplInvariantDouble (([string]$actual.changePct).Trim().TrimEnd('%')) "TopGainers row $($i+1) changePct"
+    $sourceChange=ConvertTo-AplInvariantDouble $source[$changeIndex] "Top Gainers source row $($i+1) change"
+    if([Math]::Abs($actualChange-$sourceChange)-gt0.005){throw "TopGainers row $($i+1) changePct does not match source CSV."}
+  }
+
+  $top30=@($ranking|Select-Object -First 30|ForEach-Object{([string]$_.Symbol).Trim().ToUpperInvariant()})
+  $seenRepresentatives=@{}
+  foreach($row in @($Cards['SectorStructure'].Json.Rows)){
+    $symbols=@(([string]$row.representativeSymbols)-split'[,;\s]+'|ForEach-Object{$_.Trim().ToUpperInvariant()}|Where-Object{$_})
+    if($symbols.Count-lt1){throw 'SectorStructure row has no representative symbols.'}
+    if([int]$row.count-lt$symbols.Count-or[int]$row.count-gt30){throw "SectorStructure count is inconsistent for theme '$($row.theme)'."}
+    foreach($symbol in $symbols){
+      if($top30-cnotcontains$symbol){throw "SectorStructure representative '$symbol' is not in the Trigger B Top 30."}
+      if($seenRepresentatives.ContainsKey($symbol)){throw "SectorStructure representative '$symbol' is duplicated across groups."}
+      $seenRepresentatives[$symbol]=$true
+    }
+  }
+  return [pscustomobject]@{RankingRows=$ranking.Count;TopLeaderRows=$leaderRows.Count;TopGainerRows=$gainerRows.Count;SectorRepresentatives=$seenRepresentatives.Count}
+}
+
 function Assert-AplNativeCompositionRecord($Record, [string]$ContractPath, [string]$Role, [string]$ImagePath, $BriefComposition, [string]$SceneConceptId, [string]$AllowedRoot) {
   $contractFields=@('artifact_type','scene_concept_id','native_size','aspect_ratio','camera_distance','framing_description','subject_placement','text_safe_area','source_path','tolerance','source_sha256','provider','workflow','generation_time','capture_stage','transformation')
   foreach($name in $contractFields) {
@@ -226,6 +302,9 @@ function Assert-AplNativeCompositionRecord($Record, [string]$ContractPath, [stri
 
 Assert-AplScanDate $ScanDate|Out-Null
 $allowedRoot=if($RegressionTest){Join-Path $ProjectRoot 'tmp'}else{Join-Path $ProjectRoot 'work\managed-inputs'}
+$artifactContract=Read-AplStrictJson (Join-Path $ProjectRoot 'KnowledgeBase\Rules\APL_US_Stock_Production_Artifact_Contract.json') $ProjectRoot
+$readinessContract=$artifactContract.EditorialReadiness
+if($null-eq$readinessContract-or[string]::IsNullOrWhiteSpace([string]$readinessContract.SchemaVersion)-or@($readinessContract.RequiredSourceRoles).Count-lt1-or@($readinessContract.RequiredChecks).Count-lt1){throw 'Production Artifact Contract EditorialReadiness definition is invalid.'}
 $InputCsv=Assert-AplNoReparsePath -Path $InputCsv -AllowedRoot $allowedRoot -RequireFile
 $TopGainersCsvPath=Assert-AplNoReparsePath -Path $TopGainersCsvPath -AllowedRoot $allowedRoot -RequireFile
 $MarketContextPath=Assert-AplNoReparsePath -Path $MarketContextPath -AllowedRoot $allowedRoot -RequireFile
@@ -242,7 +321,12 @@ $csv=Read-AplTradingViewCsv $InputCsv
 $manifest=Read-AplStrictJson $TableCardManifestPath $allowedRoot
 if([string]$manifest.SchemaVersion-cne'APL Table Card Manifest v1.1'-or[string]$manifest.ScanDate-cne$ScanDate){throw 'Table Card manifest schema/date mismatch.'}
 $requiredTypes=@('ExecutiveSummary','TopLeaders','TopGainers','SectorStructure')
-foreach($type in $requiredTypes){$records=@($manifest.Cards|Where-Object{[string]$_.CardType-eq$type-and$_.Required-eq$true});if($records.Count-ne 1){throw "Managed inputs require exactly one $type card."};$input=[string]$records[0].InputPath;$base=Split-Path $TableCardManifestPath -Parent;$path=if([IO.Path]::IsPathRooted($input)){$input}else{Join-Path $base $input};$path=Assert-AplNoReparsePath -Path $path -AllowedRoot $allowedRoot -RequireFile;$json=Read-AplStrictJson $path $allowedRoot;[void](Assert-AplTableCardContract $json $type)}
+$tableCardSources=@{}
+foreach($type in $requiredTypes){$records=@($manifest.Cards|Where-Object{[string]$_.CardType-eq$type-and$_.Required-eq$true});if($records.Count-ne 1){throw "Managed inputs require exactly one $type card."};$input=[string]$records[0].InputPath;$base=Split-Path $TableCardManifestPath -Parent;$path=if([IO.Path]::IsPathRooted($input)){$input}else{Join-Path $base $input};$path=Assert-AplNoReparsePath -Path $path -AllowedRoot $allowedRoot -RequireFile;$json=Read-AplStrictJson $path $allowedRoot;[void](Assert-AplTableCardContract $json $type);$tableCardSources[$type]=[pscustomobject]@{Path=$path;Json=$json}}
+$triggerBMeta=Read-AplStrictJson $TriggerBMetaPath $allowedRoot
+if([string]$triggerBMeta.scanDate-cne$ScanDate){throw 'Trigger B metadata ScanDate mismatch.'}
+if($csv.Rows.Count-ne[int]$triggerBMeta.universe){throw "Cumulative screener row count does not match Trigger B metadata universe. Csv=$($csv.Rows.Count); Meta=$($triggerBMeta.universe)."}
+$tableCardIntegrity=Assert-AplTableCardSourceIntegrity $tableCardSources $triggerBMeta $TopGainersCsvPath $allowedRoot
 $brief=Read-AplStrictJson $CoverBriefPath $allowedRoot
 foreach($name in @('version','scanDate','composition','imageGenerationBrief','overlay')){if($null-eq$brief.PSObject.Properties[$name]){throw "Cover brief missing $name."}}
 if([string]$brief.version-cne'APL Cover Brief v1.1'-or[string]$brief.scanDate-cne$ScanDate){throw 'Cover brief schema/date mismatch.'}
@@ -283,17 +367,29 @@ $editorialAuditPath=Join-Path $packageRoot "APL_Editorial_Completion_Audit_${Sca
 $scanDateRoot=Join-Path $allowedRoot $ScanDate
 function New-AplEditorialEvidence([string]$Path,[string]$Role){$item=Get-Item -LiteralPath $Path;return [pscustomobject]@{Role=$Role;RelativePath=$item.FullName.Substring($scanDateRoot.TrimEnd('\').Length+1).Replace('\','/');Size=[long]$item.Length;SHA256=(Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash}}
 $audit=[ordered]@{
-  SchemaVersion='APL Editorial Completion Audit v1.0'
+  SchemaVersion=[string]$readinessContract.SchemaVersion
   ScanDate=$ScanDate
   Status='PASS'
   EditorialCompletion=$true
+  ProductionReadiness=$true
   DailyProductionPublishableCandidate=$true
   MandatorySections=[string[]]$editorial.MandatorySections
   CoreTitle=[string]$editorial.MarkdownTitle
   Sources=[object[]]@(
+    (New-AplEditorialEvidence $InputCsv 'cumulative-screener'),
     (New-AplEditorialEvidence $MarketContextPath 'market-context'),
     (New-AplEditorialEvidence $TopGainersCsvPath 'top-gainers'),
-    (New-AplEditorialEvidence $TriggerBMetaPath 'trigger-b-meta')
+    (New-AplEditorialEvidence $TriggerBMetaPath 'trigger-b-meta'),
+    (New-AplEditorialEvidence $TableCardManifestPath 'table-card-manifest'),
+    (New-AplEditorialEvidence $tableCardSources['ExecutiveSummary'].Path 'table-card-executive-summary'),
+    (New-AplEditorialEvidence $tableCardSources['TopLeaders'].Path 'table-card-top-leaders'),
+    (New-AplEditorialEvidence $tableCardSources['TopGainers'].Path 'table-card-top-gainers'),
+    (New-AplEditorialEvidence $tableCardSources['SectorStructure'].Path 'table-card-sector-structure'),
+    (New-AplEditorialEvidence $CoverBriefPath 'cover-brief'),
+    (New-AplEditorialEvidence $CoverBackgroundPath 'cover-native-background'),
+    (New-AplEditorialEvidence $SeoBackgroundPath 'seo-native-background'),
+    (New-AplEditorialEvidence $CoverNativeContractPath 'cover-native-contract'),
+    (New-AplEditorialEvidence $SeoNativeContractPath 'seo-native-contract')
   )
   Artifacts=[object[]]@(
     (New-AplEditorialEvidence $blogMarkdownPath 'blog-markdown'),
@@ -301,13 +397,20 @@ $audit=[ordered]@{
     (New-AplEditorialEvidence $whatsAppPath 'whatsapp'),
     (New-AplEditorialEvidence $companyPath 'company-business-analysis')
   )
-  Checks=[ordered]@{NoPlaceholder=$true;MandatorySections=$true;SectionOrder=$true;SubstantiveContent=$true;DetailedMarketContext=$true;MarkdownHtmlEquivalent=$true;TriggerBDataMatch=$true;TopGainersEvidence=$true;ConclusionResponds=$true;WhatsAppFirstScreen=$true;CompanyAnalysis=$true}
+  TableCardSourceIntegrity=$tableCardIntegrity
+  NativeCompositionIntegrity=[ordered]@{SceneConceptId=$sceneId;CoverSourceSHA256=$coverSha;SeoSourceSHA256=$seoSha;DistinctSourcePaths=$true;DistinctSourceSHA256=$true;NativeAspectRatios=$true;DistinctViewpoints=$true}
+  Checks=[ordered]@{NoPlaceholder=$true;MandatorySections=$true;SectionOrder=$true;SubstantiveContent=$true;DetailedMarketContext=$true;MarkdownHtmlEquivalent=$true;TriggerBDataMatch=$true;TopGainersEvidence=$true;ConclusionResponds=$true;WhatsAppFirstScreen=$true;CompanyAnalysis=$true;IntakeSourceIntegrity=$true;TableCardSourceIntegrity=$true;NativeCompositionIntegrity=$true}
 }
+$actualSourceRoles=@($audit.Sources|ForEach-Object{[string]$_.Role})
+if(Compare-Object @($readinessContract.RequiredSourceRoles) $actualSourceRoles){throw 'Editorial readiness source roles do not match the Production Artifact Contract.'}
+$actualChecks=@($audit.Checks.Keys|ForEach-Object{[string]$_})
+if(Compare-Object @($readinessContract.RequiredChecks) $actualChecks){throw 'Editorial readiness checks do not match the Production Artifact Contract.'}
 if(Test-Path -LiteralPath $editorialAuditPath -PathType Leaf){
   $existingAudit=Read-AplStrictJson $editorialAuditPath $packageRoot
-  if([string]$existingAudit.SchemaVersion-cne[string]$audit.SchemaVersion-or[string]$existingAudit.ScanDate-cne$ScanDate-or[string]$existingAudit.Status-cne'PASS'-or$existingAudit.EditorialCompletion-ne$true-or$existingAudit.DailyProductionPublishableCandidate-ne$true){throw 'Existing Editorial Completion Audit is invalid.'}
-  foreach($record in @($audit.Artifacts)){$existing=@($existingAudit.Artifacts|Where-Object{[string]$_.Role-ceq[string]$record.Role});if($existing.Count-ne1-or[string]$existing[0].SHA256-cne[string]$record.SHA256-or[long]$existing[0].Size-ne[long]$record.Size){throw "Existing Editorial Completion Audit artifact mismatch: $($record.Role)"}}
+  if([string]$existingAudit.SchemaVersion-cne[string]$audit.SchemaVersion-or[string]$existingAudit.ScanDate-cne$ScanDate-or[string]$existingAudit.Status-cne'PASS'-or$existingAudit.EditorialCompletion-ne$true-or$existingAudit.ProductionReadiness-ne$true-or$existingAudit.DailyProductionPublishableCandidate-ne$true){throw 'Existing Editorial Completion Audit is invalid.'}
+  foreach($collectionName in @('Sources','Artifacts')){foreach($record in @($audit[$collectionName])){$existing=@($existingAudit.$collectionName|Where-Object{[string]$_.Role-ceq[string]$record.Role});if($existing.Count-ne1-or[string]$existing[0].RelativePath-cne[string]$record.RelativePath-or[string]$existing[0].SHA256-cne[string]$record.SHA256-or[long]$existing[0].Size-ne[long]$record.Size){throw "Existing Editorial Completion Audit $collectionName mismatch: $($record.Role)"}}}
+  foreach($check in $audit.Checks.Keys){if($null-eq$existingAudit.Checks.PSObject.Properties[$check]-or$existingAudit.Checks.$check-ne$true){throw "Existing Editorial Completion Audit check is not PASS: $check"}}
 }else{
   Write-AplUtf8Atomic $editorialAuditPath ($audit|ConvertTo-Json -Depth 10) $packageRoot|Out-Null
 }
-[pscustomobject]@{Status='MANAGED INPUT PREFLIGHT PASS';ScanDate=$ScanDate;InputRows=$csv.Rows.Count;RequiredTableCards=4;PublishingArtifacts=($requiredPublishing.Count+1);NativeSceneConceptId=$sceneId;NativeCompositions=2;EditorialCompletion='PASS';EditorialAudit=$editorialAuditPath;DailyProductionPublishableCandidate=$true;ProductionStarted=$false}
+[pscustomobject]@{Status='MANAGED INPUT PREFLIGHT PASS';ScanDate=$ScanDate;InputRows=$csv.Rows.Count;RequiredTableCards=4;TableCardSourceIntegrity='PASS';PublishingArtifacts=($requiredPublishing.Count+1);NativeSceneConceptId=$sceneId;NativeCompositions=2;EditorialCompletion='PASS';ProductionReadiness='PASS';EditorialAudit=$editorialAuditPath;DailyProductionPublishableCandidate=$true;ProductionStarted=$false}

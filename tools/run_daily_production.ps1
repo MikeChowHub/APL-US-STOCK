@@ -15,6 +15,11 @@ param(
   [string]$LogoPath = '',
   [string]$PublishingArtifactsRoot = '',
   [string]$ArtifactContractPath = '',
+  [string]$TopGainersCsvPath = '',
+  [string]$MarketContextPath = '',
+  [string]$TriggerBMetaPath = '',
+  [string]$CoverNativeContractPath = '',
+  [string]$SeoNativeContractPath = '',
 
   [Parameter(Mandatory = $true, ParameterSetName = 'SingleTableCard')]
   [string]$TableCardInputPath,
@@ -76,6 +81,9 @@ function Write-Utf8Text([string]$Path, [string]$Text) {
 }
 
 $InputCsv = Assert-InputFile $InputCsv 'InputCsv'
+if (-not $RegressionTest -and $PSCmdlet.ParameterSetName -ne 'TableCardManifest') {
+  throw 'Formal Daily Production requires TableCardManifest; the single-card parameter set is renderer regression only.'
+}
 if ($PSCmdlet.ParameterSetName -eq 'TableCardManifest') {
   $TableCardManifestPath = Assert-InputFile $TableCardManifestPath 'TableCardManifestPath'
 } else {
@@ -84,6 +92,28 @@ if ($PSCmdlet.ParameterSetName -eq 'TableCardManifest') {
 $CoverBriefPath = Assert-InputFile $CoverBriefPath 'CoverBriefPath'
 $CoverBackgroundPath = Assert-InputFile $CoverBackgroundPath 'CoverBackgroundPath'
 $SeoBackgroundPath = Assert-InputFile $SeoBackgroundPath 'SeoBackgroundPath'
+$managedParameterValues = [ordered]@{
+  TopGainersCsvPath=$TopGainersCsvPath
+  MarketContextPath=$MarketContextPath
+  TriggerBMetaPath=$TriggerBMetaPath
+  CoverNativeContractPath=$CoverNativeContractPath
+  SeoNativeContractPath=$SeoNativeContractPath
+  PublishingArtifactsRoot=$PublishingArtifactsRoot
+}
+if (-not $RegressionTest) {
+  foreach ($entry in $managedParameterValues.GetEnumerator()) { if ([string]::IsNullOrWhiteSpace([string]$entry.Value)) { throw "Formal Daily Production requires -$($entry.Key)." } }
+}
+$hasCompleteManagedInputs = @($managedParameterValues.Values | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) }).Count -eq $managedParameterValues.Count
+if ($RegressionTest -and -not $hasCompleteManagedInputs -and @($managedParameterValues.Values | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) }).Count -gt 0) {
+  throw 'Regression runner must supply either all managed preflight parameters or none.'
+}
+if ($hasCompleteManagedInputs) {
+  $TopGainersCsvPath = Assert-InputFile $TopGainersCsvPath 'TopGainersCsvPath'
+  $MarketContextPath = Assert-InputFile $MarketContextPath 'MarketContextPath'
+  $TriggerBMetaPath = Assert-InputFile $TriggerBMetaPath 'TriggerBMetaPath'
+  $CoverNativeContractPath = Assert-InputFile $CoverNativeContractPath 'CoverNativeContractPath'
+  $SeoNativeContractPath = Assert-InputFile $SeoNativeContractPath 'SeoNativeContractPath'
+}
 if ($CoverBackgroundPath.Equals($SeoBackgroundPath, [System.StringComparison]::OrdinalIgnoreCase)) {
   throw 'CoverBackgroundPath and SeoBackgroundPath must be different native source files.'
 }
@@ -106,9 +136,14 @@ if ($RegressionTest) {
 }
 if ([string]::IsNullOrWhiteSpace($ArtifactContractPath)) { $ArtifactContractPath = Join-Path $ProjectRoot 'KnowledgeBase\Rules\APL_US_Stock_Production_Artifact_Contract.json' }
 $ArtifactContractPath = Assert-AplNoReparsePath -Path $ArtifactContractPath -AllowedRoot $ProjectRoot -RequireFile
+$publishingAllowedRoot = if ($RegressionTest) { $regressionRoot } else { Join-Path $ProjectRoot 'work' }
 if (-not [string]::IsNullOrWhiteSpace($PublishingArtifactsRoot)) {
-  $publishingAllowedRoot = if ($RegressionTest) { $regressionRoot } else { Join-Path $ProjectRoot 'work' }
   $PublishingArtifactsRoot = Assert-AplNoReparsePath -Path $PublishingArtifactsRoot -AllowedRoot $publishingAllowedRoot -RequireDirectory
+}
+$managedInputDateRoot = $null
+if ($hasCompleteManagedInputs) {
+  $managedInputAllowedRoot = if ($RegressionTest) { $regressionRoot } else { Join-Path $ProjectRoot 'work\managed-inputs' }
+  $managedInputDateRoot = Assert-AplNoReparsePath -Path (Join-Path $managedInputAllowedRoot $ScanDate) -AllowedRoot $managedInputAllowedRoot -RequireDirectory
 }
 
 $publishRoot = $OutputRoot
@@ -362,12 +397,44 @@ $overlayScript = Join-Path $PSScriptRoot 'render_blog_cover_overlay.ps1'
 $archiveScript = Join-Path $PSScriptRoot 'archive_daily_production.ps1'
 $artifactAuditScript = Join-Path $PSScriptRoot 'test_production_artifact_contract.ps1'
 $completionScript = Join-Path $PSScriptRoot 'complete_daily_production.ps1'
+$managedInputValidatorScript = Join-Path $PSScriptRoot 'validate_managed_inputs.ps1'
 
 $status = 'FAILED'
 try {
   Add-Log "RUN START $runId ProjectRoot=$ProjectRoot GitRoot=$gitRoot PublishRoot=$publishRoot StagingRoot=$OutputRoot RegressionTest=$([bool]$RegressionTest)"
+  if ($hasCompleteManagedInputs) {
+    $preflightArgs = @(
+      '-InputCsv',$InputCsv,
+      '-TopGainersCsvPath',$TopGainersCsvPath,
+      '-MarketContextPath',$MarketContextPath,
+      '-TriggerBMetaPath',$TriggerBMetaPath,
+      '-ScanDate',$ScanDate,
+      '-TableCardManifestPath',$TableCardManifestPath,
+      '-CoverBriefPath',$CoverBriefPath,
+      '-CoverBackgroundPath',$CoverBackgroundPath,
+      '-SeoBackgroundPath',$SeoBackgroundPath,
+      '-CoverNativeContractPath',$CoverNativeContractPath,
+      '-SeoNativeContractPath',$SeoNativeContractPath,
+      '-PublishingArtifactsRoot',$PublishingArtifactsRoot
+    )
+    if ($RegressionTest) { $preflightArgs += '-RegressionTest' }
+    Invoke-PipelineStep 'ManagedInputPreflight' $managedInputValidatorScript $preflightArgs
+  }
   $scoringRegressionArg = if ($RegressionTest) { @('-RegressionTest') } else { @() }
   Invoke-PipelineStep 'ScoringRanking' $processScript (@('-InputCsv',$InputCsv,'-ScanDate',$ScanDate,'-WeekLabel',$WeekLabel,'-OutputRoot',$OutputRoot,'-SkipRootCopies') + $scoringRegressionArg) @($rankingCsv,$topTxt,$topMd,$overviewMd,$metaJson,$sourceCopy)
+  if ($hasCompleteManagedInputs) {
+    Complete-InternalStep 'VerifyTriggerBEvidence' {
+      $managedRoot = if ($RegressionTest) { $regressionRoot } else { Join-Path $ProjectRoot 'work\managed-inputs' }
+      $managedMeta = Read-AplStrictJson $TriggerBMetaPath $managedRoot
+      $generatedMeta = Read-AplStrictJson $metaJson $OutputRoot
+      foreach ($field in @('scanDate','weekLabel','universe','qualified','leaders','leaderLock','averageMomentum','averageBuyability','removedBelowSma200Count','retainedMissingSma200Count','finalWatchlistCount')) {
+        if ([string]$managedMeta.$field -cne [string]$generatedMeta.$field) { throw "Managed Trigger B metadata is stale or inconsistent: $field." }
+      }
+      $managedRanking = Assert-AplNoReparsePath -Path ([string]$managedMeta.fullRankingCsv) -AllowedRoot $managedRoot -RequireFile
+      if ((Get-FileHash -LiteralPath $managedRanking -Algorithm SHA256).Hash -cne (Get-FileHash -LiteralPath $rankingCsv -Algorithm SHA256).Hash) { throw 'Managed Trigger B ranking does not match the ranking generated by this Production run.' }
+      if ((Get-FileHash -LiteralPath $InputCsv -Algorithm SHA256).Hash -cne (Get-FileHash -LiteralPath $sourceCopy -Algorithm SHA256).Hash) { throw 'Scoring source copy does not match the managed cumulative screener input.' }
+    }
+  }
   Complete-InternalStep 'WatchlistSma200Audit' {
     foreach ($path in @($watchlistTxt,$removedAudit,$retainedAudit)) { if (!(Test-Path -LiteralPath $path -PathType Leaf)) { throw "Audit artifact missing: $path" } }
     $meta = Read-AplUtf8Json $metaJson
@@ -515,6 +582,7 @@ try {
 
   $publishedArtifacts = @($publishedPaths | ForEach-Object { $item=Get-Item -LiteralPath $_; [ordered]@{ path=$item.FullName; bytes=$item.Length; sha256=(Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash } })
   $auditArgs = @('-ProductionDatePath',$finalDateOut,'-ScanDate',$ScanDate,'-ContractPath',$ArtifactContractPath,'-AuditOutputPath',$finalAuditPath)
+  if ($hasCompleteManagedInputs) { $auditArgs += @('-ManagedInputDatePath',$managedInputDateRoot) }
   if ($RegressionTest) { $auditArgs += '-RegressionTest' }
   Invoke-PipelineStep 'FinalProductionAudit' $artifactAuditScript $auditArgs @($finalAuditPath)
   (Get-Item -LiteralPath $finalAuditPath).IsReadOnly = $true

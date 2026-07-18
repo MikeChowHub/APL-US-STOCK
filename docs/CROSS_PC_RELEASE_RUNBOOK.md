@@ -32,19 +32,24 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\validate_managed
   -PublishingArtifactsRoot ".\work\managed-inputs\<ScanDate>\publishing"
 ```
 
-Only `MANAGED INPUT PREFLIGHT PASS` with `EditorialCompletion=PASS` and `DailyProductionPublishableCandidate=true` may proceed. The preflight writes deterministic editorial completion evidence into the publishing package; the Production runner copies that evidence but does not author editorial content.
+Only `MANAGED INPUT PREFLIGHT PASS` with `EditorialCompletion=PASS`, `ProductionReadiness=PASS` and `DailyProductionPublishableCandidate=true` may proceed. The preflight writes deterministic v1.1 readiness evidence into the publishing package. The Production runner repeats this same fail-closed gate before scoring and verifies that its generated Trigger B ranking matches the managed editorial evidence; the standalone command is not a bypass token.
 
 ## Atomic Production
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run_daily_production.ps1 `
   -InputCsv ".\work\managed-inputs\<ScanDate>\source.csv" `
+  -TopGainersCsvPath ".\work\managed-inputs\<ScanDate>\top-gainers.csv" `
+  -MarketContextPath ".\work\managed-inputs\<ScanDate>\market-context.md" `
+  -TriggerBMetaPath ".\work\managed-inputs\<ScanDate>\trigger-b\<ScanDate>\APL_Momentum_Leaders_Meta_<ScanDate>.json" `
   -ScanDate "<ScanDate>" `
   -WeekLabel "<week-label>" `
   -TableCardManifestPath ".\work\managed-inputs\<ScanDate>\table-card-manifest.json" `
   -CoverBriefPath ".\work\managed-inputs\<ScanDate>\cover-brief.json" `
   -CoverBackgroundPath ".\work\managed-inputs\<ScanDate>\cover-background.png" `
   -SeoBackgroundPath ".\work\managed-inputs\<ScanDate>\seo-background.png" `
+  -CoverNativeContractPath ".\work\managed-inputs\<ScanDate>\cover-native-contract.json" `
+  -SeoNativeContractPath ".\work\managed-inputs\<ScanDate>\seo-native-contract.json" `
   -PublishingArtifactsRoot ".\work\managed-inputs\<ScanDate>\publishing"
 ```
 

@@ -1,5 +1,40 @@
 {
   "SchemaVersion": "APL Production Artifact Contract v1.0",
+  "EditorialReadiness": {
+    "SchemaVersion": "APL Editorial Completion Audit v1.1",
+    "RequiredSourceRoles": [
+      "cumulative-screener",
+      "market-context",
+      "top-gainers",
+      "trigger-b-meta",
+      "table-card-manifest",
+      "table-card-executive-summary",
+      "table-card-top-leaders",
+      "table-card-top-gainers",
+      "table-card-sector-structure",
+      "cover-brief",
+      "cover-native-background",
+      "seo-native-background",
+      "cover-native-contract",
+      "seo-native-contract"
+    ],
+    "RequiredChecks": [
+      "NoPlaceholder",
+      "MandatorySections",
+      "SectionOrder",
+      "SubstantiveContent",
+      "DetailedMarketContext",
+      "MarkdownHtmlEquivalent",
+      "TriggerBDataMatch",
+      "TopGainersEvidence",
+      "ConclusionResponds",
+      "WhatsAppFirstScreen",
+      "CompanyAnalysis",
+      "IntakeSourceIntegrity",
+      "TableCardSourceIntegrity",
+      "NativeCompositionIntegrity"
+    ]
+  },
   "Required": [
     {
       "Id": "ranking-score-breakdown",

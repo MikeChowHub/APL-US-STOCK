@@ -4,6 +4,7 @@ param(
   [Parameter(Mandatory = $true)][string]$ScanDate,
   [string]$ContractPath = '',
   [string]$AuditOutputPath = '',
+  [string]$ManagedInputDatePath = '',
   [switch]$RegressionTest
 )
 
@@ -20,9 +21,17 @@ if ([string]::IsNullOrWhiteSpace($ContractPath)) { $ContractPath = Join-Path $Pr
 $ContractPath = Assert-AplNoReparsePath -Path $ContractPath -AllowedRoot $ProjectRoot -RequireFile
 if ([string]::IsNullOrWhiteSpace($AuditOutputPath)) { $AuditOutputPath = Join-Path $ProductionDatePath "Final_Production_Audit_${ScanDate}.json" }
 $AuditOutputPath = Assert-AplNoReparsePath -Path $AuditOutputPath -AllowedRoot $ProductionDatePath
+$managedInputAllowedRoot = if ($RegressionTest) { Join-Path $ProjectRoot 'tmp' } else { Join-Path $ProjectRoot 'work\managed-inputs' }
+if (-not $RegressionTest -and [string]::IsNullOrWhiteSpace($ManagedInputDatePath)) { throw 'Formal Final Production Audit requires ManagedInputDatePath.' }
+if (-not [string]::IsNullOrWhiteSpace($ManagedInputDatePath)) {
+  $ManagedInputDatePath = Assert-AplNoReparsePath -Path $ManagedInputDatePath -AllowedRoot $managedInputAllowedRoot -RequireDirectory
+  if ((Split-Path $ManagedInputDatePath -Leaf) -cne $ScanDate) { throw 'ManagedInputDatePath leaf must equal ScanDate.' }
+}
 
 $contract = Read-AplStrictJson $ContractPath $ProjectRoot
 if ([string]$contract.SchemaVersion -cne 'APL Production Artifact Contract v1.0') { throw 'Unsupported Production Artifact Contract SchemaVersion.' }
+$readinessContract=$contract.EditorialReadiness
+if($null-eq$readinessContract-or[string]::IsNullOrWhiteSpace([string]$readinessContract.SchemaVersion)-or@($readinessContract.RequiredSourceRoles).Count-lt1-or@($readinessContract.RequiredChecks).Count-lt1){throw 'Production Artifact Contract EditorialReadiness definition is invalid.'}
 $requiredDefinitions = @($contract.Required)
 $optionalDefinitions = @($contract.Optional)
 if ($requiredDefinitions.Count -eq 0) { throw 'Production Artifact Contract Required must not be empty.' }
@@ -149,14 +158,27 @@ try {
 
   $editorialAuditPath = Assert-AplNoReparsePath -Path (Join-Path $packageRoot "APL_Editorial_Completion_Audit_${ScanDate}.json") -AllowedRoot $packageRoot -RequireFile
   $editorialAudit = Read-AplStrictJson $editorialAuditPath $packageRoot
-  if ([string]$editorialAudit.SchemaVersion -cne 'APL Editorial Completion Audit v1.0' -or [string]$editorialAudit.ScanDate -cne $ScanDate -or [string]$editorialAudit.Status -cne 'PASS' -or $editorialAudit.EditorialCompletion -ne $true -or $editorialAudit.DailyProductionPublishableCandidate -ne $true) { throw 'Editorial Completion Audit schema/date/status mismatch.' }
+  if ([string]$editorialAudit.SchemaVersion -cne [string]$readinessContract.SchemaVersion -or [string]$editorialAudit.ScanDate -cne $ScanDate -or [string]$editorialAudit.Status -cne 'PASS' -or $editorialAudit.EditorialCompletion -ne $true -or $editorialAudit.ProductionReadiness -ne $true -or $editorialAudit.DailyProductionPublishableCandidate -ne $true) { throw 'Editorial Completion Audit schema/date/status/readiness mismatch.' }
   $mandatorySections=@('Executive Summary','Market Context','為什麼要看 APL Momentum Leaders 領導股？','Deep-Scan Overview','最近7日 Top Gainers','Momentum Leaders Analysis','Sector Analysis','Relative Volume / Market Activity','Risk','Deep-Scan Conclusion')
   if(@($editorialAudit.MandatorySections).Count-ne$mandatorySections.Count){throw 'Editorial Completion Audit mandatory section count mismatch.'}
   for($i=0;$i-lt$mandatorySections.Count;$i++){if([string]$editorialAudit.MandatorySections[$i]-cne$mandatorySections[$i]){throw 'Editorial Completion Audit mandatory section order mismatch.'}}
-  foreach($name in @('NoPlaceholder','MandatorySections','SectionOrder','SubstantiveContent','DetailedMarketContext','MarkdownHtmlEquivalent','TriggerBDataMatch','TopGainersEvidence','ConclusionResponds','WhatsAppFirstScreen','CompanyAnalysis')){if($null-eq$editorialAudit.Checks.PSObject.Properties[$name]-or$editorialAudit.Checks.$name-ne$true){throw "Editorial Completion Audit check is not PASS: $name"}}
+  foreach($name in @($readinessContract.RequiredChecks)){if($null-eq$editorialAudit.Checks.PSObject.Properties[[string]$name]-or$editorialAudit.Checks.([string]$name)-ne$true){throw "Editorial Completion Audit check is not PASS: $name"}}
+  $sourceRoles=@($readinessContract.RequiredSourceRoles|ForEach-Object{[string]$_})
+  if(@($editorialAudit.Sources).Count-ne$sourceRoles.Count){throw 'Editorial Completion Audit source evidence count mismatch.'}
+  $seenSourceRoles=@{};$seenSourcePaths=@{}
+  foreach($role in $sourceRoles){
+    $records=@($editorialAudit.Sources|Where-Object{[string]$_.Role-ceq$role});if($records.Count-ne1){throw "Editorial Completion Audit source role mismatch: $role"}
+    $record=$records[0];$relative=[string]$record.RelativePath
+    if([string]::IsNullOrWhiteSpace($relative)-or[IO.Path]::IsPathRooted($relative)-or$relative.Contains('\')-or$relative.Contains('..')){throw "Editorial Completion Audit source path is unsafe: $role"}
+    if([long]$record.Size-le0-or[string]$record.SHA256-cnotmatch'^[0-9A-F]{64}$'){throw "Editorial Completion Audit source size/SHA is invalid: $role"}
+    $roleKey=$role.ToLowerInvariant();$pathKey=$relative.ToLowerInvariant();if($seenSourceRoles.ContainsKey($roleKey)-or$seenSourcePaths.ContainsKey($pathKey)){throw "Editorial Completion Audit source role/path is duplicated: $role"};$seenSourceRoles[$roleKey]=$true;$seenSourcePaths[$pathKey]=$true
+    if(-not[string]::IsNullOrWhiteSpace($ManagedInputDatePath)){$actualSource=Assert-AplNoReparsePath -Path (Join-Path $ManagedInputDatePath $relative.Replace('/','\')) -AllowedRoot $ManagedInputDatePath -RequireFile;$item=Get-Item -LiteralPath $actualSource;$sha=(Get-FileHash -LiteralPath $actualSource -Algorithm SHA256).Hash;if([long]$record.Size-ne[long]$item.Length-or[string]$record.SHA256-cne$sha){throw "Editorial Completion Audit source size/SHA mismatch: $role"}}
+  }
+  if($null-eq$editorialAudit.TableCardSourceIntegrity-or[int]$editorialAudit.TableCardSourceIntegrity.RankingRows-lt30-or[int]$editorialAudit.TableCardSourceIntegrity.TopLeaderRows-lt1-or[int]$editorialAudit.TableCardSourceIntegrity.TopGainerRows-lt1-or[int]$editorialAudit.TableCardSourceIntegrity.SectorRepresentatives-lt1){throw 'Editorial Completion Audit Table Card source integrity summary is invalid.'}
+  if($null-eq$editorialAudit.NativeCompositionIntegrity-or[string]::IsNullOrWhiteSpace([string]$editorialAudit.NativeCompositionIntegrity.SceneConceptId)-or$editorialAudit.NativeCompositionIntegrity.DistinctSourcePaths-ne$true-or$editorialAudit.NativeCompositionIntegrity.DistinctSourceSHA256-ne$true-or$editorialAudit.NativeCompositionIntegrity.NativeAspectRatios-ne$true-or$editorialAudit.NativeCompositionIntegrity.DistinctViewpoints-ne$true-or[string]$editorialAudit.NativeCompositionIntegrity.CoverSourceSHA256-ceq[string]$editorialAudit.NativeCompositionIntegrity.SeoSourceSHA256){throw 'Editorial Completion Audit Native Composition integrity summary is invalid.'}
   $editorialRolePaths=[ordered]@{'blog-markdown'="APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.md";'blog-html'="APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.html";'whatsapp'="WhatsApp_${ScanDate}.md";'company-business-analysis'="table-card-log/APL_Momentum_Leaders_Top_30_Company_Business_Analysis_${ScanDate}.md"}
   foreach($role in $editorialRolePaths.Keys){$record=@($editorialAudit.Artifacts|Where-Object{[string]$_.Role-ceq$role});if($record.Count-ne1){throw "Editorial Completion Audit missing artifact role: $role"};$actualPath=Assert-AplNoReparsePath -Path (Join-Path $packageRoot ([string]$editorialRolePaths[$role]).Replace('/','\')) -AllowedRoot $packageRoot -RequireFile;$actual=Get-Item -LiteralPath $actualPath;$sha=(Get-FileHash -LiteralPath $actualPath -Algorithm SHA256).Hash;if([long]$record[0].Size-ne[long]$actual.Length-or[string]$record[0].SHA256-cne$sha){throw "Editorial Completion Audit artifact size/SHA mismatch: $role"}}
-  $editorialCompletionAudit=[pscustomobject]@{Status='PASS';Audit="production-package/APL_Editorial_Completion_Audit_${ScanDate}.json";MandatorySections=$mandatorySections.Count;DailyProductionPublishable=$true}
+  $editorialCompletionAudit=[pscustomobject]@{Status='PASS';Audit="production-package/APL_Editorial_Completion_Audit_${ScanDate}.json";MandatorySections=$mandatorySections.Count;SourceEvidence=$sourceRoles.Count;ProductionReadiness=$true;DailyProductionPublishable=$true}
 
   $packageInventory = @(Get-AplArchiveInventory $packageRoot | Where-Object { $_.RelativePath -cne (Split-Path $packageManifestPath -Leaf) })
   $declaredPackageInventory = @(Get-AplManifestInventory $packageManifest)

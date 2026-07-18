@@ -30,12 +30,18 @@ Cover／SEO overlay 的指定字型為中文 `Alibaba Sans HK`、英文／數字
 | `InputCsv` | Yes | 原始 scoring input CSV |
 | `ScanDate` | Yes | `YYYY-MM-DD` |
 | `WeekLabel` | Yes | 顯示用週期標籤 |
-| `TableCardManifestPath` | Trigger C recommended | 符合 `tools/table_card_manifest.schema.json` 的 UTF-8 manifest；正式每日Trigger C必須列出4張required cards |
-| `TableCardInputPath` | Single-card compatibility | 單卡 backward-compatible mode的Table Card contract |
-| `TableCardType` | Single-card compatibility | 單卡 mode的renderer type |
+| `TopGainersCsvPath` | Yes | 當日TradingView Top Gainers CSV；由preflight核對Table Card及Blog證據 |
+| `MarketContextPath` | Yes | 當日approved detailed Market Context Markdown |
+| `TriggerBMetaPath` | Yes | Editorial preparation使用的當日Trigger B metadata；runner會核對其ranking SHA |
+| `TableCardManifestPath` | Yes | 符合 `tools/table_card_manifest.schema.json` 的 UTF-8 manifest；正式每日Trigger C必須列出4張required cards |
+| `TableCardInputPath` | Regression only | 單卡renderer regression contract；不可用於正式Daily Production |
+| `TableCardType` | Regression only | 單卡renderer regression type；不可用於正式Daily Production |
 | `CoverBriefPath` | Yes | Codex 按正式市場文案建立、符合 cover brief schema 的 UTF-8 JSON |
 | `CoverBackgroundPath` | Yes | 同一scene concept的原生4:5 Cover背景；較近／集中視角 |
 | `SeoBackgroundPath` | Yes | 同一scene concept的獨立原生16:9 SEO背景；較遠／廣角視角 |
+| `CoverNativeContractPath` | Yes | Cover native composition record；path／dimensions／SHA／transformation需吻合 |
+| `SeoNativeContractPath` | Yes | SEO native composition record；須與Cover共享scene concept但使用不同source及視角 |
+| `PublishingArtifactsRoot` | Yes | 完整Blog Markdown／HTML、WhatsApp、Company Analysis及readiness audit所在的managed publishing root |
 | `OutputRoot` | No | Production 必須是 repository `outputs/`；省略即可。Regression 必須明確位於 repository `tmp/` 內 |
 | `SectorMapPath` | No | 預設 `tools/sector_map.json` |
 | `LogoPath` | No | 預設為已追蹤的 `Assets/Brand/APL_Deep_Scan_Brand_Logo_Renderer_Clean.png` |
@@ -77,19 +83,25 @@ Execution Policy 可能阻擋直接執行 `.ps1`，因此最外層也必須明�
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run_daily_production.ps1 `
   -InputCsv "<absolute-input-csv>" `
+  -TopGainersCsvPath "<absolute-top-gainers-csv>" `
+  -MarketContextPath "<absolute-market-context-md>" `
+  -TriggerBMetaPath "<absolute-managed-trigger-b-meta>" `
   -ScanDate "YYYY-MM-DD" `
   -WeekLabel "<week-label>" `
   -TableCardManifestPath "<absolute-table-card-manifest-json>" `
   -CoverBriefPath "<absolute-cover-brief-json>" `
   -CoverBackgroundPath "<absolute-native-cover-background>" `
-  -SeoBackgroundPath "<absolute-native-seo-background>"
+  -SeoBackgroundPath "<absolute-native-seo-background>" `
+  -CoverNativeContractPath "<absolute-cover-native-contract>" `
+  -SeoNativeContractPath "<absolute-seo-native-contract>" `
+  -PublishingArtifactsRoot "<absolute-managed-publishing-root>"
 ```
 
 `-ExecutionPolicy Bypass` 只作用於該 process，不改寫 machine／user policy。Runner 的 child scripts 亦以 `powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass` 執行。
 
 ## 5. Step map and fail-fast behavior
 
-Runner 依序執行：ScoringRanking → WatchlistSma200Audit → BuildRendererContracts → PrepareProductionPackage → Validate／Render Dashboard、Social及四張Table Card → RenderCoverOverlay／SEO → ImportPublishingArtifacts → NormalizeStagedArtifacts → FinalizeProductionPackageManifest → PublishArtifacts。
+Runner 依序執行：ManagedInputPreflight → ScoringRanking → VerifyTriggerBEvidence → WatchlistSma200Audit → BuildRendererContracts → PrepareProductionPackage → Validate／Render Dashboard、Social及四張Table Card → RenderCoverOverlay／SEO → ImportPublishingArtifacts → NormalizeStagedArtifacts → FinalizeProductionPackageManifest → PublishArtifacts → Final Production Audit → Archive → authoritative completion。Preflight或Trigger B evidence任一不一致時立即fail closed。
 
 Dashboard production completeness要求同時發布1920×1080 SVG及PNG。PNG必須由已完成validation的SVG經`tools/convert_svg_to_png.ps1`及repository-pinned `tools/renderers/resvg/resvg.exe`產生；converter維持no-overwrite、resolved path guard、尺寸驗證及fail-fast，且不得 fallback到browser或system fonts。
 

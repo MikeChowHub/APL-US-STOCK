@@ -160,7 +160,9 @@ Trigger C produces the formal APL Momentum Leaders 領導股 publishing package.
 
 Trigger C must execute editorial preparation after Trigger B results exist and before Managed Input Preflight. It must not emit the Blog Template skeleton, placeholder text, a one-section summary or an English test sentence as a formal artifact. The current Trigger B metadata／ranking, Top Gainers CSV and detailed Market Context are mandatory editorial evidence.
 
-Only a PASS `APL Editorial Completion Audit v1.0` may enter the Production runner. `DailyProductionComplete=true` without `DailyProductionPublishable=true` is not a completed Trigger C production.
+Only a PASS `APL Editorial Completion Audit v1.1` with `ProductionReadiness=true` may enter the Production runner. The runner must execute the managed-input preflight itself before scoring; a separately executed preflight is useful operator feedback but is not authority to bypass the runner gate. `DailyProductionComplete=true` without `DailyProductionPublishable=true` is not a completed Trigger C production.
+
+The v1.1 readiness evidence must bind the current cumulative screener, Trigger B metadata and full ranking, Top Gainers CSV, Market Context, all four Table Card semantic inputs, Cover Brief, the two distinct native backgrounds and both native composition records by path, byte size and SHA-256. Top Leaders rows must match the current Trigger B ranking in order, symbol, company identity and score; Top Gainers rows must match the current TradingView source in order, symbol, company identity and price change; and every Sector Structure representative must exist in the current Trigger B Top 30. Schema-only validation is insufficient.
 
 ### Allowed Outputs
 
