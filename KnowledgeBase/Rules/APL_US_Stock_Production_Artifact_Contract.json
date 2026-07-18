@@ -16,6 +16,7 @@
     { "Id": "formal-blog", "Category": "Publishing", "Match": "AtLeastOne", "Patterns": ["production-package/APL_Momentum_Leaders_Market_Analysis_Blog_{ScanDate}.md", "production-package/APL_Momentum_Leaders_Market_Analysis_Blog_{ScanDate}.html"] },
     { "Id": "company-business-analysis", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/table-card-log/APL_Momentum_Leaders_Top_30_Company_Business_Analysis_{ScanDate}.md"] },
     { "Id": "social-push", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/WhatsApp_{ScanDate}.md"] },
+    { "Id": "editorial-completion-audit", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/APL_Editorial_Completion_Audit_{ScanDate}.json"] },
     { "Id": "table-card-publication-manifest", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/Table Cards/APL_Table_Card_Manifest_{ScanDate}.json"] },
     { "Id": "production-package-manifest", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/APL_Production_Package_Manifest_{ScanDate}.json"] },
     { "Id": "dashboard-png", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/APL_DeepScan_Radar_Dashboard_Top30_{ScanDate}_1920x1080.png"] },

@@ -1,10 +1,16 @@
 {
   "artifact_type": "cover|seo",
+  "scene_concept_id": "",
   "native_size": {
     "width": 0,
     "height": 0
   },
   "aspect_ratio": "",
+  "camera_distance": "",
+  "framing_description": "",
+  "subject_placement": "",
+  "text_safe_area": "",
+  "source_path": "",
   "tolerance": 0.001,
   "source_sha256": "",
   "provider": "",

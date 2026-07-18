@@ -2,7 +2,7 @@
 
 ## Status and authority
 
-This contract is executable through `tools/validate_native_image.py`, but it is not integrated with the APL Production runner, renderer, outputs, Final Audit or Archive V2.
+This contract is executable through `tools/validate_native_image.py` and is enforced as a paired Cover／SEO source contract by managed-input preflight. Publication outputs, Final Audit and Archive continue to track the rendered Cover／SEO artifacts under the existing Production Artifact Contract.
 
 Schema authority: `tools/native_image_contract_v2.schema.json`.
 
@@ -16,6 +16,16 @@ The unified logical field is `artifact_type`:
 
 - `cover` requires `aspect_ratio: 4:5`;
 - `seo` requires `aspect_ratio: 16:9`.
+
+`artifact_type` is the artifact role. Each record also carries:
+
+- one shared `scene_concept_id`;
+- role-specific `camera_distance` and `framing_description`;
+- role-specific `subject_placement` and `text_safe_area`;
+- a repository-portable relative `source_path`;
+- native dimensions, SHA-256 and `transformation: none`.
+
+The Cover／SEO pair must share the same scene concept, core subject and visual language, while using different source paths and different native bytes. Camera distance or framing must differ. Reusing, cropping, resizing or re-encoding one source to manufacture the other is not a valid pair.
 
 The previous design-only `Variant` field is removed. It must not coexist with `artifact_type`.
 
@@ -42,6 +52,7 @@ Every contract records:
 - generation date-time with UTC offset;
 - capture stage `ImmediateGenerationOutput`;
 - transformation status.
+- shared scene concept identity and role-specific composition intent.
 
 Contract dimensions and SHA must match the file decoded and hashed by the validator.
 
@@ -59,7 +70,6 @@ The validator is read-only. It never crops, pads, resizes, re-encodes, corrects 
 
 See `docs/NATIVE_RENDERER_BOUNDARY_ANALYSIS.md` for the architectural decision and alternatives.
 
-## Production activation gate
+## Production gate
 
-This executable framework remains outside Production. Integration requires a separate authorized change covering runtime inputs, renderer derivative metadata, trace, Final Audit, package manifest, Archive V2 and fresh-clone regression.
-
+Managed-input preflight validates both records, both native files, role-specific ratios, source paths, dimensions, SHA-256, shared scene identity and distinct framing before Production starts. The runner receives separate `CoverBackgroundPath` and `SeoBackgroundPath` values and fails if they resolve to the same path or bytes. Local overlay rendering remains independent for Cover and SEO.

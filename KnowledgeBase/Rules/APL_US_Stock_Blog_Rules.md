@@ -12,6 +12,23 @@ Blog Rules answer:
 
 Visual styling belongs to Visual Rules and Templates.
 
+## Editorial completion authority
+
+Trigger C editorial preparation is a required stage between verified Trigger B outputs and Managed Input Preflight. The runner does not write, expand or correct editorial content; it only copies validated publishing artifacts.
+
+Editorial completion requires both Blog formats to contain the ten mandatory analysis sections with substantive issue-specific content, detailed Market Context derived from the approved market-topic input, current Trigger B numbers, current Top Gainers evidence, a continuous reasoning chain, a responsive conclusion, a substantive WhatsApp summary and non-empty Company Business Analysis. Template placeholders, test sentences, summary shells and headings without analysis are not publishing artifacts.
+
+`tools/validate_managed_inputs.ps1` is the fail-closed executable gate. It creates `APL_Editorial_Completion_Audit_<ScanDate>.json` only after content, source evidence and Markdown／HTML equivalence pass. Mechanical Production completion without this PASS evidence is not publishable completion.
+
+Formal completion is:
+
+```text
+Mechanical Completion PASS
++ Editorial Completion PASS
+→ DailyProductionComplete=true
+→ DailyProductionPublishable=true
+```
+
 ---
 
 ## 1. Article Flow

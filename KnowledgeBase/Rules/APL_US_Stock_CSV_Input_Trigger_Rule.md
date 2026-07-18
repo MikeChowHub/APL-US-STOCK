@@ -111,15 +111,16 @@ Codex must use the existing implementation. It must not recreate or modify scori
 
 ## 7. Trigger C Cover workflow
 
-When Cumulative Breakout Screener, recent 7-day Top Gainers and Market Context are all present, Codex must not treat `CoverBackgroundPath` as a background-design task for the user. The default action is:
+When Cumulative Breakout Screener, recent 7-day Top Gainers and Market Context are all present, Codex must not treat `CoverBackgroundPath` or `SeoBackgroundPath` as a background-design task for the user. The default action is:
 
 1. derive the formal Cover Brief from the approved market narrative and research conclusion;
 2. validate the Cover Brief against `tools/cover_image_brief.schema.json`;
-3. invoke the image generation workflow to create a no-text cinematic background;
-4. reject any generated background containing text, logo, ticker, table, dashboard UI or floating information cards;
-5. save the selected background to an approved Project Root production-input path outside `tmp/`;
-6. pass the saved background as `CoverBackgroundPath` to the existing production runner;
-7. use the local renderer for exact title, subtitle, date, logo, Cover crop and SEO crop.
+3. define one shared scene concept and invoke the image generation workflow for a native 4:5 Cover view and an independent native 16:9 SEO view;
+4. reject either generated background if it contains text, logo, ticker, table, dashboard UI or floating information cards;
+5. save both selected backgrounds and their separate native records to an approved Project Root production-input path outside `tmp/`;
+6. validate the shared scene identity, role-specific framing, paths, dimensions, SHA-256 and `transformation=none`;
+7. pass the sources as `CoverBackgroundPath` and `SeoBackgroundPath` to the existing production runner;
+8. use the local renderer for exact title, subtitle, date, logo and role-specific overlay layout without deriving one background from the other.
 
 The user may explicitly provide an approved background, but Codex must not require this during the normal Trigger C flow. If image generation is unavailable or fails, Codex reports that specific blocker and preserves all validation and no-overwrite boundaries.
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-This is an executable framework boundary, not a Production integration. It does not change the APL Production runner, renderer, outputs or Archive workflow.
+This workflow defines the native Cover／SEO source boundary used by managed-input preflight. It does not change scoring, ranking, publishing artifact names or Archive selection.
 
 ## Workflow
 
@@ -29,12 +29,16 @@ The final handoff is conceptual until a separate Production integration is appro
 
 ## AI Generation
 
-Cover and SEO are generated as independent images. A Cover asset cannot be reused as SEO and an SEO asset cannot be reused as Cover.
+Cover and SEO are generated as independent views of one shared scene concept. A Cover asset cannot be reused as SEO and an SEO asset cannot be reused as Cover.
 
 Requested native targets:
 
 - `cover`: 4:5;
 - `seo`: 16:9.
+
+Cover uses a closer or medium-close portrait view, concentrated subject placement, vertical tension and a Cover-specific title／logo safe area. SEO uses a wider or more distant landscape view, lateral scene extension, more environmental narrative and an SEO-specific horizontal title／logo safe area.
+
+Both generations must retain the same market thesis, subject identity, primary scene elements, palette, lighting direction, cinematic mood, brand atmosphere and art style. Only camera distance, field of view, framing, subject scale, negative space and text-safe geometry may change.
 
 Normal generator pixel variance is accepted only through the `0.001` aspect-ratio tolerance. The generated result is never corrected to make it pass.
 
@@ -62,6 +66,8 @@ The logical roles are separated by `artifact_type`:
 
 `transformation` must be `none`. A transformed artifact is not a Native Asset and cannot use this contract.
 
+The paired records must use one `scene_concept_id`, different `artifact_type` values, different relative `source_path` values and different source SHA-256 values. Camera distance or framing must differ.
+
 ## Validation
 
 Run `tools/validate_native_image.py` with the image file and its artifact contract. Validation is read-only and fail-closed.
@@ -76,6 +82,8 @@ It verifies:
 - artifact type;
 - `transformation: none`;
 - provenance fields.
+- relative source path and scene concept identity;
+- paired Cover／SEO role, path, byte and framing separation.
 
 Any error returns a non-zero exit. The validator does not create a replacement file.
 
@@ -87,7 +95,7 @@ Changing the image bytes invalidates the source SHA and requires rejection. It m
 
 ## Archive / Publication Handoff
 
-A PASS native asset may be offered to a future Archive or Publication workflow only after that workflow is separately approved. This framework performs no handoff automatically.
+A PASS pair may be passed to the existing local overlay stage. Cover and SEO overlays remain separate publication renders at 1080x1350 and 1280x720. Archive continues to copy the final publication artifacts under its existing policy.
 
 ## Native Asset versus Publication Render
 
@@ -105,4 +113,3 @@ A PASS native asset may be offered to a future Archive or Publication workflow o
 - crop or resize, if ever approved, must be declared in separate derivative metadata;
 - cannot claim `transformation: none` after geometry changes;
 - requires a separate Production and renderer audit.
-

@@ -5,8 +5,14 @@
   "additionalProperties": false,
   "required": [
     "artifact_type",
+    "scene_concept_id",
     "native_size",
     "aspect_ratio",
+    "camera_distance",
+    "framing_description",
+    "subject_placement",
+    "text_safe_area",
+    "source_path",
     "tolerance",
     "source_sha256",
     "provider",
@@ -17,6 +23,7 @@
   ],
   "properties": {
     "artifact_type": { "type": "string", "enum": ["cover", "seo"] },
+    "scene_concept_id": { "type": "string", "minLength": 1 },
     "native_size": {
       "type": "object",
       "additionalProperties": false,
@@ -27,6 +34,11 @@
       }
     },
     "aspect_ratio": { "type": "string", "enum": ["4:5", "16:9"] },
+    "camera_distance": { "type": "string", "minLength": 1 },
+    "framing_description": { "type": "string", "minLength": 1 },
+    "subject_placement": { "type": "string", "minLength": 1 },
+    "text_safe_area": { "type": "string", "minLength": 1 },
+    "source_path": { "type": "string", "minLength": 1 },
     "tolerance": { "type": "number", "const": 0.001 },
     "source_sha256": { "type": "string", "pattern": "^[0-9A-F]{64}$" },
     "provider": { "type": "string", "minLength": 1 },

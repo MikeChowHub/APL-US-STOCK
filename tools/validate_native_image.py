@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only validator for one Native Image Artifact Contract v2 record."""
+"""Read-only validator for one or one paired Native Image Contract v2 record."""
 
 from __future__ import annotations
 
@@ -18,8 +18,14 @@ from typing import Any
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 REQUIRED_FIELDS = {
     "artifact_type",
+    "scene_concept_id",
     "native_size",
     "aspect_ratio",
+    "camera_distance",
+    "framing_description",
+    "subject_placement",
+    "text_safe_area",
+    "source_path",
     "tolerance",
     "source_sha256",
     "provider",
@@ -123,6 +129,22 @@ def validate_contract(image_path: Path, contract_path: Path) -> dict[str, Any]:
     if contract["transformation"] != "none":
         raise ValidationError("transformation must be none; transformed assets are forbidden")
 
+    for field in (
+        "scene_concept_id",
+        "camera_distance",
+        "framing_description",
+        "subject_placement",
+        "text_safe_area",
+        "source_path",
+    ):
+        require_nonempty_string(contract[field], field)
+    declared_source = Path(contract["source_path"])
+    if declared_source.is_absolute():
+        raise ValidationError("source_path must be relative to the contract for Cross-PC use")
+    resolved_declared_source = (contract_path.parent / declared_source).resolve()
+    if resolved_declared_source != image_path.resolve():
+        raise ValidationError("source_path does not resolve to the validated image")
+
     native_size = contract["native_size"]
     if not isinstance(native_size, dict) or set(native_size) != {"width", "height"}:
         raise ValidationError("native_size must contain only width and height")
@@ -170,6 +192,9 @@ def validate_contract(image_path: Path, contract_path: Path) -> dict[str, Any]:
     return {
         "status": "PASS",
         "artifact_type": artifact_type,
+        "scene_concept_id": contract["scene_concept_id"],
+        "camera_distance": contract["camera_distance"],
+        "framing_description": contract["framing_description"],
         "width": actual_width,
         "height": actual_height,
         "actual_ratio": round(actual_ratio, 9),
@@ -182,15 +207,62 @@ def validate_contract(image_path: Path, contract_path: Path) -> dict[str, Any]:
     }
 
 
+def validate_pair(
+    first_image: Path,
+    first_contract_path: Path,
+    second_image: Path,
+    second_contract_path: Path,
+) -> dict[str, Any]:
+    first = validate_contract(first_image, first_contract_path)
+    second = validate_contract(second_image, second_contract_path)
+    by_role = {first["artifact_type"]: first, second["artifact_type"]: second}
+    if set(by_role) != {"cover", "seo"}:
+        raise ValidationError("paired contracts must contain exactly one cover and one seo")
+    cover = by_role["cover"]
+    seo = by_role["seo"]
+    if cover["scene_concept_id"] != seo["scene_concept_id"]:
+        raise ValidationError("cover and seo must share the same scene_concept_id")
+    if first_image.resolve() == second_image.resolve():
+        raise ValidationError("cover and seo source paths must be different")
+    if cover["source_sha256"] == seo["source_sha256"]:
+        raise ValidationError("cover and seo source bytes must be different")
+    if (
+        cover["camera_distance"] == seo["camera_distance"]
+        and cover["framing_description"] == seo["framing_description"]
+    ):
+        raise ValidationError("cover and seo camera distance or framing must differ")
+    return {
+        "status": "PASS",
+        "scene_concept_id": cover["scene_concept_id"],
+        "cover": cover,
+        "seo": seo,
+        "native_sources_distinct": True,
+        "transformation": "none",
+        "mutated": False,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Validate one Native Image Artifact Contract v2 without modifying it."
     )
     parser.add_argument("image_file", type=Path)
     parser.add_argument("artifact_contract", type=Path)
+    parser.add_argument("--paired-image", type=Path)
+    parser.add_argument("--paired-contract", type=Path)
     args = parser.parse_args()
     try:
-        result = validate_contract(args.image_file, args.artifact_contract)
+        if (args.paired_image is None) != (args.paired_contract is None):
+            raise ValidationError("--paired-image and --paired-contract must be supplied together")
+        if args.paired_image is not None:
+            result = validate_pair(
+                args.image_file,
+                args.artifact_contract,
+                args.paired_image,
+                args.paired_contract,
+            )
+        else:
+            result = validate_contract(args.image_file, args.artifact_contract)
     except ValidationError as exc:
         print(f"FAIL: {exc}", file=sys.stderr)
         return 1

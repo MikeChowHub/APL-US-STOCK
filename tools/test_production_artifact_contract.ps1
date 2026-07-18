@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
   [Parameter(Mandatory = $true)][string]$ProductionDatePath,
   [Parameter(Mandatory = $true)][string]$ScanDate,
@@ -47,6 +47,7 @@ $requiredResults = New-Object System.Collections.Generic.List[object]
 $optionalResults = New-Object System.Collections.Generic.List[object]
 $tableCardSemanticResults = New-Object System.Collections.Generic.List[object]
 $productionPackageAudit = $null
+$editorialCompletionAudit = $null
 $classified = @{}
 $failure = $null
 try {
@@ -126,6 +127,7 @@ try {
   $expectedPackageRequired['formal-blog-markdown'] = "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.md"
   $expectedPackageRequired['formal-blog-html'] = "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.html"
   $expectedPackageRequired['company-business-analysis'] = "table-card-log/APL_Momentum_Leaders_Top_30_Company_Business_Analysis_${ScanDate}.md"
+  $expectedPackageRequired['editorial-completion-audit'] = "APL_Editorial_Completion_Audit_${ScanDate}.json"
 
   $requiredPackageRecords = @($packageManifest.Required)
   if ([int]$packageManifest.RequiredCount -ne $expectedPackageRequired.Count -or $requiredPackageRecords.Count -ne $expectedPackageRequired.Count) { throw "Production package required count mismatch. Expected=$($expectedPackageRequired.Count)." }
@@ -144,6 +146,17 @@ try {
     if ([long]$record.Size -ne [long]$actualItem.Length -or [string]$record.SHA256 -cne $actualSha) { throw "Production package required size/SHA-256 mismatch: $relative" }
   }
   foreach ($id in $expectedPackageRequired.Keys) { if (-not $seenPackageIds.ContainsKey($id.ToLowerInvariant())) { throw "Production package missing required id: $id" } }
+
+  $editorialAuditPath = Assert-AplNoReparsePath -Path (Join-Path $packageRoot "APL_Editorial_Completion_Audit_${ScanDate}.json") -AllowedRoot $packageRoot -RequireFile
+  $editorialAudit = Read-AplStrictJson $editorialAuditPath $packageRoot
+  if ([string]$editorialAudit.SchemaVersion -cne 'APL Editorial Completion Audit v1.0' -or [string]$editorialAudit.ScanDate -cne $ScanDate -or [string]$editorialAudit.Status -cne 'PASS' -or $editorialAudit.EditorialCompletion -ne $true -or $editorialAudit.DailyProductionPublishableCandidate -ne $true) { throw 'Editorial Completion Audit schema/date/status mismatch.' }
+  $mandatorySections=@('Executive Summary','Market Context','為什麼要看 APL Momentum Leaders 領導股？','Deep-Scan Overview','最近7日 Top Gainers','Momentum Leaders Analysis','Sector Analysis','Relative Volume / Market Activity','Risk','Deep-Scan Conclusion')
+  if(@($editorialAudit.MandatorySections).Count-ne$mandatorySections.Count){throw 'Editorial Completion Audit mandatory section count mismatch.'}
+  for($i=0;$i-lt$mandatorySections.Count;$i++){if([string]$editorialAudit.MandatorySections[$i]-cne$mandatorySections[$i]){throw 'Editorial Completion Audit mandatory section order mismatch.'}}
+  foreach($name in @('NoPlaceholder','MandatorySections','SectionOrder','SubstantiveContent','DetailedMarketContext','MarkdownHtmlEquivalent','TriggerBDataMatch','TopGainersEvidence','ConclusionResponds','WhatsAppFirstScreen','CompanyAnalysis')){if($null-eq$editorialAudit.Checks.PSObject.Properties[$name]-or$editorialAudit.Checks.$name-ne$true){throw "Editorial Completion Audit check is not PASS: $name"}}
+  $editorialRolePaths=[ordered]@{'blog-markdown'="APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.md";'blog-html'="APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.html";'whatsapp'="WhatsApp_${ScanDate}.md";'company-business-analysis'="table-card-log/APL_Momentum_Leaders_Top_30_Company_Business_Analysis_${ScanDate}.md"}
+  foreach($role in $editorialRolePaths.Keys){$record=@($editorialAudit.Artifacts|Where-Object{[string]$_.Role-ceq$role});if($record.Count-ne1){throw "Editorial Completion Audit missing artifact role: $role"};$actualPath=Assert-AplNoReparsePath -Path (Join-Path $packageRoot ([string]$editorialRolePaths[$role]).Replace('/','\')) -AllowedRoot $packageRoot -RequireFile;$actual=Get-Item -LiteralPath $actualPath;$sha=(Get-FileHash -LiteralPath $actualPath -Algorithm SHA256).Hash;if([long]$record[0].Size-ne[long]$actual.Length-or[string]$record[0].SHA256-cne$sha){throw "Editorial Completion Audit artifact size/SHA mismatch: $role"}}
+  $editorialCompletionAudit=[pscustomobject]@{Status='PASS';Audit="production-package/APL_Editorial_Completion_Audit_${ScanDate}.json";MandatorySections=$mandatorySections.Count;DailyProductionPublishable=$true}
 
   $packageInventory = @(Get-AplArchiveInventory $packageRoot | Where-Object { $_.RelativePath -cne (Split-Path $packageManifestPath -Leaf) })
   $declaredPackageInventory = @(Get-AplManifestInventory $packageManifest)
@@ -182,6 +195,7 @@ $audit = [ordered]@{
   Optional = [object[]]$optionalResultArray
   TableCardSemantic = [object[]]$tableCardSemanticResults.ToArray()
   ProductionPackage = $productionPackageAudit
+  EditorialCompletion = $editorialCompletionAudit
   UnclassifiedArtifacts = $unclassified
   ProductionFileCount = $safeFiles.Count
   ProductionBytes = [long](($safeFiles | Measure-Object Size -Sum).Sum)

@@ -4,6 +4,28 @@
 
 ## Production output
 
+### Editorial completion gate
+
+- [ ] `APL_Editorial_Completion_Audit_<ScanDate>.json`為required publishing artifact，schema/date/status及四份editorial artifact SHA均PASS。
+- [ ] Blog Markdown及HTML均包含十個mandatory sections，順序一致且每節有實質內容。
+- [ ] Blog沒有placeholder、template instruction、英文test sentence、單段摘要殼或只有標題的section。
+- [ ] Detailed Market Context保留approved input的小標題順序及主要篇幅，沒有被Executive Summary取代。
+- [ ] Deep-Scan Overview數字與當次Trigger B metadata一致；Top Gainers section使用當次Top Gainers CSV證據。
+- [ ] WhatsApp第一屏交代最大市場改變；Company Business Analysis涵蓋當次Top 10 leaders且不是空殼。
+- [ ] Final authoritative state同時為`DailyProductionComplete=true`及`DailyProductionPublishable=true`；任一為false即FAIL。
+
+### Cover／SEO native composition
+
+- [ ] Cover及SEO的native records引用相同且非空的`scene_concept_id`。
+- [ ] Cover source為原生4:5，使用較近／中近距離、集中主體、直向張力及Cover標題／Logo安全區。
+- [ ] SEO source為原生16:9，使用較遠／廣角視角、左右延展環境及SEO橫向標題／Logo安全區。
+- [ ] 兩個records的`artifact_type`、`source_path`及SHA-256各自正確；source path及正式背景檔案互不相同。
+- [ ] Cover與SEO的camera distance或framing不同，但核心市場命題、主體身份、主要場景元素、色調、光線方向、電影感、品牌氣氛及藝術風格一致。
+- [ ] 兩個native records的dimensions及SHA-256與實際來源逐一吻合，`transformation=none`。
+- [ ] SEO不是Cover的center crop、resize或re-encode；Cover亦不是由SEO衍生。
+- [ ] 如兩張圖是相同來源、衍生版本或互不相關場景，Final Production Audit必須FAIL CLOSED。
+- [ ] Cover及SEO overlay仍各自輸出1080x1350及1280x720，文字與Logo layout保持角色獨立。
+
 - [ ] Project Root 與 Git Root 一致。
 - [ ] `outputs/YYYY-MM-DD/` 已正式發布，沒有以 staging path 充當正式輸出。
 - [ ] 所有 runner required artifacts 存在且非空。

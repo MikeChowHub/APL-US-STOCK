@@ -12,21 +12,27 @@ The only successful environment result is `CROSS-PC ENVIRONMENT READY`. This com
 
 ## Managed inputs
 
-Place the new date's inputs under `work/managed-inputs/<ScanDate>/`; `work/` remains local and must never be committed. The managed bundle contains the source CSV, Table Card manifest and four semantic v1.1 inputs, Cover Brief, cinematic background, and publishing materials root.
+Place the new date's inputs under `work/managed-inputs/<ScanDate>/`; `work/` remains local and must never be committed. The managed bundle contains the source CSV, Top Gainers CSV, detailed Market Context source, Trigger B metadata, Table Card manifest and four semantic v1.1 inputs, Cover Brief, two native cinematic backgrounds, and the complete publishing materials root. Placeholder publishing files are forbidden.
 
 Run the preflight before Production:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\validate_managed_inputs.ps1 `
   -InputCsv ".\work\managed-inputs\<ScanDate>\source.csv" `
+  -TopGainersCsvPath ".\work\managed-inputs\<ScanDate>\top-gainers.csv" `
+  -MarketContextPath ".\work\managed-inputs\<ScanDate>\market-context.md" `
+  -TriggerBMetaPath ".\work\managed-inputs\<ScanDate>\trigger-b\<ScanDate>\APL_Momentum_Leaders_Meta_<ScanDate>.json" `
   -ScanDate "<ScanDate>" `
   -TableCardManifestPath ".\work\managed-inputs\<ScanDate>\table-card-manifest.json" `
   -CoverBriefPath ".\work\managed-inputs\<ScanDate>\cover-brief.json" `
   -CoverBackgroundPath ".\work\managed-inputs\<ScanDate>\cover-background.png" `
+  -SeoBackgroundPath ".\work\managed-inputs\<ScanDate>\seo-background.png" `
+  -CoverNativeContractPath ".\work\managed-inputs\<ScanDate>\cover-native-contract.json" `
+  -SeoNativeContractPath ".\work\managed-inputs\<ScanDate>\seo-native-contract.json" `
   -PublishingArtifactsRoot ".\work\managed-inputs\<ScanDate>\publishing"
 ```
 
-Only `MANAGED INPUT PREFLIGHT PASS` may proceed.
+Only `MANAGED INPUT PREFLIGHT PASS` with `EditorialCompletion=PASS` and `DailyProductionPublishableCandidate=true` may proceed. The preflight writes deterministic editorial completion evidence into the publishing package; the Production runner copies that evidence but does not author editorial content.
 
 ## Atomic Production
 
@@ -38,6 +44,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run_daily_produc
   -TableCardManifestPath ".\work\managed-inputs\<ScanDate>\table-card-manifest.json" `
   -CoverBriefPath ".\work\managed-inputs\<ScanDate>\cover-brief.json" `
   -CoverBackgroundPath ".\work\managed-inputs\<ScanDate>\cover-background.png" `
+  -SeoBackgroundPath ".\work\managed-inputs\<ScanDate>\seo-background.png" `
   -PublishingArtifactsRoot ".\work\managed-inputs\<ScanDate>\publishing"
 ```
 
@@ -51,6 +58,7 @@ atomic staging
 → Archive index verification
 → final Archive manifest PASS
 → authoritative DailyProductionComplete=true
+→ authoritative DailyProductionPublishable=true
 ```
 
 No Git operation is performed by the validator or runner.

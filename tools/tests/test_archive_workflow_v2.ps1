@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param()
 
 $ErrorActionPreference = 'Stop'
@@ -50,6 +50,14 @@ function New-ProductionFixture([string]$Root) {
   Write-Text (Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md") '# Formal Blog'
   Write-Text (Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.html") '<h1>Formal Blog</h1>'
   Write-Text (Join-Path $packageRoot "table-card-log\APL_Momentum_Leaders_Top_30_Company_Business_Analysis_$ScanDate.md") '# Company analysis'
+  $editorialArtifacts=@(
+    @('blog-markdown',(Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md")),
+    @('blog-html',(Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.html")),
+    @('whatsapp',(Join-Path $packageRoot "WhatsApp_$ScanDate.md")),
+    @('company-business-analysis',(Join-Path $packageRoot "table-card-log\APL_Momentum_Leaders_Top_30_Company_Business_Analysis_$ScanDate.md"))
+  )
+  $editorialAudit=[ordered]@{SchemaVersion='APL Editorial Completion Audit v1.0';ScanDate=$ScanDate;Status='PASS';EditorialCompletion=$true;DailyProductionPublishableCandidate=$true;MandatorySections=@('Executive Summary','Market Context','為什麼要看 APL Momentum Leaders 領導股？','Deep-Scan Overview','最近7日 Top Gainers','Momentum Leaders Analysis','Sector Analysis','Relative Volume / Market Activity','Risk','Deep-Scan Conclusion');Artifacts=[object[]]@($editorialArtifacts|ForEach-Object{$item=Get-Item -LiteralPath $_[1];[pscustomobject]@{Role=$_[0];RelativePath=(Split-Path $_[1] -Leaf);Size=[long]$item.Length;SHA256=(Get-FileHash -LiteralPath $_[1] -Algorithm SHA256).Hash}});Checks=[ordered]@{NoPlaceholder=$true;MandatorySections=$true;SectionOrder=$true;SubstantiveContent=$true;DetailedMarketContext=$true;MarkdownHtmlEquivalent=$true;TriggerBDataMatch=$true;TopGainersEvidence=$true;ConclusionResponds=$true;WhatsAppFirstScreen=$true;CompanyAnalysis=$true}}
+  Write-Text (Join-Path $packageRoot "APL_Editorial_Completion_Audit_$ScanDate.json") ($editorialAudit|ConvertTo-Json -Depth 10)
   $inputRoot = Join-Path (Split-Path $Root -Parent) 'semantic-inputs'
   $semanticFixtures = @{
     ExecutiveSummary = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"ExecutiveSummary","Title":"Executive","Rows":[{"observation":"Breadth","meaning":"Selective leadership"}]}'
@@ -85,7 +93,8 @@ function New-ProductionFixture([string]$Root) {
     @('whatsapp',"WhatsApp_$ScanDate.md"),
     @('formal-blog-markdown',"APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md"),
     @('formal-blog-html',"APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.html"),
-    @('company-business-analysis',"table-card-log/APL_Momentum_Leaders_Top_30_Company_Business_Analysis_$ScanDate.md")
+    @('company-business-analysis',"table-card-log/APL_Momentum_Leaders_Top_30_Company_Business_Analysis_$ScanDate.md"),
+    @('editorial-completion-audit',"APL_Editorial_Completion_Audit_$ScanDate.json")
   )
   $requiredRecords = New-Object System.Collections.Generic.List[object]
   foreach($definition in $requiredDefinitions){$path=Join-Path $packageRoot $definition[1].Replace('/','\');$item=Get-Item -LiteralPath $path;$requiredRecords.Add([pscustomobject]@{Id=$definition[0];RelativePath=$definition[1];Size=[long]$item.Length;SHA256=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash})}
@@ -261,7 +270,7 @@ try {
   Invoke-ExpectExit 'final-log-write-failure' $completionScript @('-RegressionTest','-TestFailFinalLog','-ScanDate',$ScanDate,'-FinalAuditPath',$audit,'-ArchiveManifestPath',$manifestPath,'-ArchiveIndexPath',(Join-Path $archiveRoot 'index.md'),'-PipelineLog',$pipelineLog,'-PipelineTrace',$pipelineTrace,'-StatePath',$state) 1
   Add-Result 'failed-finalization-no-pass-state' (-not (Test-Path -LiteralPath $state))
   Invoke-ExpectExit 'finalization-rerun' $completionScript @('-RegressionTest','-ScanDate',$ScanDate,'-FinalAuditPath',$audit,'-ArchiveManifestPath',$manifestPath,'-ArchiveIndexPath',(Join-Path $archiveRoot 'index.md'),'-PipelineLog',$pipelineLog,'-PipelineTrace',$pipelineTrace,'-StatePath',$state) 0
-  $stateJson=Get-Content -Raw -Encoding UTF8 $state|ConvertFrom-Json;Add-Result 'authoritative-final-state' ([string]$stateJson.Status -eq 'PASS' -and $stateJson.DailyProductionComplete -eq $true)
+  $stateJson=Get-Content -Raw -Encoding UTF8 $state|ConvertFrom-Json;Add-Result 'authoritative-final-state' ([string]$stateJson.Status -eq 'PASS' -and $stateJson.DailyProductionComplete -eq $true -and $stateJson.DailyProductionPublishable -eq $true)
 
   foreach ($file in @('tools\production_archive_common.ps1','tools\test_production_artifact_contract.ps1','tools\archive_daily_production.ps1','tools\complete_daily_production.ps1','tools\run_daily_production.ps1')) {
     $tokens=$null;$errors=$null;[void][System.Management.Automation.Language.Parser]::ParseFile((Join-Path $ProjectRoot $file),[ref]$tokens,[ref]$errors);Add-Result ("ps51-ast-"+$file.Replace('\','-')) ($errors.Count -eq 0) (($errors|ForEach-Object{$_.Message}) -join '; ')

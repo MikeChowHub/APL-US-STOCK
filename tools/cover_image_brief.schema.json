@@ -11,6 +11,8 @@
     "riskBackground",
     "leadershipDestination",
     "mainVisualMetaphor",
+    "sceneConcept",
+    "nativeCompositions",
     "composition",
     "imageGenerationBrief",
     "overlay"
@@ -18,7 +20,7 @@
   "properties": {
     "version": {
       "type": "string",
-      "const": "APL Cover Brief v1.0"
+      "const": "APL Cover Brief v1.1"
     },
     "scanDate": {
       "type": "string",
@@ -48,38 +50,58 @@
       "type": "string",
       "description": "Single concrete cinematic scene. Not a dashboard, not an infographic."
     },
+    "sceneConcept": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "coreMarketThesis", "subjectIdentity", "primarySceneElements", "colorPalette", "lightingDirection", "cinematicMood", "brandAtmosphere", "artStyle"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "coreMarketThesis": { "type": "string", "minLength": 1 },
+        "subjectIdentity": { "type": "string", "minLength": 1 },
+        "primarySceneElements": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "colorPalette": { "type": "string", "minLength": 1 },
+        "lightingDirection": { "type": "string", "minLength": 1 },
+        "cinematicMood": { "type": "string", "minLength": 1 },
+        "brandAtmosphere": { "type": "string", "minLength": 1 },
+        "artStyle": { "type": "string", "minLength": 1 }
+      }
+    },
+    "nativeCompositions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cover", "seo"],
+      "properties": {
+        "cover": { "$ref": "#/$defs/coverNativeComposition" },
+        "seo": { "$ref": "#/$defs/seoNativeComposition" }
+      }
+    },
     "composition": {
       "type": "object",
       "required": ["textSafeArea", "storyArea", "rules"],
       "properties": {
         "textSafeArea": { "type": "string" },
         "storyArea": { "type": "string" },
-        "crop": {
-          "type": "object",
-          "description": "Optional per-variant crop control for preserving the cinematic subject when Cover and SEO use different aspect ratios.",
-          "properties": {
-            "cover": { "$ref": "#/$defs/cropConfig" },
-            "seo": { "$ref": "#/$defs/cropConfig" }
-          },
-          "additionalProperties": false
-        },
         "rules": {
           "type": "array",
           "items": { "type": "string" }
         }
-      }
+      },
+      "additionalProperties": false
     },
     "imageGenerationBrief": {
       "type": "object",
-      "required": ["prompt", "negativePrompt"],
+      "required": ["sharedPrompt", "coverPrompt", "seoPrompt", "negativePrompt"],
       "properties": {
-        "prompt": { "type": "string" },
+        "sharedPrompt": { "type": "string", "minLength": 1 },
+        "coverPrompt": { "type": "string", "minLength": 1 },
+        "seoPrompt": { "type": "string", "minLength": 1 },
         "negativePrompt": { "type": "string" },
         "notes": {
           "type": "array",
           "items": { "type": "string" }
         }
-      }
+      },
+      "additionalProperties": false
     },
     "overlay": {
       "type": "object",
@@ -106,26 +128,29 @@
     }
   },
   "$defs": {
-    "cropConfig": {
+    "nativeCompositionBase": {
       "type": "object",
-      "description": "Crop anchor and focal point. focalX/focalY are normalized values from 0 to 1.",
+      "additionalProperties": false,
+      "required": ["aspect_ratio", "camera_distance", "framing_description", "subject_placement", "text_safe_area"],
       "properties": {
-        "anchor": {
-          "type": "string",
-          "enum": ["center", "top", "bottom", "left", "right", "top-left", "top-right", "bottom-left", "bottom-right", "custom"]
-        },
-        "focalX": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
-        },
-        "focalY": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
-        }
-      },
-      "additionalProperties": false
+        "aspect_ratio": { "type": "string" },
+        "camera_distance": { "type": "string", "minLength": 1 },
+        "framing_description": { "type": "string", "minLength": 1 },
+        "subject_placement": { "type": "string", "minLength": 1 },
+        "text_safe_area": { "type": "string", "minLength": 1 }
+      }
+    },
+    "coverNativeComposition": {
+      "allOf": [
+        { "$ref": "#/$defs/nativeCompositionBase" },
+        { "properties": { "aspect_ratio": { "const": "4:5" } } }
+      ]
+    },
+    "seoNativeComposition": {
+      "allOf": [
+        { "$ref": "#/$defs/nativeCompositionBase" },
+        { "properties": { "aspect_ratio": { "const": "16:9" } } }
+      ]
     },
     "overlayVariantConfig": {
       "type": "object",

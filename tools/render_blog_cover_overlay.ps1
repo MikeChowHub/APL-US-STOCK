@@ -244,6 +244,12 @@ if (-not [string]::IsNullOrWhiteSpace($outDir) -and !(Test-Path -LiteralPath $ou
 }
 
 $bg = [System.Drawing.Image]::FromFile($BackgroundPath)
+$sourceRatio = [double]$bg.Width / [double]$bg.Height
+$requiredRatio = if ($Variant -eq 'SEO') { 16.0 / 9.0 } else { 4.0 / 5.0 }
+if ([Math]::Abs($sourceRatio - $requiredRatio) -gt 0.001) {
+  $bg.Dispose()
+  throw "$Variant background must be a native role-specific composition; source aspect ratio is $sourceRatio."
+}
 $bmp = [System.Drawing.Bitmap]::new($Width, $Height)
 $g = [System.Drawing.Graphics]::FromImage($bmp)
 $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
@@ -321,6 +327,8 @@ $log = @(
   "Variant: $Variant",
   "Brief: $BriefPath",
   "Background: $BackgroundPath",
+  "Native Source Aspect Ratio: $sourceRatio",
+  'Native Source Transformation: none',
   "Output: $OutputPath",
   "Canvas: ${Width}x${Height}",
   "Crop Anchor: $($crop.anchor)",

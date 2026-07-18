@@ -79,7 +79,7 @@ ChatGPT / ImageGen is responsible for the cinematic background.
 
 Codex / local post-production is responsible only for accurate text, logo, spacing, date, and final export.
 
-For a complete Trigger C input set, Codex must first derive the Cover Brief from the approved market narrative, then invoke the image generation workflow and save the selected no-text background within the Project Root. It must not require the user to design or manufacture the normal production background. The local renderer remains the only authority for final title, date, logo and SEO composition.
+For a complete Trigger C input set, Codex must first derive one shared scene concept from the approved market narrative, then invoke the image generation workflow twice: a native 4:5 Cover view and a native 16:9 SEO view. Both no-text sources are saved within the Project Root with separate native records. It must not require the user to design or manufacture the normal production backgrounds. The local renderer remains the only authority for final title, date and logo composition.
 
 ### Prohibited Elements
 
@@ -135,6 +135,9 @@ SEO Image must:
 - simplify the metaphor if needed;
 - keep text short and high contrast;
 - work as a standalone share asset.
+- use a native 16:9 view of the same scene concept as the Cover;
+- use a wider or more distant field of view with lateral environmental context;
+- reserve a landscape-specific title and logo safe area.
 
 ### Prohibited Elements
 
@@ -145,10 +148,11 @@ SEO Image must not:
 - overload text;
 - include dense data;
 - become a table, radar UI, or social card clone.
+- be produced by cropping, resizing or re-encoding the Cover source.
 
 ### Relationship with Other Visual Types
 
-SEO Image may share the Blog Cover metaphor, but composition must be adapted for share-preview readability.
+SEO Image must share the Blog Cover scene concept, subject identity, primary scene elements, palette, lighting direction, cinematic mood, brand atmosphere and art style. It must use an independently generated camera distance／framing and a different native source file. Cover remains the concentrated 4:5 portrait view; SEO is the expanded 16:9 landscape view.
 
 ---
 

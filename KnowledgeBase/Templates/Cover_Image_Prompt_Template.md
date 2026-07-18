@@ -15,11 +15,13 @@ Extract Capital Flow
 ↓
 Choose One Visual Metaphor
 ↓
-Create ChatGPT Image Brief
+Define One Shared Scene Concept ID
 ↓
-Generate cinematic background with ChatGPT / ImageGen
+Generate native 4:5 Cover view + independent native 16:9 SEO view
 ↓
-Local text overlay
+Create and validate two native composition records
+↓
+Local Cover / SEO text overlays
 ↓
 Final QC
 ```
@@ -41,9 +43,11 @@ Codex creates Cover Brief
 ↓
 Codex invokes image generation workflow
 ↓
-Codex saves the selected no-text background inside the Project Root
+Codex saves the two selected no-text native backgrounds inside the Project Root
 ↓
-Codex passes CoverBriefPath + CoverBackgroundPath to production runner
+Codex records one shared scene concept and two role-specific native compositions
+↓
+Codex passes CoverBriefPath + CoverBackgroundPath + SeoBackgroundPath to production runner
 ↓
 Local renderer adds exact text, date, logo and SEO layout
 ```
@@ -58,10 +62,12 @@ Responsible for:
 - extracting market conclusion;
 - extracting capital flow;
 - choosing one main visual metaphor;
-- generating cinematic financial market background;
+- generating two cinematic financial market backgrounds from one shared scene concept;
 - creating concrete market environment;
 - showing capital flow, risk background, and leadership destination;
-- preserving text-safe area.
+- preserving the role-specific Cover and SEO text-safe areas;
+- keeping subject identity, primary scene elements, palette, lighting direction, cinematic mood, brand atmosphere and art style consistent;
+- changing camera distance, field of view, framing, subject scale and negative space for the target aspect ratio.
 - generating background only, with no production typography or brand asset;
 - returning a final selected bitmap that Codex copies into an approved project production-input location.
 
@@ -143,24 +149,35 @@ The metaphor must be concrete.
 
 Avoid mixing too many metaphors.
 
-### Composition
+### Shared Scene Concept
 
-Required composition:
+Create one stable `sceneConcept.id` for the issue. Record the core market thesis, subject identity, primary scene elements, color palette, lighting direction, cinematic mood, brand atmosphere and art style. These fields are shared and must not diverge between Cover and SEO.
 
-- top 35–40% reserved as text-safe area;
-- bottom 60–65% carries cinematic market story;
-- main object separated from text area;
-- clear foreground / midground / background depth;
-- no Dashboard;
-- no floating widgets;
-- no presentation-slide layout;
-- no abstract decorative flow lines.
+### Native Cover Composition
+
+- native aspect ratio `4:5`;
+- closer or medium-close camera distance;
+- concentrated subject and stronger vertical tension;
+- role-specific subject placement;
+- Cover title／logo safe area;
+- no crop from another source.
+
+### Native SEO Composition
+
+- native aspect ratio `16:9`;
+- more distant or wider field of view;
+- scene extends left and right with more environmental narrative;
+- role-specific subject placement;
+- horizontal SEO title／logo safe area;
+- no crop from the Cover source.
+
+`imageGenerationBrief` contains one shared prompt plus separate Cover and SEO prompts. The role prompts may change only viewpoint and composition; they must not introduce an unrelated subject, theme or art style.
 
 ---
 
 ## 3. AI Background Rules
 
-The AI-generated background must contain:
+Both AI-generated backgrounds must contain:
 
 - concrete market environment;
 - real industry scene;
@@ -173,7 +190,7 @@ The AI-generated background must contain:
 - blue / cyan / gold primary palette;
 - red / green only for risk / rotation signals.
 
-The AI-generated background must not contain:
+Both AI-generated backgrounds must not contain:
 
 - text;
 - date;
@@ -248,6 +265,12 @@ Reject and redesign if any answer is No.
 8. Is it clearly not a table card?
 9. Is it clearly not a presentation slide?
 10. Does it match the article's actual conclusion?
+11. Do Cover and SEO share one `sceneConcept.id` and visual language?
+12. Is Cover a native 4:5 closer／concentrated view?
+13. Is SEO a native 16:9 wider／more distant view?
+14. Are source paths and SHA-256 values different?
+15. Do both native records declare `transformation: none`?
+16. Was neither source created by crop, resize or re-encoding the other?
 
 ---
 

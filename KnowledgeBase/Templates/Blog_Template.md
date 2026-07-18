@@ -14,6 +14,20 @@ Market Context
 Formal Blog Production
 ```
 
+This template is private editorial guidance, never a publishable artifact. Every bracketed instruction and example sentence must be replaced with issue-specific analysis before Managed Input Preflight. Copying the skeleton, emitting only one section, or using a short summary as the Blog must fail editorial completion.
+
+Trigger C preparation order is fixed:
+
+```text
+verified Trigger B metadata and ranking
++ approved detailed market-context.md
++ current Top Gainers CSV
+→ complete Markdown draft
+→ content-equivalent HTML draft
+→ WhatsApp and Company Business Analysis
+→ Managed Input Editorial Completion Gate
+```
+
 Do not use this template for Trigger A or Trigger B alone.
 
 ---

@@ -1,4 +1,4 @@
-[CmdletBinding(DefaultParameterSetName = 'SingleTableCard')]
+﻿[CmdletBinding(DefaultParameterSetName = 'SingleTableCard')]
 param(
   [Parameter(Mandatory = $true)]
   [string]$InputCsv,
@@ -34,6 +34,9 @@ param(
 
   [Parameter(Mandatory = $true)]
   [string]$CoverBackgroundPath,
+
+  [Parameter(Mandatory = $true)]
+  [string]$SeoBackgroundPath,
 
   [switch]$RegressionTest
 )
@@ -80,6 +83,13 @@ if ($PSCmdlet.ParameterSetName -eq 'TableCardManifest') {
 }
 $CoverBriefPath = Assert-InputFile $CoverBriefPath 'CoverBriefPath'
 $CoverBackgroundPath = Assert-InputFile $CoverBackgroundPath 'CoverBackgroundPath'
+$SeoBackgroundPath = Assert-InputFile $SeoBackgroundPath 'SeoBackgroundPath'
+if ($CoverBackgroundPath.Equals($SeoBackgroundPath, [System.StringComparison]::OrdinalIgnoreCase)) {
+  throw 'CoverBackgroundPath and SeoBackgroundPath must be different native source files.'
+}
+if ((Get-FileHash -LiteralPath $CoverBackgroundPath -Algorithm SHA256).Hash -ceq (Get-FileHash -LiteralPath $SeoBackgroundPath -Algorithm SHA256).Hash) {
+  throw 'Cover and SEO native source bytes must be different; one background cannot serve both roles.'
+}
 if ([string]::IsNullOrWhiteSpace($SectorMapPath)) { $SectorMapPath = Join-Path $ProjectRoot 'tools\sector_map.json' }
 $SectorMapPath = Assert-InputFile $SectorMapPath 'SectorMapPath'
 if ([string]::IsNullOrWhiteSpace($LogoPath)) { $LogoPath = Join-Path $ProjectRoot 'Assets\Brand\APL_Deep_Scan_Brand_Logo_Renderer_Clean.png' }
@@ -185,6 +195,7 @@ $whatsAppPackage = Join-Path $productionPackage "WhatsApp_${ScanDate}.md"
 $blogMarkdownPackage = Join-Path $productionPackage "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.md"
 $blogHtmlPackage = Join-Path $productionPackage "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.html"
 $companyAnalysisPackage = Join-Path $productionPackage "table-card-log\APL_Momentum_Leaders_Top_30_Company_Business_Analysis_${ScanDate}.md"
+$editorialAuditPackage = Join-Path $productionPackage "APL_Editorial_Completion_Audit_${ScanDate}.json"
 $productionPackageManifest = Join-Path $productionPackage "APL_Production_Package_Manifest_${ScanDate}.json"
 $finalAuditPath = Assert-NewArtifact (Join-Path $finalDateOut "Final_Production_Audit_${ScanDate}.json") 'FinalProductionAudit'
 
@@ -247,7 +258,8 @@ function Write-ProductionPackageManifest {
     [pscustomobject]@{Id='whatsapp';Path=$whatsAppPackage},
     [pscustomobject]@{Id='formal-blog-markdown';Path=$blogMarkdownPackage},
     [pscustomobject]@{Id='formal-blog-html';Path=$blogHtmlPackage},
-    [pscustomobject]@{Id='company-business-analysis';Path=$companyAnalysisPackage}
+    [pscustomobject]@{Id='company-business-analysis';Path=$companyAnalysisPackage},
+    [pscustomobject]@{Id='editorial-completion-audit';Path=$editorialAuditPackage}
   )) { [void]$requiredDefinitions.Add($definition) }
 
   $requiredRecords = New-Object System.Collections.Generic.List[object]
@@ -435,7 +447,7 @@ try {
     } @($tableCardResultManifest)
   }
   Invoke-PipelineStep 'RenderCoverOverlay' $overlayScript @('-BriefPath',$CoverBriefPath,'-BackgroundPath',$CoverBackgroundPath,'-OutputPath',$coverOutput,'-Variant','Cover','-LogoPath',$LogoPath) @($coverOutput,$coverLog)
-  Invoke-PipelineStep 'RenderSeoOverlay' $overlayScript @('-BriefPath',$CoverBriefPath,'-BackgroundPath',$CoverBackgroundPath,'-OutputPath',$seoOutput,'-Variant','SEO','-LogoPath',$LogoPath) @($seoOutput,$seoLog)
+  Invoke-PipelineStep 'RenderSeoOverlay' $overlayScript @('-BriefPath',$CoverBriefPath,'-BackgroundPath',$SeoBackgroundPath,'-OutputPath',$seoOutput,'-Variant','SEO','-LogoPath',$LogoPath) @($seoOutput,$seoLog)
   Complete-InternalStep 'ImportPublishingArtifacts' {
     if ([string]::IsNullOrWhiteSpace($PublishingArtifactsRoot)) { return }
     $publishingRootFull = Assert-AplNoReparsePath -Path $PublishingArtifactsRoot -AllowedRoot $publishingAllowedRoot -RequireDirectory
@@ -534,7 +546,7 @@ try {
   $completionOutput = @(& powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $completionScript @completionArgs 2>&1)
   if ($LASTEXITCODE -ne 0) { throw "Daily production finalization failed: $($completionOutput -join ' ')" }
   $finalState = Read-AplStrictJson $dailyStatePath $logsRoot
-  if ([string]$finalState.Status -cne 'PASS' -or $finalState.DailyProductionComplete -ne $true) { throw 'Authoritative daily production state did not reach PASS.' }
+  if ([string]$finalState.Status -cne 'PASS' -or $finalState.DailyProductionComplete -ne $true -or $finalState.DailyProductionPublishable -ne $true) { throw 'Authoritative daily production state did not reach publishable PASS.' }
   $status = 'PASS'
   Exit-AplNamedMutex $publishScoringMutex
   Exit-AplNamedMutex $runMutex
@@ -549,4 +561,4 @@ try {
   exit 1
 }
 
-[pscustomobject]@{ RunId=$runId; Status=$status; DailyProductionComplete=($status -eq 'PASS'); AuthoritativeState=$dailyStatePath; ProjectRoot=$ProjectRoot; OutputRoot=$publishRoot; DateOutput=$finalDateOut; FinalProductionAudit=$finalAuditPath; ArchiveDestination=$archiveDestination; ArchiveManifest=$archiveManifestPath; ArchiveIndex=$archiveIndexPath; PipelineLog=$pipelineLog; PipelineTrace=$tracePath; ArtifactCount=$publishedArtifacts.Count }
+[pscustomobject]@{ RunId=$runId; Status=$status; DailyProductionComplete=($status -eq 'PASS'); DailyProductionPublishable=($status -eq 'PASS'); AuthoritativeState=$dailyStatePath; ProjectRoot=$ProjectRoot; OutputRoot=$publishRoot; DateOutput=$finalDateOut; FinalProductionAudit=$finalAuditPath; ArchiveDestination=$archiveDestination; ArchiveManifest=$archiveManifestPath; ArchiveIndex=$archiveIndexPath; PipelineLog=$pipelineLog; PipelineTrace=$tracePath; ArtifactCount=$publishedArtifacts.Count }

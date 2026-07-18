@@ -34,7 +34,8 @@ Cover／SEO overlay 的指定字型為中文 `Alibaba Sans HK`、英文／數字
 | `TableCardInputPath` | Single-card compatibility | 單卡 backward-compatible mode的Table Card contract |
 | `TableCardType` | Single-card compatibility | 單卡 mode的renderer type |
 | `CoverBriefPath` | Yes | Codex 按正式市場文案建立、符合 cover brief schema 的 UTF-8 JSON |
-| `CoverBackgroundPath` | Yes | Codex 經 image generation workflow 生成並保存到核准 production-input path 的無字 cinematic background；overlay renderer 只負責本地後製 |
+| `CoverBackgroundPath` | Yes | 同一scene concept的原生4:5 Cover背景；較近／集中視角 |
+| `SeoBackgroundPath` | Yes | 同一scene concept的獨立原生16:9 SEO背景；較遠／廣角視角 |
 | `OutputRoot` | No | Production 必須是 repository `outputs/`；省略即可。Regression 必須明確位於 repository `tmp/` 內 |
 | `SectorMapPath` | No | 預設 `tools/sector_map.json` |
 | `LogoPath` | No | 預設為已追蹤的 `Assets/Brand/APL_Deep_Scan_Brand_Logo_Renderer_Clean.png` |
@@ -47,7 +48,7 @@ Cover／SEO overlay 的指定字型為中文 `Alibaba Sans HK`、英文／數字
 
 ## 3. Cover pre-production and cinematic background
 
-`CoverBackgroundPath` 是 PowerShell runner 的必要 file input，但預設 production responsibility 不在使用者。Trigger C inputs 齊備後，Codex 必須在啟動 runner 前完成：
+`CoverBackgroundPath`及`SeoBackgroundPath`是PowerShell runner的必要file inputs，但預設production responsibility不在使用者。Trigger C inputs齊備後，Codex必須在啟動runner前完成：
 
 ```text
 正式市場文案／研究結論
@@ -58,14 +59,14 @@ Cover／SEO overlay 的指定字型為中文 `Alibaba Sans HK`、英文／數字
 ↓
 將 final background 保存到 Project Root 內核准且非 tmp/ 的 production-input path
 ↓
-把 CoverBriefPath 與 CoverBackgroundPath 傳給 run_daily_production.ps1
+把CoverBriefPath、CoverBackgroundPath及SeoBackgroundPath傳給run_daily_production.ps1
 ↓
-本地 renderer 疊加正式標題、日期、logo及SEO版式
+本地renderer分別疊加正式標題、日期、logo及各自版式
 ```
 
 Codex 不應要求使用者自行設計或製作背景。只有 image generation capability 不可用、生成失敗，或使用者明確指定外部核准背景時，才可停下並報告具體狀態。
 
-背景必須能同時裁切為 Cover 1080x1350 與 SEO 1280x720；上方約 35–40% 為低細節 text-safe area，主體集中於中下方。背景不得包含文字、日期、logo、ticker、table、dashboard UI、資訊卡或由 renderer 再疊加的品牌元素。Cover Brief 的構圖、crop／focal point 與 overlay 欄位應先驗證；背景不存在或不可讀時 runner 仍必須 fail-fast。
+Cover及SEO必須是同一scene concept的兩個獨立native compositions，不可由單一背景center crop、resize或re-encode。Cover原生4:5並採較近／集中視角；SEO原生16:9並採較遠／廣角、左右延展視角。兩者各自預留標題及Logo安全區，且不得包含文字、日期、logo、ticker、table、dashboard UI或資訊卡。Managed Input Preflight必須核對兩份native records的scene ID、視角、path、dimensions、SHA-256及`transformation=none`。
 
 Image generation 與 PowerShell runner 是兩個明確 stages：runner 不應內嵌外部生成 API，image generation 亦不得自行繪製正式文字或logo。
 
@@ -80,7 +81,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run_daily_produc
   -WeekLabel "<week-label>" `
   -TableCardManifestPath "<absolute-table-card-manifest-json>" `
   -CoverBriefPath "<absolute-cover-brief-json>" `
-  -CoverBackgroundPath "<absolute-cinematic-background>"
+  -CoverBackgroundPath "<absolute-native-cover-background>" `
+  -SeoBackgroundPath "<absolute-native-seo-background>"
 ```
 
 `-ExecutionPolicy Bypass` 只作用於該 process，不改寫 machine／user policy。Runner 的 child scripts 亦以 `powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass` 執行。
@@ -144,7 +146,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run_daily_produc
   -WeekLabel "<approved-baseline-week-label>" `
   -TableCardManifestPath "<approved-baseline-table-card-manifest-json>" `
   -CoverBriefPath "<approved-baseline-cover-brief-json>" `
-  -CoverBackgroundPath "<approved-baseline-background>"
+  -CoverBackgroundPath "<approved-native-cover-background>" `
+  -SeoBackgroundPath "<approved-native-seo-background>"
 ```
 
 以核准 baseline 比較完整 Top 30 的 Rank、Symbol 及所需數值欄位、watchlist／SMA200 counts、contracts、artifacts 與 trace PASS。Fixtures 不納入 v1.0.0 commit；不要把 `tmp/` regression output 當 production artifact。
@@ -170,7 +173,7 @@ Runner 不會執行 Git stage、commit、tag 或 push。首次發布使用 GitHu
 2. `FinalProductionAudit`
 3. `ArchiveDailyProduction`
 4. `VerifyArchivePass`
-5. `Daily Production Complete`
+5. `Daily Production Complete / Publishable`
 
 Final audit 會建立：
 
@@ -193,7 +196,8 @@ Archive executor 會：
 - 逐檔核對 relative path、file count、bytes 與 SHA-256；
 - 寫入 `archive-manifest.json`；
 - 更新 `Archive/index.md`；
-- 只有 manifest 與 index 都通過 runner 的 `VerifyArchivePass`，才輸出 `DailyProductionComplete=True`。
+- Managed Input Preflight必須先產生`EditorialCompletion=PASS`的editorial completion audit；placeholder、缺少mandatory section、Markdown/HTML不對等或與Trigger B／Top Gainers來源不一致時必須fail closed。
+- 只有Editorial Completion、Final Production Audit、Archive manifest與index全部通過，才可輸出`DailyProductionComplete=True`及`DailyProductionPublishable=True`。
 
 若 Archive 失敗，runner 保持非完成狀態，即使前段 Production 已 PASS。查看 pipeline log/trace、Final Audit 與 Archive staging 狀態後修正原因；不得以 Git Commit／Push 代替 Archive。既有 Archive 日期只在 PASS manifest 且與來源逐檔一致時可重用，不會覆蓋不同內容。
 

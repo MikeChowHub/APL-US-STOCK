@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
   [Parameter(Mandatory = $true)][string]$ScanDate,
   [Parameter(Mandatory = $true)][string]$FinalAuditPath,
@@ -27,14 +27,15 @@ $StatePath = Assert-AplNoReparsePath -Path $StatePath -AllowedRoot $allowedRoot
 
 if (Test-Path -LiteralPath $StatePath -PathType Leaf) {
   $existing = Read-AplStrictJson $StatePath $allowedRoot
-  if ([string]$existing.SchemaVersion -cne 'APL Daily Production State v1.0' -or [string]$existing.ScanDate -cne $ScanDate -or [string]$existing.Status -cne 'PASS' -or $existing.DailyProductionComplete -ne $true) { throw 'Existing daily production state is invalid.' }
-  [pscustomobject]@{ Status='PASS'; DailyProductionComplete=$true; Reused=$true; StatePath=$StatePath }
+  if ([string]$existing.SchemaVersion -cne 'APL Daily Production State v1.0' -or [string]$existing.ScanDate -cne $ScanDate -or [string]$existing.Status -cne 'PASS' -or $existing.DailyProductionComplete -ne $true -or $existing.DailyProductionPublishable -ne $true) { throw 'Existing daily production state is invalid.' }
+  [pscustomobject]@{ Status='PASS'; DailyProductionComplete=$true; DailyProductionPublishable=$true; Reused=$true; StatePath=$StatePath }
   exit 0
 }
 
 $audit = Read-AplStrictJson $FinalAuditPath (Split-Path $FinalAuditPath -Parent)
 if ([string]$audit.SchemaVersion -cne $script:AplFinalAuditSchemaVersion -or [string]$audit.ScanDate -cne $ScanDate -or [string]$audit.Status -cne 'PASS') { throw 'Final Production Audit is not PASS.' }
-if ([string]$audit.ProductionPackage.Status -cne 'PASS' -or [int]$audit.ProductionPackage.RequiredCount -lt 12) { throw 'Production package audit is not PASS.' }
+if ([string]$audit.ProductionPackage.Status -cne 'PASS' -or [int]$audit.ProductionPackage.RequiredCount -lt 13) { throw 'Production package audit is not PASS.' }
+if ([string]$audit.EditorialCompletion.Status -cne 'PASS' -or $audit.EditorialCompletion.DailyProductionPublishable -ne $true -or [int]$audit.EditorialCompletion.MandatorySections -ne 10) { throw 'Editorial Completion Audit is not publishable PASS.' }
 if (@($audit.TableCardSemantic).Count -ne 4 -or @($audit.TableCardSemantic | Where-Object { [string]$_.Status -cne 'PASS' }).Count -gt 0) { throw 'Table Card semantic audit is not PASS.' }
 $manifest = Read-AplStrictJson $ArchiveManifestPath $archiveDatePath
 $actual = @(Get-AplArchiveInventory $archiveDatePath -ExcludeManifest)
@@ -51,6 +52,7 @@ $state = [ordered]@{
   ScanDate = $ScanDate
   Status = 'PASS'
   DailyProductionComplete = $true
+  DailyProductionPublishable = $true
   CompletedUtc = [datetime]::UtcNow.ToString('o')
   FinalProductionAudit = $FinalAuditPath
   ArchiveManifest = $ArchiveManifestPath
@@ -59,4 +61,4 @@ $state = [ordered]@{
   PipelineTrace = $PipelineTrace
 }
 Write-AplUtf8Atomic $StatePath ($state | ConvertTo-Json -Depth 6) $allowedRoot | Out-Null
-[pscustomobject]@{ Status='PASS'; DailyProductionComplete=$true; Reused=$false; StatePath=$StatePath }
+[pscustomobject]@{ Status='PASS'; DailyProductionComplete=$true; DailyProductionPublishable=$true; Reused=$false; StatePath=$StatePath }

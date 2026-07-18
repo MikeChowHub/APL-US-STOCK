@@ -25,7 +25,7 @@ v1.0.0 scope 包括：
 - `git.exe` 必須在 `PATH`。只安裝／登入 GitHub Desktop 不保證外部 PowerShell 可找到 Git；先執行 `git --version`。
 - .NET Framework 可載入 `System.Drawing` 與 `Microsoft.VisualBasic`。
 - 建議安裝設計文件所用字型；缺少時 renderer 會 fallback，但跨 PC 像素結果可能不同。
-- Trigger C 由 Codex 先按正式市場文案建立符合 schema 的 Cover Brief，再使用 image generation workflow 生成無字 cinematic background。背景生成完成後，`run_daily_production.ps1` 以 `CoverBriefPath`／`CoverBackgroundPath` 接收兩項 production inputs，並由本地 renderer 疊加準確標題、日期、logo及SEO版式。PowerShell pipeline 本身不呼叫 image generation。
+- Trigger C由Codex先按正式市場文案建立符合schema的Cover Brief，再以同一scene concept分別生成原生4:5 Cover及原生16:9 SEO無字背景。`run_daily_production.ps1`以`CoverBriefPath`／`CoverBackgroundPath`／`SeoBackgroundPath`接收inputs，本地renderer只疊加準確標題、日期、logo及各自版式。PowerShell pipeline本身不呼叫image generation。
 - 正式 production logo 與 manifest 位於 `Assets/Brand/`；runtime 不依賴 `outputs/` 歷史檔案。
 
 完整環境檢查、參數及 recovery 程序見 [Production Runbook](docs/PRODUCTION_RUNBOOK.md)。
@@ -41,7 +41,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run_daily_produc
   -WeekLabel "<week-label>" `
   -TableCardManifestPath "<absolute-table-card-manifest-json>" `
   -CoverBriefPath "<absolute-cover-brief-json>" `
-  -CoverBackgroundPath "<absolute-cinematic-background>"
+  -CoverBackgroundPath "<absolute-native-cover-background>" `
+  -SeoBackgroundPath "<absolute-native-seo-background>"
 ```
 
 Production output root 固定為 `outputs/`。成功後 artifacts 位於 `outputs/<ScanDate>/`，logs 位於 `outputs/logs/`。同日期正式 artifacts 已存在時，pipeline 會在寫入前拒絕覆蓋。
@@ -59,7 +60,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run_daily_produc
   -WeekLabel "<baseline-week-label>" `
   -TableCardManifestPath "<baseline-table-card-manifest-json>" `
   -CoverBriefPath "<baseline-cover-brief-json>" `
-  -CoverBackgroundPath "<baseline-cinematic-background>"
+  -CoverBackgroundPath "<baseline-native-cover-background>" `
+  -SeoBackgroundPath "<baseline-native-seo-background>"
 ```
 
 Regression fixtures 屬本機測試資料，不隨 v1.0.0 repository 發布；執行者須提供已核准 baseline inputs，並比較 Top 30、audit counts、contracts 與 artifacts。
@@ -98,6 +100,7 @@ Production PASS
 → Archive index update
 → Archive PASS
 → Daily Production Complete
+→ Daily Production Publishable
 ```
 
 - Source：`outputs/YYYY-MM-DD/`

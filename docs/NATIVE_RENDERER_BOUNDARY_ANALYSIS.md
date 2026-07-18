@@ -2,11 +2,11 @@
 
 ## Scope
 
-This analysis documents the boundary between immutable Native Assets and derived Publication Renders. It does not modify the renderer or authorize Production integration.
+This analysis documents the boundary between immutable Native Assets and derived Publication Renders. Managed-input preflight now validates the two role-specific native sources before the existing overlay renderer is invoked.
 
 ## Current renderer behavior
 
-`tools/render_blog_cover_overlay.ps1` uses `Draw-CroppedImage` to fill a fixed destination canvas. Depending on source and destination ratios, it calculates a source rectangle and crops horizontally or vertically before drawing.
+`tools/render_blog_cover_overlay.ps1` uses `Draw-CroppedImage` to fill a fixed destination canvas. It now rejects a source outside the role-specific native ratio tolerance before drawing. Cover receives the native 4:5 source and SEO receives the independent native 16:9 source, so one background is no longer cropped into both roles.
 
 That behavior is valid only for a declared derived publication composition. It is incompatible with a claim that the resulting image is an unchanged Native Asset with `transformation: none`.
 
@@ -42,20 +42,14 @@ Keep two distinct records:
 - declares destination dimensions;
 - declares scale and crop rectangle if used;
 - must never claim `transformation: none` when geometry changes;
-- requires a future schema, validator, trace and audit design.
+- is tracked by the existing Production Package manifest, renderer log, Final Audit and Archive integrity flow;
+- does not alter the immutable native source record.
 
 ## Draw-CroppedImage decision
 
-Do not replace `Draw-CroppedImage` in this framework change.
+Do not replace `Draw-CroppedImage` in this minimal integration. It belongs only to the publication render and may scale the already validated role-specific source to the exact output canvas while adding text and logo. It must never normalize an invalid native input, reuse the Cover source for SEO, overwrite a native source or describe the publication output as `transformation: none`.
 
-Before Production integration:
-
-- retain it only if Publication Render transformation metadata is separately approved and machine-enforced;
-- replace it if the system adopts a strict no-crop rule for every stage;
-- if replaced under strict no-transform rules, render at native dimensions and remove exact fixed output-size requirements;
-- never use it to normalize an invalid native input before validation.
-
-## Required future tests
+## Required tests
 
 - Native Asset SHA and dimensions unchanged before/after rendering;
 - derived output never overwrites the Native Asset;
@@ -63,4 +57,3 @@ Before Production integration:
 - missing transformation evidence fails Final Audit;
 - fixed-canvas rendering cannot be labelled native;
 - no hidden padding, distortion or pre-validation normalization.
-

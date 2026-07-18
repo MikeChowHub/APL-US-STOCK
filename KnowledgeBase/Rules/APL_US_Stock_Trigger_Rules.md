@@ -158,6 +158,10 @@ Market Context
 
 Trigger C produces the formal APL Momentum Leaders 領導股 publishing package.
 
+Trigger C must execute editorial preparation after Trigger B results exist and before Managed Input Preflight. It must not emit the Blog Template skeleton, placeholder text, a one-section summary or an English test sentence as a formal artifact. The current Trigger B metadata／ranking, Top Gainers CSV and detailed Market Context are mandatory editorial evidence.
+
+Only a PASS `APL Editorial Completion Audit v1.0` may enter the Production runner. `DailyProductionComplete=true` without `DailyProductionPublishable=true` is not a completed Trigger C production.
+
 ### Allowed Outputs
 
 ```text
