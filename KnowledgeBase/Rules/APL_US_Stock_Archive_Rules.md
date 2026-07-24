@@ -97,6 +97,8 @@ Date | Status | Files | Bytes | Manifest | Notes
 - V2 row：`PASS`、verified file count／bytes、`YYYY/YYYY-MM-DD/archive-manifest.json`、`V2 manifest verified`。
 - Legacy row：`LEGACY_UNVERIFIED`、read-only inventory count／bytes、`N/A`、`Pre-v2 archive; inventory-only counts; integrity not attested`。
 
+`PENDING_INDEX`只屬同日Archive finalization／resume的暫態manifest狀態，不可成為持久index row。更新另一日期的index時，如發現其他日期仍為`PENDING_INDEX`，必須FAIL CLOSED；應先重試該未完成日期並取得final manifest `Status=PASS`。
+
 Legacy Files／Bytes are current read-only inventory statistics only. They are not historical SHA evidence and are not equivalent to a v2 manifest. Index generation must be deterministic and idempotent. Legacy rows must not block a valid new v2 Archive, but an unknown or post-adoption manifest-less date must block it.
 
 ## 7. Historical backfill prohibition

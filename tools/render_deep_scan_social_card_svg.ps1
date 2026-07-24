@@ -19,6 +19,12 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'dashboard_svg_geometry.ps1')
 $resolved = Resolve-AplRendererInput -ExpectedRendererType Social -BoundParameters $PSBoundParameters -InputPath $InputPath -RankingCsv $RankingCsv -ScanDate $ScanDate -SectorMapPath $SectorMapPath -OutputPath $OutputPath -OutputDir $OutputDir -Root $Root -LogoPath $LogoPath -WeekLabel $WeekLabel -ScanUniverseCount $ScanUniverseCount -ScanQualifiedCount $ScanQualifiedCount -LeaderCapacity $LeaderCapacity -RegressionTest:$RegressionTest
 $Root=$resolved.ProjectRoot; $RankingCsv=$resolved.RankingCsv; $ScanDate=$resolved.ScanDate; $SectorMapPath=$resolved.SectorMapPath; $OutputDir=$resolved.OutputPath; $LogoPath=$resolved.LogoPath; $WeekLabel=$resolved.WeekLabel; $ScanUniverseCount=$resolved.ScanUniverseCount; $ScanQualifiedCount=$resolved.ScanQualifiedCount; $LeaderCapacity=$resolved.LeaderCapacity
+$managedHeadlineLines=@()
+$coreMarketThesis=''
+if($null-ne$resolved.Contract-and$null-ne$resolved.Contract.Meta){
+  $managedHeadlineLines=@($resolved.Contract.Meta.SocialHeadlineLines|ForEach-Object{([string]$_).Trim()}|Where-Object{-not[string]::IsNullOrWhiteSpace($_)})
+  $coreMarketThesis=([string]$resolved.Contract.Meta.CoreMarketThesis).Trim()
+}
 $raw = Import-AplRankingCsv $RankingCsv
 $sectorPresentation = Import-AplSectorPresentation $SectorMapPath
 if ([string]::IsNullOrWhiteSpace($WeekLabel)) {
@@ -51,45 +57,6 @@ function NormalizeSector([string]$sector) {
 function SectorChinese([string]$sector) {
   return [string](Get-AplSectorVisual $sectorPresentation $sector).ChineseLabel
 }
-function BuyColor([int]$b) {
-  if ($b -ge 8) { return '#00D8FF' }
-  if ($b -ge 6) { return '#00D97B' }
-  if ($b -ge 4) { return '#008BFF' }
-  if ($b -ge 2) { return '#FF9D00' }
-  return '#FF4E5E'
-}
-function BuyGlow([int]$b) {
-  if ($b -ge 8) { return 16 }
-  if ($b -ge 6) { return 11 }
-  if ($b -ge 4) { return 7 }
-  if ($b -ge 2) { return 4 }
-  return 0
-}
-function Diameter([int]$rank, [double]$mom) {
-  if ($rank -le 5) { $base=76; $max=98 }
-  elseif ($rank -le 15) { $base=56; $max=72 }
-  else { $base=40; $max=52 }
-  $d = $base + (($mom - 56) / 34) * ($max - $base)
-  if ($d -lt $base) { $d = $base }
-  if ($d -gt $max) { $d = $max }
-  return [math]::Round($d,1)
-}
-$rankMap = @{
-  1=@(0,122); 2=@(215,178); 3=@(145,178); 4=@(285,178); 5=@(75,178);
-  6=@(18,262); 7=@(54,270); 8=@(90,262); 9=@(126,270); 10=@(162,262);
-  11=@(198,270); 12=@(234,262); 13=@(270,270); 14=@(306,262); 15=@(342,270);
-  16=@(12,352); 17=@(36,365); 18=@(60,352); 19=@(84,365); 20=@(108,352);
-  21=@(132,365); 22=@(156,352); 23=@(180,365); 24=@(204,352); 25=@(228,365);
-  26=@(252,352); 27=@(276,365); 28=@(300,352); 29=@(324,365); 30=@(348,352)
-}
-function Pos([int]$rank) {
-  $cx=540; $cy=560
-  $p=$rankMap[$rank]
-  $rad=([double]$p[0]-90)*[math]::PI/180
-  $r=[double]$p[1]
-  return @([math]::Round($cx+[math]::Cos($rad)*$r,2), [math]::Round($cy+[math]::Sin($rad)*$r,2))
-}
-
 $leaderCapacity = [math]::Min($LeaderCapacity, 30)
 $rankedRaw = @(
   $raw |
@@ -111,27 +78,40 @@ foreach ($r in $rankedRaw) {
     0
   }
   $sector=if ($sectorMap.ContainsKey($sym)) { $sectorMap[$sym] } else { $defaultSector }
-  $p=Pos $rank
   $rows += [pscustomobject]@{
     Rank=$rank; Symbol=$sym; Momentum=$mom; Buy=$buy; Composite=[math]::Round($composite,2); RelVol=$relVol;
-    Sector=$sector; Perf6=[double]$r.'Perf 6M %'; Perf3=[double]$r.'Perf 3M %'; X=$p[0]; Y=$p[1]; D=(Diameter $rank $mom)
+    Sector=$sector; Perf6=[double]$r.'Perf 6M %'; Perf3=[double]$r.'Perf 3M %'
   }
-}$leaderCount=@($rows).Count
-$highBuy=@($rows | Where-Object { $_.Buy -ge 8 }).Count
-$avgMomentum=[math]::Round((($rows | Measure-Object Momentum -Average).Average),2)
-$avgBuy=[math]::Round((($rows | Measure-Object Buy -Average).Average),2)
-$highestRel=($rows | Sort-Object RelVol -Descending | Select-Object -First 1).Symbol
-$sectorCounts=@($rows | ForEach-Object { [pscustomobject]@{ Sector=(NormalizeSector $_.Sector) } } | Group-Object Sector | Sort-Object @{Expression='Count';Descending=$true}, @{Expression='Name';Descending=$false} | Select-Object -First 5)
-$topSectorNames=@($sectorCounts | ForEach-Object { $_.Name })
-$topSector=$sectorCounts[0].Name
-$marketTheme=[string](Get-AplSectorVisual $sectorPresentation $topSector).MarketTheme
-$buyBuckets=[ordered]@{
-  '8-10'=@($rows | Where-Object { $_.Buy -ge 8 }).Count
-  '6-7'=@($rows | Where-Object { $_.Buy -ge 6 -and $_.Buy -le 7 }).Count
-  '4-5'=@($rows | Where-Object { $_.Buy -ge 4 -and $_.Buy -le 5 }).Count
-  '2-3'=@($rows | Where-Object { $_.Buy -ge 2 -and $_.Buy -le 3 }).Count
-  '0-1'=@($rows | Where-Object { $_.Buy -le 1 }).Count
 }
+$leaderCount=@($rows).Count
+if($leaderCount-lt1){throw 'Social Card requires at least one ranked leader.'}
+$topLeaders=@($rows|Sort-Object Rank|Select-Object -First 3)
+$focusSectorCounts=@($topLeaders | ForEach-Object { [pscustomobject]@{ Sector=(NormalizeSector $_.Sector) } } | Group-Object Sector | Sort-Object @{Expression='Count';Descending=$true}, @{Expression='Name';Descending=$false})
+$namedFocusSector=@($focusSectorCounts | Where-Object { $_.Name-ne'Others'-and[int]$_.Count-ge2 } | Select-Object -First 1)
+$hasNamedCluster=$namedFocusSector.Count-gt0
+if($hasNamedCluster){
+  $focusSectorGroup=$namedFocusSector[0]
+  $topSector=$focusSectorGroup.Name
+  $topSectorVisual=Get-AplSectorVisual $sectorPresentation $topSector
+  $marketTheme=[string]$topSectorVisual.MarketTheme
+  $insightTheme=[string]$topSectorVisual.InsightTheme
+  $topSectorChinese=[string]$topSectorVisual.ChineseLabel
+  $topSectorCount=[int]$focusSectorGroup.Count
+  $topSectorPct=[math]::Round(([double]$topSectorCount/$topLeaders.Count)*100,0)
+  $evidenceTitle=$topSector
+  $evidenceChinese=$topSectorChinese
+  $evidenceMetric="$topSectorPct%"
+  $evidenceCaption="$topSectorCount OF $($topLeaders.Count) SELECTED LEADERS"
+}else{
+  $marketTheme='Selective Leadership'
+  $insightTheme='No dominant named group in the selected leaders'
+  $topSectorChinese=U @(0x9818,0x5C0E,0x5206,0x6563)
+  $evidenceTitle='Selective Leadership'
+  $evidenceChinese=$topSectorChinese
+  $evidenceMetric=[string]$topLeaders.Count
+  $evidenceCaption='TOP-RANKED LEADERS'
+}
+$headlineLines=if($managedHeadlineLines.Count-gt0){[string[]]$managedHeadlineLines}else{[string[]]@($marketTheme)}
 
 $svg=New-Object System.Collections.Generic.List[string]
 $logoData=LogoData $logoPath
@@ -175,117 +155,49 @@ function Card([int]$x,[int]$y,[int]$w,[int]$h) {
   Add "<rect x='$x' y='$y' width='$w' height='$h' rx='18' fill='#08131F' fill-opacity='.72' stroke='#00D8FF' stroke-opacity='.45'/>"
 }
 
-# Radar Hero
-$cx=540; $cy=560
-foreach ($r in @(92,150,260,360,430)) { Add "<circle cx='$cx' cy='$cy' r='$r' fill='none' stroke='#00D8FF' stroke-opacity='.16'/>" }
-for ($deg=0; $deg -lt 360; $deg += 30) {
-  $rad=($deg-90)*[math]::PI/180
-  $x2=[math]::Round($cx+[math]::Cos($rad)*430,2); $y2=[math]::Round($cy+[math]::Sin($rad)*430,2)
-  Add "<line x1='$cx' y1='$cy' x2='$x2' y2='$y2' stroke='#00D8FF' stroke-opacity='.10'/>"
-}
-Add '<path d="M540 560 L760 230 L835 300 Z" fill="#00D8FF" opacity=".065" filter="url(#glow)"/>'
-Add "<circle cx='$cx' cy='$cy' r='96' fill='#00D8FF' opacity='.07' filter='url(#glow)'/>"
-Add "<text x='$cx' y='$($cy-5)' class='font-en white' font-size='56' text-anchor='middle' font-weight='900'>APL</text>"
-Add "<text x='$cx' y='$($cy+38)' class='font-en cyan' font-size='25' text-anchor='middle' font-weight='800'>Deep-Scan</text>"
-
-foreach ($row in $rows) {
-  $rank=[int]$row.Rank; $sym=X $row.Symbol; $buy=[int]$row.Buy; $d=[double]$row.D; $rr=$d/2; $x=[double]$row.X; $y=[double]$row.Y
-  $norm=NormalizeSector $row.Sector
-  $sectorColor=if ($topSectorNames -contains $norm) { $sectorColors[$norm] } else { $sectorColors['Others'] }
-  $bc=BuyColor $buy; $glow=BuyGlow $buy
-  if ($glow -gt 0) { Add "<circle cx='$x' cy='$y' r='$($rr+$glow)' fill='$bc' opacity='.13' filter='url(#glowStrong)'/>" }
-  Add "<circle cx='$x' cy='$y' r='$rr' fill='#07121C' fill-opacity='.82' stroke='$sectorColor' stroke-width='2.2'/>"
-  if ($rank -le 15) {
-    $rankFs=if ($rank -le 5) { 17 } else { 13 }
-    $tickerFs=if ($rank -le 5) { 25 } else { 18 }
-    $scoreFs=if ($rank -le 5) { 14 } else { 11 }
-    Add "<text x='$x' y='$($y-$rr+$rankFs+1)' class='mono rank' font-size='$rankFs'>$rank</text>"
-    Add "<text x='$x' y='$($y+5)' class='font-en ticker' font-size='$tickerFs'>$sym</text>"
-    Add "<text x='$x' y='$($y+25)' class='mono score' font-size='$scoreFs'>$('{0:0.00}' -f $row.Momentum)</text>"
-  } else {
-    Add "<text x='$x' y='$($y+5)' class='font-en ticker' font-size='15'>$sym</text>"
+# One mobile-first message
+$ZH_LEADERSHIP_FOCUS=U @(0x9818,0x5C0E,0x7126,0x9EDE)
+$ZH_CURRENT_LEADERS=U @(0x7576,0x671F,0x9818,0x5C0E,0x80A1)
+$ZH_SUPPORTING_EVIDENCE=U @(0x652F,0x6301,0x8B49,0x64DA)
+Add "<text x='54' y='238' class='font-en cyan' font-size='22' font-weight='900'>LEADERSHIP FOCUS</text>"
+Add "<text x='54' y='272' class='font-cn gray' font-size='18' font-weight='700'>$(X $ZH_LEADERSHIP_FOCUS)</text>"
+if($headlineLines.Count-eq1){
+  $headlineClass=if($headlineLines[0]-match'[\u3400-\u9FFF]'){'font-cn'}else{'font-en'}
+  Add "<text x='54' y='348' class='$headlineClass white' font-size='58' font-weight='900'>$(X $headlineLines[0])</text>"
+  Add "<text x='54' y='402' class='font-cn gray' font-size='28' font-weight='700'>$(X $topSectorChinese) / $(X $insightTheme)</text>"
+  Add "<line x1='54' y1='438' x2='1026' y2='438' stroke='#00D8FF' stroke-opacity='.45' stroke-width='2'/>"
+}else{
+  for($i=0;$i-lt$headlineLines.Count;$i++){
+    $headlineClass=if($headlineLines[$i]-match'[\u3400-\u9FFF]'){'font-cn'}else{'font-en'}
+    Add "<text x='54' y='$((330+($i*58)))' class='$headlineClass white' font-size='50' font-weight='900'>$(X $headlineLines[$i])</text>"
   }
+  Add "<text x='54' y='430' class='font-cn gray' font-size='24' font-weight='700'>$(X $topSectorChinese) / $(X $insightTheme)</text>"
+  Add "<line x1='54' y1='458' x2='1026' y2='458' stroke='#00D8FF' stroke-opacity='.45' stroke-width='2'/>"
 }
 
-# Hero data cards
-$heroY=920
-$ZH_UNIVERSE = U @(0x80A1,0x7968,0x6C60)
-$ZH_QUALIFIED = U @(0x7B26,0x5408,0x689D,0x4EF6)
-$ZH_LEADERS = U @(0x9818,0x5C0E,0x80A1)
-$ZH_LOCK = U @(0x6838,0x5FC3,0x9396,0x5B9A)
-$hero=@(
-  @('Universe',$ZH_UNIVERSE,('{0:N0}' -f $scanUniverseCount)),
-  @('Qualified',$ZH_QUALIFIED,('{0:N0}' -f $scanQualifiedCount)),
-  @('Leaders',$ZH_LEADERS,('{0:N0}' -f $leaderCount)),
-  @('Leader Lock',$ZH_LOCK,('{0:N0}' -f $highBuy))
-)
-for ($i=0; $i -lt 4; $i++) {
-  $x=54+($i*243)
-  Card $x $heroY 220 100
-  Add "<text x='$($x+20)' y='$($heroY+34)' class='font-en gray' font-size='16' font-weight='800'>$(X $hero[$i][0])</text>"
-  Add "<text x='$($x+20)' y='$($heroY+56)' class='font-cn gray' font-size='13' font-weight='700'>$(X $hero[$i][1])</text>"
-  Add "<text x='$($x+200)' y='$($heroY+84)' class='mono white' font-size='32' text-anchor='end' font-weight='900'>$(X $hero[$i][2])</text>"
+# Selected leaders: three evidence points, not a full radar
+Card 54 486 972 390
+Add "<text x='88' y='538' class='font-en cyan' font-size='22' font-weight='900'>CURRENT LEADERS</text>"
+Add "<text x='88' y='570' class='font-cn gray' font-size='17' font-weight='700'>$(X $ZH_CURRENT_LEADERS)</text>"
+$leaderX=@(236,540,844)
+for($i=0;$i-lt$topLeaders.Count;$i++){
+  $row=$topLeaders[$i];$x=$leaderX[$i];$sector=NormalizeSector $row.Sector
+  $color=if($sectorColors.ContainsKey($sector)){$sectorColors[$sector]}else{$sectorColors['Others']}
+  Add "<circle cx='$x' cy='704' r='112' fill='#07121C' fill-opacity='.88' stroke='$color' stroke-width='4'/>"
+  Add "<circle cx='$x' cy='704' r='126' fill='none' stroke='$color' stroke-opacity='.18' stroke-width='2'/>"
+  Add "<text x='$x' y='650' class='mono cyan' font-size='20' text-anchor='middle' font-weight='900'>#$([int]$row.Rank)</text>"
+  Add "<text x='$x' y='715' class='font-en white' font-size='42' text-anchor='middle' font-weight='900'>$(X $row.Symbol)</text>"
+  Add "<text x='$x' y='758' class='font-en gray' font-size='17' text-anchor='middle' font-weight='700'>$(X $sector)</text>"
 }
 
-# Buyability and sector cards
-Card 54 1038 440 270
-$ZH_BUY_DIST = U @(0x8CB7,0x5165,0x8A55,0x7D1A,0x5206,0x4F48)
-$ZH_SECTOR_DIST = U @(0x7522,0x696D,0x5206,0x4F48)
-Add "<text x='84' y='1078' class='font-en cyan' font-size='22' font-weight='900'>BUYABILITY</text>"
-Add "<text x='84' y='1100' class='font-cn gray' font-size='14' font-weight='700'>$(X $ZH_BUY_DIST)</text>"
-Add "<circle cx='152' cy='1185' r='62' fill='#07121C' stroke='#00D8FF' stroke-opacity='.25'/>"
-$circ=389.56; $offset=0
-$BUY_STRONG = U @(0x5F37,0x70C8,0x8CB7,0x5165)
-$BUY_GOOD = U @(0x826F,0x597D,0x6A5F,0x6703)
-$BUY_NEUTRAL = U @(0x6A5F,0x6703,0x89C0,0x5BDF)
-$BUY_WATCH = U @(0x7B49,0x5F85,0x89C0,0x5BDF)
-$BUY_EXTENDED = U @(0x904E,0x5EA6,0x5EF6,0x4F38)
-$buyRows=@(
-  @($BUY_STRONG,'8-10',$buyBuckets['8-10'],'#00D8FF'),
-  @($BUY_GOOD,'6-7',$buyBuckets['6-7'],'#00D97B'),
-  @($BUY_NEUTRAL,'4-5',$buyBuckets['4-5'],'#008BFF'),
-  @($BUY_WATCH,'2-3',$buyBuckets['2-3'],'#FF9D00'),
-  @($BUY_EXTENDED,'0-1',$buyBuckets['0-1'],'#FF4E5E')
-)
-foreach ($b in $buyRows) {
-  $count=[int]$b[2]
-  if ($count -gt 0) {
-    $dash=[math]::Round($circ*([double]$count/$leaderCount),2); $gap=[math]::Round($circ-$dash,2)
-    Add "<circle cx='152' cy='1185' r='62' fill='none' stroke='$($b[3])' stroke-width='20' stroke-dasharray='$dash $gap' stroke-dashoffset='-$offset' transform='rotate(-90 152 1185)'/>"
-    $offset += $dash
-  }
-}
-Add "<circle cx='152' cy='1185' r='38' fill='#06131D'/>"
-Add "<text x='152' y='1196' class='mono white' font-size='32' text-anchor='middle' font-weight='900'>$leaderCount</text>"
-Add "<text x='152' y='1219' class='mono gray' font-size='11' text-anchor='middle'>TOTAL</text>"
-$by=1120
-foreach ($b in $buyRows) {
-  $count=[int]$b[2]; $barW=Get-AplValidatedDistributionWidth $count $leaderCount 200 'Social buyability distribution'; $pct=[math]::Round(([double]$count/$leaderCount)*100,0)
-  if ($pct -lt 0 -or $pct -gt 100) { throw "Social buyability distribution percentage $pct is outside 0..100." }
-  Add "<text x='236' y='$by' fill='$($b[3])' class='font-cn' font-size='13.5' font-weight='600'>$(X $b[0]) ($($b[1]))</text>"
-  Add "<text x='466' y='$by' class='mono white' font-size='13' text-anchor='end' font-weight='900'>$count / $pct%</text>"
-  Add "<rect x='236' y='$($by+12)' width='200' height='9' rx='2.5' fill='#132637'/>"
-  if ($barW -gt 0) { Add "<rect x='236' y='$($by+12)' width='$barW' height='9' rx='2.5' fill='$($b[3])'/>" }
-  $by += 38
-}
-
-Card 524 1038 502 270
-Add "<text x='554' y='1078' class='font-en cyan' font-size='21' font-weight='900'>SECTOR DISTRIBUTION</text>"
-Add "<text x='554' y='1100' class='font-cn gray' font-size='14' font-weight='700'>$(X $ZH_SECTOR_DIST)</text>"
-$barY=1124
-$maxSector=($sectorCounts | Measure-Object Count -Maximum).Maximum
-$null=ConvertTo-AplRequiredFiniteDouble $maxSector 'Social sector distribution maxSectorCount'
-if ([double]$maxSector -le 0) { throw 'Social sector distribution maxSectorCount must be greater than zero.' }
-foreach ($sc in $sectorCounts) {
-  $name=$sc.Name; $count=[int]$sc.Count; $color=$sectorColors[$name]; $zh=SectorChinese $name
-  $w=Get-AplValidatedDistributionWidth $count $maxSector 138 'Social sector distribution'; $pct=[math]::Round(([double]$count/$leaderCount)*100,0)
-  Add "<text x='554' y='$barY' fill='$color' class='font-en' font-size='14' font-weight='900'>$(X $name)</text>"
-  Add "<text x='554' y='$($barY+18)' class='font-cn gray' font-size='12' font-weight='700'>$(X $zh)</text>"
-  Add "<rect x='806' y='$($barY+3)' width='138' height='12' rx='2.5' fill='#132637'/>"
-  if ($w -gt 0) { Add "<rect x='806' y='$($barY+3)' width='$w' height='12' rx='2.5' fill='$color'/>" }
-  Add "<text x='1004' y='$($barY+15)' class='mono white' font-size='14' text-anchor='end' font-weight='900'>$count  $pct%</text>"
-  $barY += 40
-}
+# Minimum supporting evidence: one group-level measure
+Card 54 916 972 300
+Add "<text x='88' y='970' class='font-en cyan' font-size='22' font-weight='900'>SUPPORTING EVIDENCE</text>"
+Add "<text x='88' y='1002' class='font-cn gray' font-size='17' font-weight='700'>$(X $ZH_SUPPORTING_EVIDENCE)</text>"
+Add "<text x='88' y='1092' class='font-en white' font-size='38' font-weight='900'>$(X $evidenceTitle)</text>"
+Add "<text x='88' y='1144' class='font-cn gray' font-size='25' font-weight='700'>$(X $evidenceChinese)</text>"
+Add "<text x='984' y='1094' class='mono white' font-size='62' text-anchor='end' font-weight='900'>$(X $evidenceMetric)</text>"
+Add "<text x='984' y='1142' class='font-en gray' font-size='18' text-anchor='end' font-weight='700'>$(X $evidenceCaption)</text>"
 
 Add "<text x='54' y='1332' class='font-cn gray' font-size='11'>$weekLabel  /  $scanDate  /  APL Deep-Scan</text>"
 
@@ -299,9 +211,13 @@ $log=@(
   "Sector Map Schema: $($sectorMapInput.SchemaVersion)",
   "Output SVG: $outSvg",
   'Canvas: 1080x1350',
-  "Rows rendered: $leaderCount",
-  'Layout: APL Deep-Scan Social Card 4:5',
-  'Renderer rule: render Rank 1-30 only; no scoring or eligibility calculation',
+  "Ranking rows evaluated: $leaderCount",
+  "Leaders displayed: $($topLeaders.Count)",
+  "Primary message: $($headlineLines-join' | ')",
+  "Core market thesis: $coreMarketThesis",
+  "Supporting evidence: $evidenceTitle; $evidenceMetric; $evidenceCaption",
+  'Layout: APL Deep-Scan Social Card mobile-first single-message',
+  'Renderer rule: evaluate Rank 1-30; display only selected evidence; no scoring or eligibility calculation',
   'Ordering: CSV Rank ascending',
   'Ranking source: prepared Full Ranking CSV generated by Deep-Scan Research Mode'
 )

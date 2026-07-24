@@ -31,7 +31,7 @@ Cover／SEO overlay 的指定字型為中文 `Alibaba Sans HK`、英文／數字
 | `ScanDate` | Yes | `YYYY-MM-DD` |
 | `WeekLabel` | Yes | 顯示用週期標籤 |
 | `TopGainersCsvPath` | Yes | 當日TradingView Top Gainers CSV；由preflight核對Table Card及Blog證據 |
-| `MarketContextPath` | Yes | 當日approved detailed Market Context Markdown |
+| `MarketContextPath` | Yes | 當日approved Market Context Markdown；必須有且只有一行`本期核心市場命題是：...` editorial-control metadata，其正規化文字必須與Cover Brief `sceneConcept.coreMarketThesis`相同，其餘為受管source evidence |
 | `TriggerBMetaPath` | Yes | Editorial preparation使用的當日Trigger B metadata；runner會核對其ranking SHA |
 | `TableCardManifestPath` | Yes | 符合 `tools/table_card_manifest.schema.json` 的 UTF-8 manifest；正式每日Trigger C必須列出4張required cards |
 | `TableCardInputPath` | Regression only | 單卡renderer regression contract；不可用於正式Daily Production |
@@ -103,11 +103,13 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run_daily_produc
 
 Runner 依序執行：ManagedInputPreflight → ScoringRanking → VerifyTriggerBEvidence → WatchlistSma200Audit → BuildRendererContracts → PrepareProductionPackage → Validate／Render Dashboard、Social及四張Table Card → RenderCoverOverlay／SEO → ImportPublishingArtifacts → NormalizeStagedArtifacts → FinalizeProductionPackageManifest → PublishArtifacts → Final Production Audit → Archive → authoritative completion。Preflight或Trigger B evidence任一不一致時立即fail closed。
 
+Standalone Trigger B 使用 `tools/process_apl_momentum_leaders.ps1` 而未傳入 `-OutputRoot` 時，正式輸出固定為 `outputs/trigger-b/<ScanDate>/`，不建立 `outputs/<ScanDate>/` 或 `outputs/trigger-b/` root copies。完整 Daily Production 仍由 runner 明確傳入 `outputs/.staging/<RunId>`，並只在 atomic publish 階段建立 `outputs/<ScanDate>/`。
+
 Dashboard production completeness要求同時發布1920×1080 SVG及PNG。PNG必須由已完成validation的SVG經`tools/convert_svg_to_png.ps1`及repository-pinned `tools/renderers/resvg/resvg.exe`產生；converter維持no-overwrite、resolved path guard、尺寸驗證及fail-fast，且不得 fallback到browser或system fonts。
 
 Social production completeness要求同時發布1080×1350 SVG及PNG。Social PNG同樣由已完成validation的SVG經`tools/convert_svg_to_png.ps1`產生，並寫入 `production-package/`。
 
-PublishArtifacts 完成後，runner 必須執行 `LockPublishedMachineArtifacts`：所有由本次 trace追蹤的 machine artifacts設為 Windows read-only，然後才計算及記錄 final bytes／SHA-256。任何 lock failure都令 run失敗。
+PublishArtifacts 完成後，runner 必須執行 `LockPublishedArtifacts`：對正式日期目錄做安全inventory，將當時存在的全部machine及publishing artifacts設為Windows read-only，然後才計算及記錄final bytes／SHA-256。Final Production Audit其後獨立建立並立即設為read-only。任何lock failure都令run失敗。
 
 任何 child exit code 非 0、validation failure、缺失／空 artifact、path guard、no-overwrite 或 audit mismatch 都會立即停止，不會繼續 publish。Scoring／ranking 邏輯只由既有 scoring script執行，runner 不重新實作。
 
@@ -134,11 +136,11 @@ PublishArtifacts 完成後，runner 必須執行 `LockPublishedMachineArtifacts`
 
 Dashboard／Social SVG、Dashboard input、source／ranking CSV、cumulative watchlist、SMA200 audit、其餘 contracts、renderer logs及其他machine records留在日期根目錄。Package publishing artifacts不得在日期根目錄保留副本。舊完成日期不作post-publish搬移；新結構只由下一次Step 1完整run或下一個ScanDate產生。
 
-### Published machine artifact immutability
+### Published artifact immutability
 
 ```text
 Publish complete
-→ machine artifacts become immutable
+→ all published artifacts become immutable
 → final bytes／SHA-256 recorded in trace
 → any later write attempt must fail
 ```
@@ -181,7 +183,7 @@ Runner 不會執行 Git stage、commit、tag 或 push。首次發布使用 GitHu
 
 正式 daily runner 的末段固定如下，不需要等待使用者再下 Archive 指令：
 
-1. `LockPublishedMachineArtifacts`
+1. `LockPublishedArtifacts`
 2. `FinalProductionAudit`
 3. `ArchiveDailyProduction`
 4. `VerifyArchivePass`

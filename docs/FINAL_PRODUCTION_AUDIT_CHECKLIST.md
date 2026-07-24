@@ -9,9 +9,9 @@
 - [ ] `APL_Editorial_Completion_Audit_<ScanDate>.json`為required publishing artifact，schema/date/status及四份editorial artifact SHA均PASS。
 - [ ] Blog Markdown及HTML均包含十個mandatory sections，順序一致且每節有實質內容。
 - [ ] Blog沒有placeholder、template instruction、英文test sentence、單段摘要殼或只有標題的section。
-- [ ] Detailed Market Context保留approved input的小標題順序及主要篇幅，沒有被Executive Summary取代。
+- [ ] Market Context提出清楚核心命題，以受管事實形成因果推理，並自然帶入APL Momentum Leaders；沒有被Executive Summary取代。
 - [ ] Deep-Scan Overview數字與當次Trigger B metadata一致；Top Gainers section使用當次Top Gainers CSV證據。
-- [ ] WhatsApp第一屏交代最大市場改變；Company Business Analysis涵蓋當次Top 10 leaders且不是空殼。
+- [ ] WhatsApp第一屏交代最大市場改變，並只保留移動閱讀所需證據；Company Business Analysis涵蓋當次完整Top 30 symbols且不是空殼。
 - [ ] Final authoritative state同時為`DailyProductionComplete=true`及`DailyProductionPublishable=true`；任一為false即FAIL。
 
 ### Cover／SEO native composition
@@ -36,7 +36,8 @@
 - [ ] Table Card required semantic fields 全部非空；header/display column 數與 renderer mapping 一致；score、percentage、sector/theme、direction及symbols沒有錯欄。
 - [ ] `TopLeaders`逐列rank／symbol／company identity／Composite Score與當次Trigger B full ranking一致；不得以其他日期或人工選股替代。
 - [ ] `TopGainers`逐列symbol／company identity／change percentage與當次TradingView Top Gainers CSV一致；重複的非Symbol header不影響核對。
-- [ ] `SectorStructure`每個representative symbol均存在於當次Trigger B Top 30，沒有跨群組重複或虛構代表股；`ExecutiveSummary`包含當次universe／qualified／leaders數字。
+- [ ] `SectorStructure`每個representative symbol均存在於當次Trigger B Top 30，沒有跨群組重複或虛構代表股。
+- [ ] `ExecutiveSummary`包含3至5個當期最高優先觀察及其意義；沒有被固定Universe／Qualified／Leaders funnel佔據，亦沒有複製其他Table Card rows。
 - [ ] Editorial Completion Audit為v1.1、`ProductionReadiness=true`，14個source roles的relative path／bytes／SHA-256完整且唯一，Table Card及native composition integrity checks全部PASS。
 - [ ] Runner trace顯示`ManagedInputPreflight`在`ScoringRanking`之前PASS，並在其後完成`VerifyTriggerBEvidence`；正式run不可只依賴人工先行preflight。
 - [ ] `production-package/APL_Production_Package_Manifest_<ScanDate>.json` schema/date/status PASS，required id/path集合完整且沒有重複。
@@ -44,13 +45,23 @@
 - [ ] 四張Table Card只在`production-package/Table Cards/`；Dashboard、Social、Cover、SEO及WhatsApp只在package，日期根目錄沒有重複。
 - [ ] 已發布 machine artifacts 的 bytes 與 SHA-256 和 runner 記錄一致。
 - [ ] 正式 Blog、HTML、Top 30 company analysis、publishing materials（若屬當次 Production scope）已置於日期輸出目錄。
-- [ ] Blog Markdown 的 Market Context 在適用時保留 approved input 的小標題順序。
-- [ ] Blog Markdown 的 Market Context 保留所有主要市場論點；「避免 news dump」不得被用作過度壓縮理由。
-- [ ] Blog HTML 與 Markdown 的 Market Context 在小標題順序及主要論點上內容對等。
+- [ ] Market Context只有一個清楚的核心市場命題，並說明結構變化如何影響資金成本、估值或資金流。
+- [ ] 正式內容只保留支持核心命題的主要證據；次要新聞可省略，相關事實可合併及重新排序。
+- [ ] 內容具有因果關係而非新聞排列，沒有重複相同結論、為滿足字數擴寫或堆砌互不相關消息。
+- [ ] Market Context在最少必要篇幅內完成推理，並自然帶入為何需要觀察APL Momentum Leaders領導股。
+- [ ] Blog HTML 與 Markdown 的最終Market Context在subsection順序及分析內容上對等。
 - [ ] HTML `<h3>` 只用於主 section；`<h4>` 只出現在 Market Context 的詳細 subsection。
 - [ ] Executive Summary 仍為短版，且未取代詳細 Market Context。
 - [ ] WhatsApp 可獨立摘要，不要求逐段與 Blog Market Context 對等。
-- [ ] Trigger B 數據、ranking、sector counts 及 Top Gainers 結果沒有冒充或混入原始 Market Context。
+- [ ] Market Context沒有未受管事實、日期或數字；引用數據保持來源原意。
+- [ ] Trigger B數據、ranking、sector counts及Top Gainers結果沒有冒充Market Context原始來源。
+- [ ] Blog、WhatsApp、ExecutiveSummary Card、Social Card、Cover及SEO的核心市場命題方向一致；任何重複數字、公司身份及方向性判斷均沒有矛盾。
+- [ ] Blog保留完整推理鏈；WhatsApp是簡潔文字分發訊息，不是Blog縮寫或Dashboard數字清單。
+- [ ] Dashboard保留完整系統性scan context；Social Card只傳遞一個mobile-first主訊息及最少必要證據，不是縮小版Dashboard。
+- [ ] Cover與SEO保持同一市場故事及視覺語言，但Cover使用較近4:5 Hero視角，SEO使用較遠16:9 search／share視角。
+- [ ] 四張required Table Cards各自完成priority synthesis、medium-term leaders、short-term gainers及group structure職責；沒有重複同一批rows或結論而不增加不同意義。
+- [ ] Company Business Analysis是完整Top 30公司／商業模式參考，不是另一篇市場評論，亦沒有只覆蓋Top 10後以一般文字填充。
+- [ ] 沒有因source-integrity檢查而強迫所有平台重複scan funnel、完整ranking、sector counts或同一句結論。
 - [ ] 全文有唯一、當期特定的核心市場命題；沒有預設固定股票、板塊或市場結論。
 - [ ] 每個主要 section 只完成一個明確推理任務，並建立在上一節的結果之上。
 - [ ] 沒有重複結論卻未新增證據、重新由零開始解釋市場背景，或可任意交換順序的獨立 section。

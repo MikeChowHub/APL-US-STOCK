@@ -31,6 +31,25 @@ Mechanical Completion PASS
 
 ---
 
+## Cross-platform editorial responsibility
+
+The Production Package must share one issue-specific core market proposition without turning every artifact into a duplicate of the Blog or Dashboard.
+
+- The Blog owns the complete market reasoning chain.
+- WhatsApp owns the concise text distribution message: the first screen states the largest market change, followed by only the evidence and call to action needed for that channel.
+- The `ExecutiveSummary` Table Card owns three to five client-priority observations and their implications.
+- Dashboard owns the complete systematic scan context, including the scan funnel, ranked structure, Buyability and sector distribution.
+- Social Card owns one mobile-first visual message supported by minimal current data.
+- Cover and SEO own the visual market story; they share one scene concept but use role-specific native compositions.
+- `TopLeaders`, `TopGainers` and `SectorStructure` own company-level medium-term evidence, short-term price evidence and group-level structure respectively.
+- Company Business Analysis owns the company and business-model reference for the current Top 30; it is not a second market commentary.
+
+Cross-platform consistency means that any repeated date, number, company identity, ranking fact or directional judgment remains accurate and non-contradictory. It does not mean every artifact must display the same facts, wording, rows or conclusion.
+
+Do not use source-integrity requirements to force low-priority metrics into client-facing content. Structured validators, manifests and audit evidence establish provenance; editorial preparation selects what each platform needs.
+
+---
+
 ## 1. Article Flow
 
 Formal Blog articles should follow this reading flow:
@@ -131,39 +150,64 @@ It should answer:
 
 Market Context must explain the market environment before introducing the APL framework.
 
-Market Context is the Blog's detailed market-analysis section. It must not be compressed into a single-paragraph summary merely because the input is long.
+Market Context is the Blog's market-reasoning section. It may be concise and may use one paragraph when that is the clearest complete argument, but it must not collapse into an unsupported summary shell.
 
 It must state the issue's largest structural market change and establish the core market proposition that the following sections test.
 
-It should answer:
+Market Context does not reproduce every source item. It selects the managed facts that best support the issue's core proposition and turns them into the shortest complete, continuous market argument needed to:
 
-- current market condition;
-- capital flow direction;
-- sector rotation;
-- risk background;
-- how the context relates to APL Momentum Leaders 領導股.
+1. state the structural market change;
+2. explain how it affects capital cost, valuation or capital flow;
+3. support the proposition with the most representative managed facts; and
+4. lead naturally to why APL Momentum Leaders 領導股 must be examined.
 
-When the approved `market-context.md` contains multiple subheadings and paragraphs, the Blog Markdown and companion HTML must preserve:
+Editorial completeness is determined by whether this reasoning is complete, not by source-item coverage, subsection count, paragraph count, source order or a fixed character target.
 
-- the original subheading order;
-- the semantic meaning of each subheading;
-- all major market arguments and their causal relationships.
+The approved Market Context input is authoritative for facts, dates, numbers, company names, event topics and their original meaning. It is not authoritative for final length, paragraph count, paragraph order, subsection count, inclusion of every news item or final wording.
 
-Editorial wording may be lightly reorganized for clarity, but it must not remove a major market-background argument. Executive Summary is a separate short-form observation and must not replace Market Context.
+The approved `market-context.md` must declare exactly one editorial-control line before its source evidence:
+
+```text
+本期核心市場命題是：[one substantive issue-specific proposition]
+```
+
+This line is managed source metadata used by preflight and audit evidence. It is not a mandatory sentence in the formal Blog and must not be copied mechanically. The formal Blog must express the same proposition through natural editorial prose; whether that expression is analytically faithful remains a human Final Audit decision.
+
+The normalized value of this metadata line must equal Cover Brief `sceneConcept.coreMarketThesis`. Managed Input Preflight fails closed when they differ, preventing Cover, SEO and Social from using a different cross-platform proposition.
+
+Editorial preparation may:
+
+- omit secondary news that does not materially support the core proposition;
+- merge related facts into one analytical point;
+- reorder evidence to establish causality;
+- rewrite subsection headings;
+- use one or more subsections, or concise continuous prose where that is clearer;
+- substantially shorten the source;
+- combine evidence from different companies when it supports the same analytical point.
+
+Editorial preparation must not:
+
+- invent an unmanaged fact, date or number;
+- change the meaning of managed evidence;
+- present Trigger B ranking, sector counts or Top Gainers results as source Market Context;
+- repeat the same conclusion merely to increase length;
+- turn Market Context into a list of unrelated news items.
+
+Executive Summary is a separate short-form observation and must not replace Market Context.
 
 Trigger B data, ranking results, sector counts and 最近7日 Top Gainers results must not be presented as if they were source Market Context. Those inputs belong in their own Blog sections and may only be related back to the market background through editorial analysis.
 
-Blog Markdown and Blog HTML must remain content-equivalent for Market Context: they must preserve the same subheading order and major arguments. WhatsApp is an independent social summary and is not required to retain each detailed Market Context subsection.
+Blog Markdown and Blog HTML must remain content-equivalent for the final edited Market Context. WhatsApp is an independent social summary and is not required to retain the same evidence or structure.
 
-`Market Context must not become a news dump` means do not pile up unconnected headlines or repeat individual news items without analysis. It does not permit removal of an already organized, market-logical detailed context.
+`Market Context must not become a news dump` means do not pile up unconnected headlines or repeat individual news items without analysis. Editorial preparation should omit or merge weaker items, while retaining enough managed evidence to make the selected causal argument complete.
 
 ### Market Context hierarchy
 
-The Blog's main `Market Context` section remains Markdown H2 and HTML `<h3>`. Within that section only:
+The Blog's main `Market Context` section remains Markdown H2 and HTML `<h3>`. Subsections are optional. When used:
 
 - Market Context subsections use Markdown H3;
 - the corresponding HTML subsections use `<h4>`;
-- each prose block remains its own paragraph.
+- the final Markdown and HTML use the same subsection order and analytical content.
 
 No other Blog section may use arbitrary `<h4>` headings.
 
@@ -400,7 +444,16 @@ The standard Trigger C Production Package must publish the successful required e
 
 `MarketObservation` and `Comparison` are optional and must not be generated without an article-specific reason. No Table Card, whether required or optional, may be referenced inside the Blog manuscript. A publishing operation outside the manuscript may use only cards recorded as `PASS` in the publication manifest.
 
-Required Table Cards are source-bound publishing evidence, not free-form illustrations. `TopLeaders` must reproduce the current Trigger B ranking rows in rank order with matching symbols, company identities and Composite Scores; `TopGainers` must reproduce the current Top Gainers CSV order with matching symbols, company identities and percentage changes; `SectorStructure` representative symbols must belong to the current Trigger B Top 30; and `ExecutiveSummary` must state the current universe, qualified and leader counts. Any mismatch is a managed-input preflight failure and Production must not start.
+Required Table Cards are source-bound publishing evidence, not free-form illustrations. `TopLeaders` must reproduce the selected current Trigger B ranking rows in rank order with matching symbols, company identities and Composite Scores; `TopGainers` must reproduce the selected current Top Gainers CSV rows in source order with matching symbols, company identities and percentage changes; and `SectorStructure` representative symbols must belong to the current Trigger B Top 30. Any displayed source fact that does not match the current managed evidence is a preflight failure and Production must not start.
+
+`ExecutiveSummary` must contain three to five issue-specific priority observations with a short implication for each. Universe, qualified, leaders, Leader Lock or other scan metrics may appear only when they materially support one of those priority observations. They are not mandatory content because Deep-Scan Overview and Dashboard already own the complete scan context.
+
+The four required cards must not collapse into four presentations of the same data:
+
+- `ExecutiveSummary` synthesizes priority conclusions;
+- `TopLeaders` provides medium-term company-level evidence;
+- `TopGainers` provides short-term price-leadership evidence;
+- `SectorStructure` provides group-level structural evidence.
 
 ---
 
@@ -466,20 +519,20 @@ Page description should summarize APL Momentum Leaders 領導股, market leaders
 
 ## 16. Prohibited Blog Patterns
 
-### Published machine artifact immutability
+### Published artifact immutability
 
-After the production runner publishes and traces machine-generated artifacts, the editorial stage is read-only with respect to those artifacts.
+After the production runner publishes the complete same-date package, every published artifact present before Final Production Audit becomes read-only. Final Production Audit is then created separately and immediately made read-only.
 
 ```text
 Publish complete
-→ machine artifacts become immutable
-→ editorial stage reads only
-→ editorial outputs use separate files
+→ all published artifacts become immutable
+→ Final Production Audit is created and locked
+→ Archive copies the immutable package
 ```
 
-Editorial work must never reopen and save, normalize encoding, normalize line endings, format, append to, or replace a machine artifact. This includes ranking CSV, Top 30 TXT／Markdown, Overview Markdown, Watchlist, SMA200 audits, metadata, runtime contracts, renderer outputs and renderer logs.
+No post-publish process may reopen and save, normalize encoding, normalize line endings, format, append to, or replace a published artifact. This includes Blog／HTML, WhatsApp, Company Business Analysis, Table Cards, ranking CSV, Top 30 TXT／Markdown, Overview Markdown, Watchlist, SMA200 audits, metadata, runtime contracts, renderer outputs and renderer logs.
 
-Formal Blog, company business analysis, WhatsApp copy and publishing notes must be written to independent filenames. Any attempted later write to a published machine artifact must fail.
+All editorial and machine artifacts must be complete before atomic publish. Any attempted later write to a published artifact must fail.
 
 Do not:
 

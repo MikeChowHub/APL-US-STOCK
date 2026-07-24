@@ -11,7 +11,7 @@ try {
   $ranking=Join-Path $TestRoot 'ranking.csv'
   $lines=New-Object System.Collections.Generic.List[string]
   $lines.Add('Rank,Symbol,Momentum Score,Buyability Score,Composite Score,Rel Vol,Perf 6M %,Perf 3M %')
-  foreach($i in 1..30){$lines.Add("$i,T$i,$(100-$i),$([math]::Max(1,10-($i%10))),$([math]::Round(110-$i,2)),$([math]::Round(1+($i/100),2)),$([math]::Round(50-$i,2)),$([math]::Round(25-$i/2,2))")}
+  foreach($i in 1..30){$symbol=if($i-eq1){'DVA'}else{"T$i"};$lines.Add("$i,$symbol,$(100-$i),$([math]::Max(1,10-($i%10))),$([math]::Round(110-$i,2)),$([math]::Round(1+($i/100),2)),$([math]::Round(50-$i,2)),$([math]::Round(25-$i/2,2))")}
   Write-Utf8 $ranking ($lines -join [Environment]::NewLine)
   $logo=Join-Path $ProjectRoot 'Assets\Brand\APL_Deep_Scan_Brand_Logo_Renderer_Clean.png'
   $sectorMap=Join-Path $ProjectRoot 'tools\sector_map.json'
@@ -23,9 +23,25 @@ try {
   $dashboardSvg=Join-Path $TestRoot 'APL_DeepScan_Radar_Dashboard_Top30_2040-01-02_1920x1080.svg';$dashboardPng=Join-Path $TestRoot 'dashboard.png'
   $dashboardResult=& powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $convertScript -RegressionTest -InputSvg $dashboardSvg -OutputPng $dashboardPng -Width 1920 -Height 1080
   if($LASTEXITCODE-ne 0){throw 'Dashboard PNG smoke failed.'};Assert-Png $dashboardPng 1920 1080
-  & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $socialScript -RegressionTest -RankingCsv $ranking -ScanDate '2040-01-02' -SectorMapPath $sectorMap -OutputPath $TestRoot -LogoPath $logo -WeekLabel 'Cross-PC Smoke' -ScanUniverseCount 30 -ScanQualifiedCount 30 | Out-Null
+  $socialContractPath=Join-Path $TestRoot 'social-input.json'
+  $headlineOne=-join(@(0x80FD,0x6E90,0x98A8,0x96AA,0x5347,0x6EAB)|ForEach-Object{[char]$_})
+  $headlineTwo='AI'+(-join(@(0x56DE,0x5831,0x91CD,0x65B0,0x5B9A,0x50F9)|ForEach-Object{[char]$_}))
+  $socialContract=[ordered]@{SchemaVersion='APL Deep-Scan Renderer Input v1.0';RendererType='Social';RankingCsv=$ranking;ScanDate='2040-01-02';SectorMapPath=$sectorMap;OutputPath=$TestRoot;LogoPath=$logo;WeekLabel='Cross-PC Smoke';ScanUniverseCount=30;ScanQualifiedCount=30;LeaderCapacity=30;Meta=[ordered]@{ProductionMode='Deep-Scan Research Mode';ProductionNote='Cross-PC smoke';SocialHeadlineLines=@($headlineOne,$headlineTwo);CoreMarketThesis='Energy risk and AI capital-return verification define the issue.'}}
+  Write-Utf8 $socialContractPath ($socialContract|ConvertTo-Json -Depth 6)
+  & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $ProjectRoot 'tools\validate_renderer_inputs.ps1') -RegressionTest -RendererType Social -InputPath $socialContractPath | Out-Null
+  if($LASTEXITCODE-ne 0){throw 'Social input contract smoke failed.'}
+  $invalidSocialContractPath=Join-Path $TestRoot 'social-input-missing-thesis.json'
+  $invalidSocialContract=Get-Content -LiteralPath $socialContractPath -Raw -Encoding UTF8|ConvertFrom-Json
+  $invalidSocialContract.Meta.PSObject.Properties.Remove('CoreMarketThesis')
+  Write-Utf8 $invalidSocialContractPath ($invalidSocialContract|ConvertTo-Json -Depth 6)
+  & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $ProjectRoot 'tools\validate_renderer_inputs.ps1') -RegressionTest -RendererType Social -InputPath $invalidSocialContractPath 2>$null | Out-Null
+  if($LASTEXITCODE-eq0){throw 'Social input contract without CoreMarketThesis did not fail closed.'}
+  & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $socialScript -RegressionTest -InputPath $socialContractPath | Out-Null
   if($LASTEXITCODE-ne 0){throw 'Social SVG smoke failed.'}
   $socialSvg=Join-Path $TestRoot 'APL_DeepScan_Social_Card_2040-01-02_1080x1350.svg';$socialPng=Join-Path $TestRoot 'social.png'
+  $socialText=[IO.File]::ReadAllText($socialSvg,[Text.Encoding]::UTF8)
+  foreach($required in @($headlineOne,$headlineTwo,'Selective Leadership','TOP-RANKED LEADERS')){if(-not$socialText.Contains($required)){throw "Social role regression missing: $required"}}
+  foreach($forbidden in @('Universe','Qualified','Leader Lock','BUYABILITY','SECTOR DISTRIBUTION','Healthcare / Bio Rotation')){if($socialText.Contains($forbidden)){throw "Social role regression contains forbidden Dashboard or weak-cluster claim: $forbidden"}}
   $socialResult=& powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $convertScript -RegressionTest -InputSvg $socialSvg -OutputPng $socialPng -Width 1080 -Height 1350
   if($LASTEXITCODE-ne 0){throw 'Social PNG smoke failed.'};Assert-Png $socialPng 1080 1350
   foreach($result in @($dashboardResult,$socialResult)){if([int]$result.FontFallbackWarningCount-ne 0-or[int]$result.InvalidGeometryWarningCount-ne 0){throw 'resvg smoke reported fallback or invalid geometry.'}}

@@ -53,6 +53,8 @@ LeaderCapacity
 Meta
 ```
 
+For a formal `Social` contract, `Meta.SocialHeadlineLines` and `Meta.CoreMarketThesis` are supplied together. The headline contains one or two mobile-readable lines from the approved Cover Brief; the thesis is the preflight-verified value shared verbatim by approved Market Context metadata and Cover Brief `sceneConcept.coreMarketThesis`. Regression／direct CLI rendering may omit both and use the renderer's conservative evidence-only fallback.
+
 ### RankingCsv
 
 The ranking CSV must already be prepared by the research pipeline.

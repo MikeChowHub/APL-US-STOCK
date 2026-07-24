@@ -52,10 +52,17 @@ function Get-IndexContent([string]$Root, [object]$CurrentManifest, [object]$Poli
         if (Test-Path -LiteralPath $existingManifestPath -PathType Leaf) {
           if ($isLegacy) { throw "Legacy allowlisted date must not claim v2 PASS without an approved migration: $date" }
           $existingManifest = Read-AplStrictJson $existingManifestPath $dateDirectory.FullName
-          Assert-AplArchiveManifest $existingManifest $date 'PASS' $inventory | Out-Null
-          $status = 'PASS'
+          if ([string]$existingManifest.Status -ceq 'PASS') {
+            Assert-AplArchiveManifest $existingManifest $date 'PASS' $inventory | Out-Null
+            $status = 'PASS'
+            $notes = 'V2 manifest verified'
+          } elseif ([string]$existingManifest.Status -ceq 'PENDING_INDEX') {
+            Assert-AplArchiveManifest $existingManifest $date 'PENDING_INDEX' $inventory | Out-Null
+            throw "Archive date remains PENDING_INDEX and must be resumed before another date can update the index: $date"
+          } else {
+            throw "Archive date has unsupported manifest Status '$($existingManifest.Status)': $date"
+          }
           $manifestRelative = '{0}/{1}/archive-manifest.json' -f $yearDirectory.Name, $date
-          $notes = 'V2 manifest verified'
         } else {
           if (-not $isLegacy) { throw "Archive date without v2 manifest is not allowlisted as legacy: $date" }
           $status = 'LEGACY_UNVERIFIED'
@@ -85,7 +92,9 @@ function Update-And-VerifyIndex([string]$Root, [object]$Manifest, [object]$Polic
   $indexPath = Join-Path $Root 'index.md'
   $content = Get-IndexContent $Root $Manifest $Policy
   Write-AplUtf8Atomic $indexPath $content $Root | Out-Null
-  Assert-AplArchiveIndexRow $indexPath $Manifest $Root | Out-Null
+  $indexProjection = $Manifest | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+  $indexProjection.Status = 'PASS'
+  Assert-AplArchiveIndexRow $indexPath $indexProjection $Root | Out-Null
   foreach ($legacyDateValue in @($Policy.LegacyUnverifiedDates)) {
     $legacyDate = [string]$legacyDateValue
     $legacyDirectory = Join-Path $Root (Join-Path $legacyDate.Substring(0,4) $legacyDate)

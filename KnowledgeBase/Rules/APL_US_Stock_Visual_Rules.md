@@ -20,18 +20,22 @@ APL visual assets are not interchangeable.
 
 Each asset has a specific job in the production system:
 
-| Visual Type | Core Role |
-|---|---|
-| Blog Cover | Market story |
-| SEO Image | Search / share thumbnail |
-| Dashboard | Research UI |
-| Social Card | Mobile-first summary |
-| Table Card | Research information card |
-| Charts | Data explanation |
+| Visual Type | Core Role | Unique Client Value |
+|---|---|---|
+| Blog Cover | Market story | Create the first visual interpretation of the issue's core market proposition |
+| SEO Image | Search / share thumbnail | Preserve the Cover story in a wider composition optimized for thumbnail recognition |
+| Dashboard | Research UI | Present the complete systematic scan structure and quantitative context |
+| Social Card | Mobile-first summary | Communicate one primary issue-specific message with only the minimum supporting data |
+| Table Card | Companion research information card | Explain one structured observation through a role-specific evidence set |
+| Charts | Data explanation | Explain a numeric relationship that is not clear from prose alone |
 
 The same article may require multiple visual assets, but each asset must serve its own role.
 
 Do not reuse one visual type as another if doing so weakens the reader experience.
+
+Cross-platform consistency does not require identical content. When a fact or conclusion appears in more than one artifact, its date, number, company identity, direction and meaning must remain consistent. Each artifact still selects only the content required for its own role.
+
+Do not force every artifact to repeat scan-universe counts, the full leadership structure or the complete market argument merely to prove source integrity. Source integrity belongs to structured input validation, manifests and audit evidence; client-facing content priority belongs to the artifact's role.
 
 ---
 
@@ -221,11 +225,14 @@ Use for Instagram, Facebook, Threads, Discord, WhatsApp preview, and other socia
 Social Card must prioritize:
 
 - mobile readability;
-- concise headline;
-- key metrics;
+- one concise, issue-specific headline;
+- one primary market or leadership message;
+- no more supporting metrics than are necessary to make that message credible;
 - simple hierarchy;
 - strong brand recognition;
 - minimal but meaningful data.
+
+The Social Card may select a current scan metric, leadership signal or sector observation when it materially supports the headline. Universe, Qualified Stocks, Momentum Leaders, Leader Lock, Average Momentum and Average Buyability are not a mandatory bundle.
 
 ### Prohibited Elements
 
@@ -243,13 +250,15 @@ Social Card summarizes.
 
 It does not replace the Blog, Dashboard, or Table Cards.
 
+The Dashboard owns the complete systematic scan view. The Social Card owns the mobile distribution message. Reusing the same source data is permitted; reproducing the Dashboard's complete information hierarchy is not.
+
 ---
 
 ## 6. Table Card
 
 ### Purpose
 
-Turn article tables and structured observations into reader-friendly visual insight cards.
+Turn structured observations into reader-friendly companion visual insight cards.
 
 ### Role
 
@@ -259,7 +268,9 @@ Blog Research Information Card
 
 ### When to Use
 
-Use inside the Blog when tabular information would otherwise interrupt reading flow.
+Use as independently distributed same-date companion cards when structured evidence would help readers understand a specific Blog argument, social post or publishing package observation.
+
+The formal Blog manuscript remains text-only. A Table Card may support the same argument, but it must not be embedded or referenced by filename, path or URL inside the manuscript.
 
 ### Required Elements
 
@@ -288,6 +299,15 @@ Table Card must not become:
 Table Card supports the Blog publishing experience as an independent same-date Production Package artifact. It must not be embedded or referenced inside `APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.md`.
 
 It is not a Dashboard, not a full research export, and not a cover.
+
+Each required Table Card has one non-interchangeable role:
+
+- `ExecutiveSummary`: three to five issue-specific priority observations and their implications;
+- `TopLeaders`: representative medium-term leaders bound to the current Trigger B ranking;
+- `TopGainers`: short-term price leadership bound to the current Top Gainers source;
+- `SectorStructure`: the group structure formed by current Top 30 representatives.
+
+The cards may share evidence where analytically necessary, but they must not repeat the same rows or conclusion without adding a different role-specific meaning.
 
 ---
 

@@ -114,6 +114,7 @@ Social Card
 ### Allowed Outputs
 
 ```text
+Standalone namespace: outputs/trigger-b/YYYY-MM-DD/
 Composite Score
 Full Ranking CSV
 Top 30 TXT / Markdown
@@ -124,6 +125,8 @@ Dashboard SVG / PNG
 Social Card SVG / PNG
 Research Outputs
 ```
+
+`outputs/YYYY-MM-DD/` is reserved for the complete atomic Daily Production package. Standalone Trigger B must never create or occupy that Final Production namespace. The internal Trigger B step used by `run_daily_production.ps1` continues to write only to its orchestrator-owned staging root before atomic publish.
 
 ### Forbidden Actions
 

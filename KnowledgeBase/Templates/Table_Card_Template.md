@@ -36,6 +36,17 @@ The standard daily Blog package requires these four cards:
 
 Do not generate all six merely because the renderer supports six types. Optional cards are selected only when the approved article narrative needs them.
 
+The four required cards are companion publishing assets, not four alternate summaries of the same dataset:
+
+| CardType | Single reasoning responsibility |
+|---|---|
+| `ExecutiveSummary` | Select the issue's three to five highest-priority observations and explain why they matter |
+| `TopLeaders` | Show representative medium-term company leadership from the current Trigger B ranking |
+| `TopGainers` | Show representative short-term price leadership from the current Top Gainers source |
+| `SectorStructure` | Determine whether current Top 30 representatives form meaningful groups |
+
+Evidence may overlap when necessary, but repeating the same rows or conclusion without a different reasoning function is a role failure.
+
 ---
 
 ## 1. Common Style
@@ -82,6 +93,8 @@ Summarize the issue's most important observations.
 - Top Gainers signal;
 - risk background.
 
+Universe, Qualified Stocks, Momentum Leaders, Leader Lock and other scan metrics are optional. Use one only when its level or change is itself a client-priority signal for the current issue.
+
 ### Recommended Columns
 
 ```text
@@ -94,6 +107,8 @@ Meaning
 - full ranking;
 - excessive metrics;
 - raw CSV fields.
+- a fixed Universe／Qualified／Leaders funnel that duplicates Deep-Scan Overview or Dashboard;
+- row-level repetition of the TopLeaders, TopGainers or SectorStructure cards.
 
 ### Example Content Logic
 
@@ -310,3 +325,9 @@ What are the numbers?
 ```
 
 If the reader cannot understand the card in a few seconds, reduce columns and increase spacing.
+
+Before publication, confirm:
+
+- the card performs only its assigned reasoning responsibility;
+- repeated facts match the current managed source;
+- the card adds independent client value rather than duplicating Dashboard, Social Card or another Table Card.

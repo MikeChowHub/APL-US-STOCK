@@ -76,6 +76,29 @@ function Get-AplSafeFileList([string]$Root) {
   return $files.ToArray()
 }
 
+function Set-AplPublishedFilesReadOnly([string[]]$Paths, [string]$AllowedRoot) {
+  $root = Assert-AplNoReparsePath -Path $AllowedRoot -AllowedRoot $AllowedRoot -RequireDirectory
+  $locked = New-Object System.Collections.Generic.List[string]
+  foreach ($candidate in @($Paths | Sort-Object -Unique)) {
+    $path = Assert-AplNoReparsePath -Path $candidate -AllowedRoot $root -RequireFile
+    $item = Get-Item -LiteralPath $path -Force
+    $item.IsReadOnly = $true
+    $verified = Get-Item -LiteralPath $path -Force
+    if (-not $verified.IsReadOnly) { throw "Published artifact immutable lock failed: $path" }
+    [void]$locked.Add($path)
+  }
+  return [string[]]$locked.ToArray()
+}
+
+function Set-AplPublishedPackageReadOnly([string]$PublishedRoot) {
+  $root = Assert-AplNoReparsePath -Path $PublishedRoot -AllowedRoot $PublishedRoot -RequireDirectory
+  $inventory = @(Get-AplSafeFileList $root | ForEach-Object { $_.FullName } | Sort-Object -Unique)
+  if ($inventory.Count -eq 0) { throw "Published package is empty: $root" }
+  $locked = @(Set-AplPublishedFilesReadOnly $inventory $root)
+  if ($locked.Count -ne $inventory.Count) { throw 'Published artifact immutable lock count mismatch.' }
+  return [string[]]$locked
+}
+
 function Assert-AplScanDate([string]$ScanDate) {
   $parsed = [datetime]::MinValue
   $ok = [datetime]::TryParseExact($ScanDate, 'yyyy-MM-dd', [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::None, [ref]$parsed)

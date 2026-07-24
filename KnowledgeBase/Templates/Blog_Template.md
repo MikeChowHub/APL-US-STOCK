@@ -74,6 +74,14 @@ Use the following private editorial guidance for every major section; do not dis
 - 本節得到什麼結論；
 - 下一節需要驗證什麼。
 
+For Market Context, also answer privately before drafting:
+
+- 哪些來源事實真正支持核心命題？
+- 哪些新聞屬次要資料，可以刪除？
+- 是否有兩項以上證據其實支持同一論點，可以合併？
+- 是否重複解釋相同的估值、利率或資本回報概念？
+- Market Context 是否能在最少必要篇幅內完成推理？
+
 Each section completes one reasoning task, begins with an issue-specific transition from the preceding conclusion, and ends by naturally introducing the next question. Sections must not be independently exchangeable.
 
 ---
@@ -107,25 +115,30 @@ APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.html
 
 The `.md` file is the editorial manuscript and may retain text-only publishing metadata. The `.html` file is the publish-ready article source and contains article content only. Neither file may embed or reference images.
 
+The same editorial preparation also creates two independent companion text artifacts:
+
+- `WhatsApp_<ScanDate>.md`: a concise distribution message whose first screen states the largest market change; it selects only the evidence needed for mobile reading and does not reproduce the complete Blog.
+- `APL_Momentum_Leaders_Top_30_Company_Business_Analysis_<ScanDate>.md`: a company and business-model reference for the current Top 30; it does not repeat the Blog's market argument.
+
 ## 4. Market Context detailed structure
 
-Executive Summary remains one concise market observation. Market Context is a detailed section and may contain multiple subsections and paragraphs without a fixed word limit.
+Executive Summary remains one concise market observation. Market Context is the shortest complete market argument that supports the issue's core proposition; it has no fixed length, paragraph count or subsection count.
 
-Use this Markdown structure when the approved Market Context has multiple headings:
+Use one or more optional subsections when they improve the causal structure:
 
 ```markdown
 ## Market Context
 
 ### [市場背景小標題一]
 
-[一或多個段落。]
+[只保留最能支持核心命題的事實，解釋其市場含義。]
 
-### [市場背景小標題二]
+### [可選：第二個分析小標題]
 
-[一或多個段落。]
+[合併相關證據，避免重複前一段的結論。]
 ```
 
-Preserve the approved input's subsection order and major arguments. Blog Markdown and HTML must retain the same subsection order and major arguments. Do not substitute Executive Summary, Trigger B data, rankings, sector counts or Top Gainers results for the detailed Market Context. WhatsApp may use an independent summary. End this section by showing why the broad index alone cannot answer the capital-flow question.
+The managed source is authoritative for facts, dates, numbers, company names, event topics and original meaning, not for final structure or source-item coverage. Omit weak evidence, merge related facts and reorder them where needed to form one causal argument. Do not invent evidence or mix Trigger B rankings, sector counts or Top Gainers results into source Market Context. Blog Markdown and HTML must remain equivalent for the final edited content. End by showing why the broad index alone cannot answer the capital-flow question.
 
 ## 5. Publish-ready HTML Skeleton
 
@@ -189,14 +202,16 @@ The HTML file must not end with `詳細文章`, `Page title` or `Page descriptio
 Generate and publish visual assets separately from the Blog manuscript:
 
 - Blog Cover: independent Hero artifact;
-- Table Cards: independent structured-observation artifacts;
-- Dashboard: independent research artifact;
-- Social Card: independent publishing artifact;
+- Table Cards: independently distributed companion research cards, each with one structured-observation role;
+- Dashboard: complete systematic research UI;
+- Social Card: one mobile-first visual message with minimal supporting data;
 - SEO Image: independent search／share artifact.
 
 Visual selection must follow the Visual Decision Tree.
 
 Each visual must still be validated and recorded with byte size and SHA-256 in the Production Package. Do not place Markdown image syntax, HTML image elements, image filenames, image paths or image URLs in the Blog `.md` file.
+
+Cross-platform consistency requires the same core market proposition and accurate repeated facts, but not identical content. Do not copy the complete scan funnel into ExecutiveSummary, Social Card and WhatsApp merely because Dashboard displays it. Do not copy full Table Card rows into the Blog when prose analysis already performs a different function.
 
 ---
 

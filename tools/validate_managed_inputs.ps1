@@ -99,6 +99,42 @@ function Get-AplHtmlTokens([string]$Section){
   return [string[]]@([regex]::Matches($Section,'(?is)<(?:h4|p)>\s*(.*?)\s*</(?:h4|p)>')|ForEach-Object{ConvertTo-AplPlainText $_.Groups[1].Value})
 }
 
+function Get-AplCoreMarketThesis([string]$Text,[string]$Label){
+  $matches=@([regex]::Matches($Text,'(?m)^\s*本期核心市場命題(?:是)?\s*[：:]\s*(.+?)\s*$'))
+  if($matches.Count-ne1){throw "$Label must declare exactly one 本期核心市場命題 editorial-control line."}
+  $thesis=ConvertTo-AplPlainText $matches[0].Groups[1].Value
+  if($thesis.Length-lt40){throw "$Label 本期核心市場命題 must be substantive."}
+  return $thesis
+}
+
+function Assert-AplCoreMarketThesisAlignment([string]$MarketThesis,[string]$CoverBriefThesis){
+  $market=ConvertTo-AplPlainText $MarketThesis
+  $cover=ConvertTo-AplPlainText $CoverBriefThesis
+  if([string]::IsNullOrWhiteSpace($market)-or[string]::IsNullOrWhiteSpace($cover)){throw 'Cross-platform core market thesis values must be non-empty.'}
+  if(-not$market.Equals($cover,[StringComparison]::Ordinal)){throw 'Cover brief sceneConcept.coreMarketThesis must match the approved Market Context core thesis metadata.'}
+  return $market
+}
+
+function Get-AplNumericClaims([string]$Text){
+  $claims=New-Object System.Collections.Generic.List[string]
+  foreach($match in @([regex]::Matches($Text,'(?<![A-Za-z0-9])\d[\d,]*(?:\.\d+)?\s*(?:%|％|億|萬|千|百|年|月|日|厘|個|款|周|週|倍)?'))){
+    $value=($match.Value-replace'[,\s]','').Replace('％','%')
+    if(-not[string]::IsNullOrWhiteSpace($value)){[void]$claims.Add($value)}
+  }
+  return [string[]]@($claims.ToArray()|Sort-Object -Unique)
+}
+
+function Assert-AplCompanyAnalysisTopSymbols([object[]]$Ranking,[string]$CompanyAnalysis,[int]$RequiredCount=30){
+  $rows=@($Ranking)
+  if($rows.Count-lt$RequiredCount){throw "Trigger B full ranking has fewer than $RequiredCount rows."}
+  foreach($symbolValue in @($rows|Select-Object -First $RequiredCount|ForEach-Object{[string]$_.Symbol})){
+    $symbol=$symbolValue.Trim().ToUpperInvariant()
+    if([string]::IsNullOrWhiteSpace($symbol)){throw 'Trigger B full ranking contains an empty Symbol.'}
+    if($CompanyAnalysis-cnotmatch("(?<![A-Z0-9.])"+[regex]::Escape($symbol)+"(?![A-Z0-9.])")){throw "Company Business Analysis missing Top $RequiredCount leader: $symbol"}
+  }
+  return $true
+}
+
 function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[string]$WhatsAppPath,[string]$CompanyPath,[string]$MarketPath,[string]$TopGainersPath,[string]$MetaPath,[string]$AllowedRoot,[string]$ScanDate){
   $markdown=[IO.File]::ReadAllText($MarkdownPath,[Text.Encoding]::UTF8)
   $html=[IO.File]::ReadAllText($HtmlPath,[Text.Encoding]::UTF8)
@@ -111,7 +147,7 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
 
   $mandatory=[ordered]@{
     'Executive Summary'=80
-    'Market Context'=400
+    'Market Context'=160
     '為什麼要看 APL Momentum Leaders 領導股？'=120
     'Deep-Scan Overview'=120
     '最近7日 Top Gainers'=150
@@ -142,14 +178,17 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
   $mdTitle=[regex]::Match($markdown,'(?m)^#\s+(.+?)\s*$').Groups[1].Value.Trim();$htmlTitle=ConvertTo-AplPlainText ([regex]::Match($html,'(?is)<h1>\s*(.*?)\s*</h1>').Groups[1].Value)
   if([string]::IsNullOrWhiteSpace($mdTitle)-or$mdTitle-cne$htmlTitle){throw 'Blog Markdown/HTML title mismatch.'}
   $marketSection=Get-AplMarkdownSection $markdown 'Market Context'
+  $coreThesis=Get-AplCoreMarketThesis $market 'Approved Market Context'
+  $marketPlain=ConvertTo-AplPlainText $marketSection
+  if(@([regex]::Matches($marketPlain,'[\u3400-\u9FFF]')).Count-lt80){throw 'Blog Market Context is only a heading, placeholder, or extremely short summary.'}
+  $marketBlocks=@($marketSection-split'(?:\r?\n){2,}'|ForEach-Object{$_.Trim()}|Where-Object{-not[string]::IsNullOrWhiteSpace($_)-and$_-notmatch'^###\s+'})
+  if($marketBlocks.Count-lt1-or@($marketBlocks|Where-Object{$_-notmatch'(?m)^\s*(?:[-*+]|\d+[.)])\s+'}).Count-eq0){throw 'Blog Market Context is only a news list without analytical prose.'}
+  $executivePlain=ConvertTo-AplPlainText (Get-AplMarkdownSection $markdown 'Executive Summary')
+  if($marketPlain-ceq$executivePlain){throw 'Blog Market Context is replaced by the Executive Summary.'}
+  $sourceNumbers=@(Get-AplNumericClaims $market)
+  $blogNumbers=@(Get-AplNumericClaims $marketSection)
+  foreach($number in $blogNumbers){if($sourceNumbers-cnotcontains$number){throw "Blog Market Context contains a numeric claim not found in the approved source: $number"}}
   $sourceMarketHeadings=@([regex]::Matches($market,'(?m)^#{2,3}\s+(.+?)\s*$')|ForEach-Object{$_.Groups[1].Value.Trim()})
-  $blogMarketHeadings=@([regex]::Matches($marketSection,'(?m)^###\s+(.+?)\s*$')|ForEach-Object{$_.Groups[1].Value.Trim()})
-  if($sourceMarketHeadings.Count-ge2){
-    if($blogMarketHeadings.Count-ne$sourceMarketHeadings.Count){throw 'Detailed Market Context subsection count mismatch.'}
-    for($i=0;$i-lt$sourceMarketHeadings.Count;$i++){if($sourceMarketHeadings[$i]-cne$blogMarketHeadings[$i]){throw 'Detailed Market Context subsection order mismatch.'}}
-  }
-  $sourceMarketLength=(ConvertTo-AplPlainText $market).Length;$blogMarketLength=(ConvertTo-AplPlainText $marketSection).Length
-  if($sourceMarketLength-ge400-and$blogMarketLength-lt[Math]::Floor($sourceMarketLength*0.7)){throw 'Blog Market Context is materially compressed relative to the detailed source.'}
   $outsideContext=$html-replace'(?is)<h3>\s*Market Context\s*</h3>.*?(?=<h3>)',''
   if($outsideContext-match'(?is)<h4>'){throw 'HTML h4 is allowed only inside Market Context.'}
 
@@ -163,8 +202,7 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
   }
   $rankingPath=Assert-AplNoReparsePath -Path ([string]$meta.fullRankingCsv) -AllowedRoot $AllowedRoot -RequireFile
   $ranking=@(Import-Csv -LiteralPath $rankingPath)
-  if($ranking.Count-lt10){throw 'Trigger B full ranking has fewer than ten rows.'}
-  foreach($symbol in @($ranking|Select-Object -First 10|ForEach-Object{[string]$_.Symbol})){if($company-cnotmatch("(?<![A-Z0-9.])"+[regex]::Escape($symbol)+"(?![A-Z0-9.])")){throw "Company Business Analysis missing Top 10 leader: $symbol"}}
+  Assert-AplCompanyAnalysisTopSymbols $ranking $company 30|Out-Null
   if((ConvertTo-AplPlainText $company).Length-lt800){throw 'Company Business Analysis is an empty or summary shell.'}
 
   $topCsv=Read-AplTradingViewCsv $TopGainersPath
@@ -179,7 +217,7 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
   if((ConvertTo-AplPlainText $whatsApp).Length-lt250){throw 'WhatsApp artifact is an empty or summary shell.'}
   $firstScreen=(ConvertTo-AplPlainText $whatsApp);if($firstScreen.Length-gt400){$firstScreen=$firstScreen.Substring(0,400)}
   if($keywords.Count-gt0-and@($keywords|Where-Object{$firstScreen.Contains($_)}).Count-lt1){throw 'WhatsApp first screen does not state the main market change.'}
-  return [pscustomobject]@{MandatorySections=[string[]]$mandatory.Keys;Sections=$sections;TriggerBMeta=$meta;TopGainers=[string[]]$topSymbols;MarkdownTitle=$mdTitle}
+  return [pscustomobject]@{MandatorySections=[string[]]$mandatory.Keys;Sections=$sections;TriggerBMeta=$meta;TopGainers=[string[]]$topSymbols;MarkdownTitle=$mdTitle;MarketContextIntegrity=[pscustomobject]@{CoreThesis=$coreThesis;MarkdownCharacters=$marketPlain.Length;ChineseCharacters=@([regex]::Matches($marketPlain,'[\u3400-\u9FFF]')).Count;NumericClaimsValidated=[string[]]$blogNumbers;NotExecutiveSummary=$true;MechanicalIntegrity=$true}}
 }
 
 function Get-AplUniqueCsvColumnIndex($Csv,[string]$Name){
@@ -210,12 +248,8 @@ function Assert-AplTableCardSourceIntegrity($Cards,$Meta,[string]$TopGainersPath
   $ranking=@(Import-Csv -LiteralPath $rankingPath)
   if($ranking.Count-lt30){throw 'Trigger B full ranking has fewer than 30 rows for Table Card source validation.'}
 
-  $executive=$Cards['ExecutiveSummary'].Json
-  $executiveText=(@($executive.Rows|ForEach-Object{"$($_.observation) $($_.meaning)"})-join' ')
-  foreach($field in @('universe','qualified','leaders')){
-    $value=[string]$Meta.$field
-    if($executiveText-cnotmatch('(?<![0-9])'+[regex]::Escape($value)+'(?![0-9])')){throw "ExecutiveSummary does not match Trigger B metadata field: $field=$value"}
-  }
+  $executiveRows=@($Cards['ExecutiveSummary'].Json.Rows)
+  if($executiveRows.Count-lt3-or$executiveRows.Count-gt5){throw 'ExecutiveSummary must contain 3 to 5 priority observations.'}
 
   $leaderRows=@($Cards['TopLeaders'].Json.Rows)
   if($leaderRows.Count-lt1-or$leaderRows.Count-gt$ranking.Count){throw 'TopLeaders card row count is invalid.'}
@@ -255,7 +289,7 @@ function Assert-AplTableCardSourceIntegrity($Cards,$Meta,[string]$TopGainersPath
       $seenRepresentatives[$symbol]=$true
     }
   }
-  return [pscustomobject]@{RankingRows=$ranking.Count;TopLeaderRows=$leaderRows.Count;TopGainerRows=$gainerRows.Count;SectorRepresentatives=$seenRepresentatives.Count}
+  return [pscustomobject]@{RankingRows=$ranking.Count;ExecutiveRows=$executiveRows.Count;TopLeaderRows=$leaderRows.Count;TopGainerRows=$gainerRows.Count;SectorRepresentatives=$seenRepresentatives.Count}
 }
 
 function Assert-AplNativeCompositionRecord($Record, [string]$ContractPath, [string]$Role, [string]$ImagePath, $BriefComposition, [string]$SceneConceptId, [string]$AllowedRoot) {
@@ -363,6 +397,9 @@ $blogMarkdownPath=Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_B
 $blogHtmlPath=Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.html"
 $companyPath=Join-Path $packageRoot "table-card-log\APL_Momentum_Leaders_Top_30_Company_Business_Analysis_${ScanDate}.md"
 $editorial=Assert-AplEditorialContent $blogMarkdownPath $blogHtmlPath $whatsAppPath $companyPath $MarketContextPath $TopGainersCsvPath $TriggerBMetaPath $allowedRoot $ScanDate
+$alignedCoreThesis=Assert-AplCoreMarketThesisAlignment ([string]$editorial.MarketContextIntegrity.CoreThesis) ([string]$brief.sceneConcept.coreMarketThesis)
+$editorial.MarketContextIntegrity|Add-Member -NotePropertyName CoverBriefCoreThesis -NotePropertyValue $alignedCoreThesis
+$editorial.MarketContextIntegrity|Add-Member -NotePropertyName CrossPlatformThesisAligned -NotePropertyValue $true
 $editorialAuditPath=Join-Path $packageRoot "APL_Editorial_Completion_Audit_${ScanDate}.json"
 $scanDateRoot=Join-Path $allowedRoot $ScanDate
 function New-AplEditorialEvidence([string]$Path,[string]$Role){$item=Get-Item -LiteralPath $Path;return [pscustomobject]@{Role=$Role;RelativePath=$item.FullName.Substring($scanDateRoot.TrimEnd('\').Length+1).Replace('\','/');Size=[long]$item.Length;SHA256=(Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash}}
@@ -397,6 +434,7 @@ $audit=[ordered]@{
     (New-AplEditorialEvidence $whatsAppPath 'whatsapp'),
     (New-AplEditorialEvidence $companyPath 'company-business-analysis')
   )
+  MarketContextIntegrity=$editorial.MarketContextIntegrity
   TableCardSourceIntegrity=$tableCardIntegrity
   NativeCompositionIntegrity=[ordered]@{SceneConceptId=$sceneId;CoverSourceSHA256=$coverSha;SeoSourceSHA256=$seoSha;DistinctSourcePaths=$true;DistinctSourceSHA256=$true;NativeAspectRatios=$true;DistinctViewpoints=$true}
   Checks=[ordered]@{NoPlaceholder=$true;MandatorySections=$true;SectionOrder=$true;SubstantiveContent=$true;DetailedMarketContext=$true;MarkdownHtmlEquivalent=$true;TriggerBDataMatch=$true;TopGainersEvidence=$true;ConclusionResponds=$true;WhatsAppFirstScreen=$true;CompanyAnalysis=$true;IntakeSourceIntegrity=$true;TableCardSourceIntegrity=$true;NativeCompositionIntegrity=$true}
@@ -410,6 +448,8 @@ if(Test-Path -LiteralPath $editorialAuditPath -PathType Leaf){
   if([string]$existingAudit.SchemaVersion-cne[string]$audit.SchemaVersion-or[string]$existingAudit.ScanDate-cne$ScanDate-or[string]$existingAudit.Status-cne'PASS'-or$existingAudit.EditorialCompletion-ne$true-or$existingAudit.ProductionReadiness-ne$true-or$existingAudit.DailyProductionPublishableCandidate-ne$true){throw 'Existing Editorial Completion Audit is invalid.'}
   foreach($collectionName in @('Sources','Artifacts')){foreach($record in @($audit[$collectionName])){$existing=@($existingAudit.$collectionName|Where-Object{[string]$_.Role-ceq[string]$record.Role});if($existing.Count-ne1-or[string]$existing[0].RelativePath-cne[string]$record.RelativePath-or[string]$existing[0].SHA256-cne[string]$record.SHA256-or[long]$existing[0].Size-ne[long]$record.Size){throw "Existing Editorial Completion Audit $collectionName mismatch: $($record.Role)"}}}
   foreach($check in $audit.Checks.Keys){if($null-eq$existingAudit.Checks.PSObject.Properties[$check]-or$existingAudit.Checks.$check-ne$true){throw "Existing Editorial Completion Audit check is not PASS: $check"}}
+  if($null-eq$existingAudit.MarketContextIntegrity-or[string]$existingAudit.MarketContextIntegrity.CoreThesis-cne[string]$audit.MarketContextIntegrity.CoreThesis-or[string]$existingAudit.MarketContextIntegrity.CoverBriefCoreThesis-cne[string]$audit.MarketContextIntegrity.CoverBriefCoreThesis-or$existingAudit.MarketContextIntegrity.MechanicalIntegrity-ne$true-or$existingAudit.MarketContextIntegrity.CrossPlatformThesisAligned-ne$true){throw 'Existing Editorial Completion Audit MarketContextIntegrity mismatch.'}
+  if($null-eq$existingAudit.TableCardSourceIntegrity-or[int]$existingAudit.TableCardSourceIntegrity.ExecutiveRows-ne[int]$audit.TableCardSourceIntegrity.ExecutiveRows){throw 'Existing Editorial Completion Audit ExecutiveSummary row evidence mismatch.'}
 }else{
   Write-AplUtf8Atomic $editorialAuditPath ($audit|ConvertTo-Json -Depth 10) $packageRoot|Out-Null
 }

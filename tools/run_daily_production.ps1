@@ -458,9 +458,15 @@ try {
 
   Complete-InternalStep 'BuildRendererContracts' {
     $meta = Read-AplUtf8Json $metaJson
+    $coverBrief = Read-AplUtf8Json $CoverBriefPath
+    $socialHeadlineLines = @($coverBrief.overlay.titleLines | ForEach-Object { ([string]$_).Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    if ($socialHeadlineLines.Count -lt 1 -or $socialHeadlineLines.Count -gt 2) { throw 'Cover Brief overlay.titleLines must provide one or two Social Card headline lines.' }
+    $coreMarketThesis = ([string]$coverBrief.sceneConcept.coreMarketThesis).Trim()
+    if ([string]::IsNullOrWhiteSpace($coreMarketThesis)) { throw 'Cover Brief sceneConcept.coreMarketThesis is required for Social Card alignment.' }
     $common = [ordered]@{ SchemaVersion='APL Deep-Scan Renderer Input v1.0'; RankingCsv=$rankingCsv; ScanDate=$ScanDate; SectorMapPath=$SectorMapPath; OutputPath=$dateOut; LogoPath=$LogoPath; WeekLabel=$WeekLabel; ScanUniverseCount=[int]$meta.universe; ScanQualifiedCount=[int]$meta.qualified; LeaderCapacity=30; Meta=[ordered]@{ ProductionMode='Deep-Scan Research Mode'; ProductionNote="run_daily_production $runId" } }
     $dashboard = [ordered]@{}; foreach ($key in $common.Keys) { $dashboard[$key]=$common[$key] }; $dashboard.RendererType='Dashboard'
     $social = [ordered]@{}; foreach ($key in $common.Keys) { $social[$key]=$common[$key] }; $social.RendererType='Social'
+    $social.Meta = [ordered]@{ ProductionMode='Deep-Scan Research Mode'; ProductionNote="run_daily_production $runId"; SocialHeadlineLines=[string[]]$socialHeadlineLines; CoreMarketThesis=$coreMarketThesis }
     Write-Utf8Text $dashboardContract (($dashboard | ConvertTo-Json -Depth 6))
     Write-Utf8Text $socialContract (($social | ConvertTo-Json -Depth 6))
   } @($dashboardContract,$socialContract)
@@ -570,14 +576,8 @@ try {
   } @()
 
   $publishedPaths = @($script:completedArtifacts | Where-Object { Test-PathInside $_ $OutputRoot } | ForEach-Object { Get-PublishedPath $_ } | Sort-Object -Unique)
-  Complete-InternalStep 'LockPublishedMachineArtifacts' {
-    foreach ($path in $publishedPaths) {
-      if (!(Test-Path -LiteralPath $path -PathType Leaf)) { throw "Published machine artifact missing before immutable lock: $path" }
-      $item = Get-Item -LiteralPath $path
-      $item.IsReadOnly = $true
-      $locked = Get-Item -LiteralPath $path
-      if (-not $locked.IsReadOnly) { throw "Published machine artifact immutable lock failed: $path" }
-    }
+  Complete-InternalStep 'LockPublishedArtifacts' {
+    Set-AplPublishedPackageReadOnly $finalDateOut | Out-Null
   } @()
 
   $publishedArtifacts = @($publishedPaths | ForEach-Object { $item=Get-Item -LiteralPath $_; [ordered]@{ path=$item.FullName; bytes=$item.Length; sha256=(Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash } })
@@ -585,7 +585,7 @@ try {
   if ($hasCompleteManagedInputs) { $auditArgs += @('-ManagedInputDatePath',$managedInputDateRoot) }
   if ($RegressionTest) { $auditArgs += '-RegressionTest' }
   Invoke-PipelineStep 'FinalProductionAudit' $artifactAuditScript $auditArgs @($finalAuditPath)
-  (Get-Item -LiteralPath $finalAuditPath).IsReadOnly = $true
+  Set-AplPublishedFilesReadOnly @($finalAuditPath) $finalDateOut | Out-Null
 
   $status = 'PRODUCTION_PASS'
   Add-Trace @{ event='final-production-audit'; runId=$runId; utc=[datetime]::UtcNow.ToString('o'); status='PASS'; audit=$finalAuditPath; next='Archive' }

@@ -89,11 +89,13 @@ function Get-AplTableCardPresentation([object]$Json, [string]$CardType) {
 
   switch ($CardType) {
     'ExecutiveSummary' {
+      $executiveRows = @($Json.Rows)
+      if ($executiveRows.Count -lt 3 -or $executiveRows.Count -gt 5) { throw 'Table card input ExecutiveSummary must contain 3 to 5 priority observations.' }
       foreach ($column in @(
         [pscustomobject]@{ Key='observation'; Label='Observation'; Width=0.42; Align='Near'; Bold=$true },
         [pscustomobject]@{ Key='meaning'; Label='Meaning'; Width=0.58; Align='Near'; Bold=$false }
       )) { [void]$columns.Add($column) }
-      foreach ($row in @($Json.Rows)) {
+      foreach ($row in $executiveRows) {
         $rowIndex++
         Assert-AplObjectProperties $row @('observation','meaning') @('observation','meaning') "Table card input ExecutiveSummary row $rowIndex"
         foreach ($key in @('observation','meaning')) { Assert-AplStringProperty $row $key "Table card input ExecutiveSummary row $rowIndex" -Required -NonEmpty }
@@ -279,10 +281,23 @@ function Resolve-AplRendererInput {
     }
     if ($null -ne $contract.LeaderCapacity -and ([int]$contract.LeaderCapacity -lt 1 -or [int]$contract.LeaderCapacity -gt 30)) { throw 'Runtime contract LeaderCapacity must be 1-30.' }
     if ($null -ne $contract.PSObject.Properties['Meta']) {
-      Assert-AplObjectProperties $contract.Meta @('ProductionMode','ProductionNote') @() 'Runtime contract Meta'
+      Assert-AplObjectProperties $contract.Meta @('ProductionMode','ProductionNote','SocialHeadlineLines','CoreMarketThesis') @() 'Runtime contract Meta'
       Assert-AplStringProperty $contract.Meta 'ProductionMode' 'Runtime contract Meta'
       Assert-AplStringProperty $contract.Meta 'ProductionNote' 'Runtime contract Meta'
+      Assert-AplStringProperty $contract.Meta 'CoreMarketThesis' 'Runtime contract Meta'
       if ($null -ne $contract.Meta.ProductionMode -and @('Deep-Scan Research Mode','Blog Production Mode') -notcontains [string]$contract.Meta.ProductionMode) { throw 'Runtime contract Meta.ProductionMode is invalid; Regression/Test authority is CLI-only.' }
+      if ($null -ne $contract.Meta.PSObject.Properties['SocialHeadlineLines']) {
+        $headlineLines = @($contract.Meta.SocialHeadlineLines)
+        if ($headlineLines.Count -lt 1 -or $headlineLines.Count -gt 2) { throw 'Runtime contract Meta.SocialHeadlineLines must contain one or two lines.' }
+        foreach ($line in $headlineLines) {
+          if ($line -isnot [string] -or [string]::IsNullOrWhiteSpace([string]$line)) { throw 'Runtime contract Meta.SocialHeadlineLines entries must be non-empty strings.' }
+        }
+      }
+      if ($ExpectedRendererType -eq 'Social') {
+        $hasHeadline = $null -ne $contract.Meta.PSObject.Properties['SocialHeadlineLines']
+        $hasThesis = $null -ne $contract.Meta.PSObject.Properties['CoreMarketThesis'] -and -not [string]::IsNullOrWhiteSpace([string]$contract.Meta.CoreMarketThesis)
+        if ($hasHeadline -xor $hasThesis) { throw 'Social runtime contract must provide Meta.SocialHeadlineLines and Meta.CoreMarketThesis together.' }
+      }
     }
 
     $pairs = @{

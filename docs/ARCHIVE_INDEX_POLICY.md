@@ -24,6 +24,12 @@ YYYY-MM-DD | PASS | <verified count> | <verified bytes> | YYYY/YYYY-MM-DD/archiv
 
 The manifest schema, date, status, file records, count, bytes and SHA-256 must match the actual Archive directory.
 
+### Transient same-date recovery state
+
+`PENDING_INDEX` is a provisional manifest state used only while the same date is being finalized or resumed by `archive_daily_production.ps1`. It is never a valid row in the durable Archive index and must not be carried into a different date's index update.
+
+If index generation encounters `PENDING_INDEX` for a date other than the date currently being resumed, Archive must fail closed. The incomplete date must be resumed and reach final manifest `Status=PASS` before another date can complete Archive.
+
 ### Legacy Unverified Archive
 
 ```text
@@ -44,6 +50,7 @@ Index generation fails when:
 - an unknown date has no v2 manifest;
 - an adoption-date-or-later directory has no v2 manifest;
 - a v2 manifest is malformed, unsupported or inconsistent with actual files;
+- a different date remains at provisional `PENDING_INDEX`;
 - an allowlisted legacy date contains a purported v2 manifest without an approved migration;
 - the index contains duplicate date rows or values inconsistent with a verified manifest／legacy inventory.
 

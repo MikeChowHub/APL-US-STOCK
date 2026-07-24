@@ -8,6 +8,7 @@ param(
   [string]$WeekLabel,
   [string]$OutputRoot = "",
   [switch]$RegressionTest,
+  [string]$RegressionProjectRoot = "",
   [switch]$SkipRootCopies
 )
 
@@ -16,15 +17,28 @@ $root = Split-Path -Parent $PSScriptRoot
 . (Join-Path $PSScriptRoot 'renderer_production_common.ps1')
 $InputCsv = Assert-AplProductionPath (Get-AplFullPath $InputCsv) 'InputCsv' -RegressionTest:$RegressionTest
 if (!(Test-Path -LiteralPath $InputCsv -PathType Leaf)) { throw "InputCsv not found: $InputCsv" }
-$outputRootValue = if ([string]::IsNullOrWhiteSpace($OutputRoot)) { Join-Path $root "outputs" } else { $OutputRoot }
+$repositoryTmpRoot = Get-AplFullPath (Join-Path $root 'tmp')
+if (-not [string]::IsNullOrWhiteSpace($RegressionProjectRoot)) {
+  if (-not $RegressionTest) { throw 'RegressionProjectRoot is test-only and requires -RegressionTest.' }
+  $RegressionProjectRoot = Get-AplFullPath $RegressionProjectRoot
+  if (-not ($RegressionProjectRoot.StartsWith($repositoryTmpRoot.TrimEnd('\') + '\', [System.StringComparison]::OrdinalIgnoreCase))) { throw "RegressionProjectRoot must be inside '$repositoryTmpRoot'." }
+}
+$effectiveProjectRoot = if ([string]::IsNullOrWhiteSpace($RegressionProjectRoot)) { $root } else { $RegressionProjectRoot }
+$isStandaloneTriggerB = [string]::IsNullOrWhiteSpace($OutputRoot)
+$outputRootValue = if ($isStandaloneTriggerB) { Join-Path $effectiveProjectRoot "outputs\trigger-b" } else { $OutputRoot }
 $outputsRoot = Get-AplFullPath $outputRootValue
 $outputsRoot = Assert-AplProductionPath $outputsRoot 'OutputRoot' -RegressionTest:$RegressionTest
-$formalRoot = Get-AplFullPath (Join-Path $root 'outputs')
-$regressionRoot = Get-AplFullPath (Join-Path $root 'tmp')
+$formalRoot = Get-AplFullPath (Join-Path $effectiveProjectRoot 'outputs')
+$standaloneRoot = Get-AplFullPath (Join-Path $formalRoot 'trigger-b')
+$regressionRoot = $repositoryTmpRoot
 if ($RegressionTest) {
   if (-not ($outputsRoot.StartsWith($regressionRoot.TrimEnd('\') + '\', [System.StringComparison]::OrdinalIgnoreCase))) { throw "RegressionTest OutputRoot must be inside '$regressionRoot'." }
-} elseif (-not ($outputsRoot.Equals($formalRoot, [System.StringComparison]::OrdinalIgnoreCase) -or $outputsRoot.StartsWith($formalRoot.TrimEnd('\') + '\.staging\', [System.StringComparison]::OrdinalIgnoreCase))) {
-  throw "Production OutputRoot must be '$formalRoot' or an orchestrator staging child."
+} elseif ($isStandaloneTriggerB) {
+  if (-not $outputsRoot.Equals($standaloneRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+    throw "Standalone Trigger B OutputRoot must be '$standaloneRoot'."
+  }
+} elseif (-not $outputsRoot.StartsWith($formalRoot.TrimEnd('\') + '\.staging\', [System.StringComparison]::OrdinalIgnoreCase)) {
+  throw "Explicit Production OutputRoot is reserved for an orchestrator staging child."
 }
 $dateOut = Join-Path $outputsRoot $ScanDate
 $dateArtifacts = @(
@@ -32,7 +46,7 @@ $dateArtifacts = @(
   "APL_Momentum_Leaders_Watchlist_$ScanDate.txt", "removed-below-sma200-$ScanDate.txt", "retained-missing-sma200-$ScanDate.txt",
   "APL_Momentum_Leaders_Overview_$ScanDate.md", "APL_Momentum_Leaders_Meta_$ScanDate.json", "APL_Momentum_Leaders_Source_$ScanDate.csv"
 )
-$rootArtifacts = if ($SkipRootCopies) { @() } else { @($dateArtifacts | Where-Object { $_ -ne "APL_Momentum_Leaders_Source_$ScanDate.csv" }) }
+$rootArtifacts = if ($SkipRootCopies -or $isStandaloneTriggerB) { @() } else { @($dateArtifacts | Where-Object { $_ -ne "APL_Momentum_Leaders_Source_$ScanDate.csv" }) }
 $mutex = Enter-AplNamedMutex ("scoring|$outputsRoot|$ScanDate") 'Scoring/ranking'
 try {
 foreach ($name in $dateArtifacts) { $path=Join-Path $dateOut $name; if (Test-Path -LiteralPath $path) { throw "Scoring output already exists; refusing overwrite: $path" } }
@@ -362,7 +376,7 @@ $meta = [ordered]@{
 }
 $meta | ConvertTo-Json -Depth 4 | Set-Content -Path $metaJson -Encoding UTF8
 
-if (-not $SkipRootCopies) {
+if (-not $SkipRootCopies -and -not $isStandaloneTriggerB) {
   foreach ($file in @($fullCsv, $topTxt, $topMd, $cumTxt, $removedBelowSma200Txt, $retainedMissingSma200Txt, $overviewMd, $metaJson)) {
     Copy-Item -LiteralPath $file -Destination (Join-Path $outputsRoot (Split-Path $file -Leaf))
   }

@@ -57,11 +57,11 @@ function New-ProductionFixture([string]$Root) {
     @('company-business-analysis',(Join-Path $packageRoot "table-card-log\APL_Momentum_Leaders_Top_30_Company_Business_Analysis_$ScanDate.md"))
   )
   $sourceRoles=@('cumulative-screener','market-context','top-gainers','trigger-b-meta','table-card-manifest','table-card-executive-summary','table-card-top-leaders','table-card-top-gainers','table-card-sector-structure','cover-brief','cover-native-background','seo-native-background','cover-native-contract','seo-native-contract')
-  $editorialAudit=[ordered]@{SchemaVersion='APL Editorial Completion Audit v1.1';ScanDate=$ScanDate;Status='PASS';EditorialCompletion=$true;ProductionReadiness=$true;DailyProductionPublishableCandidate=$true;MandatorySections=@('Executive Summary','Market Context','為什麼要看 APL Momentum Leaders 領導股？','Deep-Scan Overview','最近7日 Top Gainers','Momentum Leaders Analysis','Sector Analysis','Relative Volume / Market Activity','Risk','Deep-Scan Conclusion');Sources=[object[]]@($sourceRoles|ForEach-Object{[pscustomobject]@{Role=$_;RelativePath=("evidence/"+$_+'.fixture');Size=[long]1;SHA256=('A'*64)}});Artifacts=[object[]]@($editorialArtifacts|ForEach-Object{$item=Get-Item -LiteralPath $_[1];[pscustomobject]@{Role=$_[0];RelativePath=(Split-Path $_[1] -Leaf);Size=[long]$item.Length;SHA256=(Get-FileHash -LiteralPath $_[1] -Algorithm SHA256).Hash}});TableCardSourceIntegrity=[ordered]@{RankingRows=30;TopLeaderRows=1;TopGainerRows=1;SectorRepresentatives=1};NativeCompositionIntegrity=[ordered]@{SceneConceptId='fixture-scene';CoverSourceSHA256=('B'*64);SeoSourceSHA256=('C'*64);DistinctSourcePaths=$true;DistinctSourceSHA256=$true;NativeAspectRatios=$true;DistinctViewpoints=$true};Checks=[ordered]@{NoPlaceholder=$true;MandatorySections=$true;SectionOrder=$true;SubstantiveContent=$true;DetailedMarketContext=$true;MarkdownHtmlEquivalent=$true;TriggerBDataMatch=$true;TopGainersEvidence=$true;ConclusionResponds=$true;WhatsAppFirstScreen=$true;CompanyAnalysis=$true;IntakeSourceIntegrity=$true;TableCardSourceIntegrity=$true;NativeCompositionIntegrity=$true}}
+  $editorialAudit=[ordered]@{SchemaVersion='APL Editorial Completion Audit v1.1';ScanDate=$ScanDate;Status='PASS';EditorialCompletion=$true;ProductionReadiness=$true;DailyProductionPublishableCandidate=$true;MandatorySections=@('Executive Summary','Market Context','為什麼要看 APL Momentum Leaders 領導股？','Deep-Scan Overview','最近7日 Top Gainers','Momentum Leaders Analysis','Sector Analysis','Relative Volume / Market Activity','Risk','Deep-Scan Conclusion');Sources=[object[]]@($sourceRoles|ForEach-Object{[pscustomobject]@{Role=$_;RelativePath=("evidence/"+$_+'.fixture');Size=[long]1;SHA256=('A'*64)}});Artifacts=[object[]]@($editorialArtifacts|ForEach-Object{$item=Get-Item -LiteralPath $_[1];[pscustomobject]@{Role=$_[0];RelativePath=(Split-Path $_[1] -Leaf);Size=[long]$item.Length;SHA256=(Get-FileHash -LiteralPath $_[1] -Algorithm SHA256).Hash}});MarketContextIntegrity=[ordered]@{CoreThesis='Fixture core market thesis';CoverBriefCoreThesis='Fixture core market thesis';CrossPlatformThesisAligned=$true;MechanicalIntegrity=$true};TableCardSourceIntegrity=[ordered]@{RankingRows=30;ExecutiveRows=3;TopLeaderRows=1;TopGainerRows=1;SectorRepresentatives=1};NativeCompositionIntegrity=[ordered]@{SceneConceptId='fixture-scene';CoverSourceSHA256=('B'*64);SeoSourceSHA256=('C'*64);DistinctSourcePaths=$true;DistinctSourceSHA256=$true;NativeAspectRatios=$true;DistinctViewpoints=$true};Checks=[ordered]@{NoPlaceholder=$true;MandatorySections=$true;SectionOrder=$true;SubstantiveContent=$true;DetailedMarketContext=$true;MarkdownHtmlEquivalent=$true;TriggerBDataMatch=$true;TopGainersEvidence=$true;ConclusionResponds=$true;WhatsAppFirstScreen=$true;CompanyAnalysis=$true;IntakeSourceIntegrity=$true;TableCardSourceIntegrity=$true;NativeCompositionIntegrity=$true}}
   Write-Text (Join-Path $packageRoot "APL_Editorial_Completion_Audit_$ScanDate.json") ($editorialAudit|ConvertTo-Json -Depth 10)
   $inputRoot = Join-Path (Split-Path $Root -Parent) 'semantic-inputs'
   $semanticFixtures = @{
-    ExecutiveSummary = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"ExecutiveSummary","Title":"Executive","Rows":[{"observation":"Breadth","meaning":"Selective leadership"}]}'
+    ExecutiveSummary = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"ExecutiveSummary","Title":"Executive","Rows":[{"observation":"Market structure","meaning":"Selective leadership"},{"observation":"Capital flow","meaning":"Rotation remains narrow"},{"observation":"Risk","meaning":"Confirmation is still required"}]}'
     TopLeaders = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"TopLeaders","Title":"Leaders","Rows":[{"rank":"#1","symbol":"TEST","companyName":"Test Company","coreBusiness":"Test business","mainDriver":"Relative strength","compositeScore":100}]}'
     TopGainers = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"TopGainers","Title":"\u6700\u8fd17\u65e5 Top Gainers","Rows":[{"symbol":"TEST","companyName":"Test Company","sectorTheme":"Technology","changePct":"+10.00%"}]}'
     SectorStructure = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"SectorStructure","Title":"Structure","Rows":[{"theme":"Technology","count":1,"direction":"Selective leadership","representativeSymbols":"TEST"}]}'
@@ -166,6 +166,32 @@ try {
   Invoke-ExpectExit 'same-date-identical-rerun' $archiveScript @('-RegressionTest','-SourceDatePath',$source,'-ScanDate',$ScanDate,'-FinalAuditPath',$audit,'-ArchiveRoot',$archiveRoot) 0
   $indexHashAfter = (Get-FileHash -LiteralPath (Join-Path $archiveRoot 'index.md') -Algorithm SHA256).Hash
   Add-Result 'index-deterministic-idempotent' ($indexHashBefore -ceq $indexHashAfter) ("before=$indexHashBefore after=$indexHashAfter")
+
+  $sameDatePending=Get-Content -Raw -Encoding UTF8 $manifestPath|ConvertFrom-Json
+  $sameDatePending.Status='PENDING_INDEX'
+  Write-Text $manifestPath ($sameDatePending|ConvertTo-Json -Depth 10)
+  Invoke-ExpectExit 'same-date-pending-resume' $archiveScript @('-RegressionTest','-SourceDatePath',$source,'-ScanDate',$ScanDate,'-FinalAuditPath',$audit,'-ArchiveRoot',$archiveRoot) 0
+  $sameDateResumed=Get-Content -Raw -Encoding UTF8 $manifestPath|ConvertFrom-Json
+  Add-Result 'same-date-pending-final-pass' ([string]$sameDateResumed.Status-ceq'PASS')
+
+  $unrelatedPendingDate='2040-01-05'
+  $unrelatedPending=Join-Path $archiveRoot "2040\$unrelatedPendingDate"
+  Copy-Item -LiteralPath $archiveDate -Destination $unrelatedPending -Recurse
+  $unrelatedManifestPath=Join-Path $unrelatedPending 'archive-manifest.json'
+  $unrelatedManifest=Get-Content -Raw -Encoding UTF8 $unrelatedManifestPath|ConvertFrom-Json
+  $unrelatedManifest.ScanDate=$unrelatedPendingDate
+  $unrelatedManifest.Status='PENDING_INDEX'
+  Write-Text $unrelatedManifestPath ($unrelatedManifest|ConvertTo-Json -Depth 10)
+  Invoke-ExpectExit 'unrelated-pending-index-blocks-new-date' $archiveScript @('-RegressionTest','-SourceDatePath',$source,'-ScanDate',$ScanDate,'-FinalAuditPath',$audit,'-ArchiveRoot',$archiveRoot) 1
+  Remove-Item -LiteralPath $unrelatedPending -Recurse -Force
+
+  $lockRoot=Join-Path $TestRoot 'published-lock'
+  Write-Text (Join-Path $lockRoot 'machine.csv') 'machine'
+  Write-Text (Join-Path $lockRoot 'production-package\blog.md') 'publishing'
+  $lockedPaths=@(Set-AplPublishedPackageReadOnly $lockRoot)
+  $allLocked=@($lockedPaths|Where-Object{-not(Get-Item -LiteralPath $_ -Force).IsReadOnly}).Count-eq0
+  Add-Result 'all-published-artifacts-read-only' ($lockedPaths.Count-eq2-and$allLocked)
+  foreach($path in $lockedPaths){(Get-Item -LiteralPath $path -Force).IsReadOnly=$false}
 
   $postAdoption = Join-Path $archiveRoot '2040\2040-01-03'
   Write-Text (Join-Path $postAdoption 'new-without-manifest.txt') 'must fail'

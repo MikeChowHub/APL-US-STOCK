@@ -39,9 +39,9 @@ Need to generate a visual asset
 │   └── Use Social Card
 │       Role: Mobile-first Summary
 │
-├── Is it inside the Blog body and replacing a table / structured observation?
+├── Is it a separately distributed companion insight based on a structured observation?
 │   └── Use Table Card / Information Card
-│       Role: Blog Research Information Card
+│       Role: Companion Research Information Card
 │
 ├── Is it explaining a numeric relationship?
 │   └── Use Chart
@@ -111,13 +111,13 @@ Dashboard must not be used as Blog Cover.
 
 Choose Social Card when the visual must work on mobile.
 
-Social Card should summarize, not reproduce the full Dashboard.
+Social Card should communicate one primary issue-specific message with only the supporting data needed for mobile comprehension. It must not reproduce the Dashboard's complete scan funnel, radar, Buyability and sector hierarchy as a smaller layout.
 
 ---
 
 ## 7. Blog Information Card Decision
 
-Choose Table Card / Information Card when the Blog needs to convert structured data into a visual insight.
+Choose Table Card / Information Card when a publishing channel needs a separately distributed companion visual for one structured insight.
 
 Use this for:
 
@@ -128,6 +128,8 @@ Use this for:
 - market signal cards.
 
 Do not paste full CSV data into a card.
+
+Do not embed or reference the card inside the formal text-only Blog manuscript. The card may support the same argument as a separately published same-date asset.
 
 ---
 

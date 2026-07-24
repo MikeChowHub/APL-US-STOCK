@@ -66,6 +66,7 @@ Current Rule files:
 - `Rules/APL_US_Stock_Blog_Rules.md`
 - `Rules/APL_US_Stock_Visual_Rules.md`
 - `Rules/APL_US_Stock_Production_Package_Rules.md`
+- `Rules/APL_US_Stock_Native_Image_Contract_v2.md`
 - `Rules/APL_US_Stock_Archive_Rules.md`
 - `Rules/APL_US_Stock_Production_Artifact_Contract.json`
 
