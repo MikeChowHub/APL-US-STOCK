@@ -6,10 +6,14 @@ $ProjectRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
 $Script=Join-Path $ProjectRoot 'tools\prepare_trigger_c_managed_inputs.ps1'
 $Runner=Join-Path $ProjectRoot 'tools\run_daily_production.ps1'
 $ScanDate='2040-02-07'
+$SupersedeDate='2040-02-08'
 $FixtureRoot=Join-Path $ProjectRoot ("tmp\trigger-c-builder-fixture-"+[guid]::NewGuid().ToString('N'))
 $BuilderRoot=Join-Path $ProjectRoot 'tmp\trigger-c-managed-input-builder'
 $StagingDate=Join-Path $BuilderRoot "staging\$ScanDate"
 $ManagedDate=Join-Path $BuilderRoot "managed-inputs\$ScanDate"
+$SupersedeStagingDate=Join-Path $BuilderRoot "staging\$SupersedeDate"
+$SupersedeManagedDate=Join-Path $BuilderRoot "managed-inputs\$SupersedeDate"
+$RejectedStagingRoot=Join-Path $BuilderRoot 'staging\rejected'
 $results=New-Object System.Collections.Generic.List[object]
 Add-Type -AssemblyName System.Drawing
 
@@ -186,12 +190,32 @@ try{
   Add-Result 'daily-production-consumes-finalized-bundle' ($LASTEXITCODE-eq0) ($runnerOutput-join' ')
   $dailyState=Get-Content -LiteralPath (Join-Path $productionRoot "logs\daily-production-state-$ScanDate.json") -Raw -Encoding UTF8|ConvertFrom-Json
   Add-Result 'daily-production-complete' ($dailyState.DailyProductionComplete-eq$true-and[string]$dailyState.Status-ceq'PASS')
+  $invalidMarket=Join-Path $FixtureRoot 'market-context-missing-thesis.md'
+  Write-Utf8 $invalidMarket '## 市場背景`r`n這是一段沒有受管核心命題的市場說明。'
+  $previous=$ErrorActionPreference
+  $ErrorActionPreference='Continue'
+  $invalidInitialize=@(& powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $Script -RegressionTest -Mode Initialize -ScanDate $SupersedeDate -WeekLabel 'Regression' -InputCsv $input -TopGainersCsvPath $gainers -MarketContextPath $invalidMarket 2>&1)
+  $invalidInitializeExit=$LASTEXITCODE
+  $ErrorActionPreference=$previous
+  Add-Result 'missing-core-thesis-rejected-before-staging' ($invalidInitializeExit-ne0-and($invalidInitialize-join' ').Contains('exactly one 本期核心市場命題')-and-not(Test-Path -LiteralPath $SupersedeStagingDate))
+  $supersedeInitialize=@(& powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $Script -RegressionTest -Mode Initialize -ScanDate $SupersedeDate -WeekLabel 'Regression' -InputCsv $input -TopGainersCsvPath $gainers -MarketContextPath $market 2>&1)
+  Add-Result 'initial-staging-created-for-supersede' ($LASTEXITCODE-eq0-and(Test-Path -LiteralPath $SupersedeStagingDate)) ($supersedeInitialize-join' ')
+  $revisedMarket=Join-Path $FixtureRoot 'market-context-revised.md'
+  $revisedThesis='能源與利率風險重新提高估值門檻，資金正轉向盈利能見度、現金流品質與資本效率更明確的中期領導公司。'
+  Write-Utf8 $revisedMarket "本期核心市場命題：$revisedThesis`r`n`r`n## 修訂市場背景`r`n修訂來源把當期市場因果關係集中於能源成本、利率預期與企業盈利品質。"
+  $supersede=@(& powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $Script -RegressionTest -Mode Supersede -ScanDate $SupersedeDate -WeekLabel 'Regression' -InputCsv $input -TopGainersCsvPath $gainers -MarketContextPath $revisedMarket 2>&1)
+  Add-Result 'supersede-pass' ($LASTEXITCODE-eq0-and(Test-Path -LiteralPath $SupersedeStagingDate)) ($supersede-join' ')
+  $rejected=@(Get-ChildItem -LiteralPath $RejectedStagingRoot -Directory -ErrorAction SilentlyContinue|Where-Object{$_.Name.StartsWith($SupersedeDate+'-')})
+  Add-Result 'supersede-preserves-prior-staging-in-quarantine' ($rejected.Count-eq1)
+  Add-Result 'supersede-new-market-source-is-bound' ((Get-FileHash -LiteralPath (Join-Path $SupersedeStagingDate 'market-context.md') -Algorithm SHA256).Hash-ceq(Get-FileHash -LiteralPath $revisedMarket -Algorithm SHA256).Hash)
+  $supersedeState=Get-Content -LiteralPath (Join-Path $SupersedeStagingDate 'trigger-c-preparation.json') -Raw -Encoding UTF8|ConvertFrom-Json
+  Add-Result 'supersede-work-order-carries-cover-contract' ([string]$supersedeState.WorkOrder.NativeAssets.RequiredCoverBriefVersion-ceq'APL Cover Brief v1.1'-and[string]$supersedeState.WorkOrder.NativeAssets.RequiredCoverBriefScanDate-ceq$SupersedeDate-and[string]$supersedeState.WorkOrder.NativeAssets.RequiredCoreMarketThesis-ceq$revisedThesis)
   $afterHashes=@(@($input,$gainers,$market)|ForEach-Object{(Get-FileHash -LiteralPath $_ -Algorithm SHA256).Hash})
   Add-Result 'intake-sources-unchanged' (-not(Compare-Object $sourceHashes $afterHashes))
 }catch{
   Add-Result 'test-harness' $false $_.Exception.Message
 }finally{
-  foreach($path in @($StagingDate,$ManagedDate,$FixtureRoot)){
+  foreach($path in @($StagingDate,$ManagedDate,$SupersedeStagingDate,$SupersedeManagedDate,$RejectedStagingRoot,$FixtureRoot)){
     if(Test-Path -LiteralPath $path){Remove-Item -LiteralPath $path -Recurse -Force}
   }
 }

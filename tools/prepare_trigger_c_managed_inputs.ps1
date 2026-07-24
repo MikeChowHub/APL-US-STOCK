@@ -1,6 +1,6 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
-  [Parameter(Mandatory=$true)][ValidateSet('Initialize','Finalize','Status')][string]$Mode,
+  [Parameter(Mandatory=$true)][ValidateSet('Initialize','Supersede','Finalize','Status')][string]$Mode,
   [Parameter(Mandatory=$true)][string]$ScanDate,
   [string]$WeekLabel='',
   [string]$InputCsv='',
@@ -15,11 +15,20 @@ $ProjectRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 . (Join-Path $PSScriptRoot 'production_archive_common.ps1')
 
 function Assert-InputFile([string]$Path,[string]$Label){
-  if([string]::IsNullOrWhiteSpace($Path)){throw "$Label is required for Initialize."}
+  if([string]::IsNullOrWhiteSpace($Path)){throw "$Label is required for Initialize or Supersede."}
   $full=Get-AplFullPath $Path
   if(!(Test-Path -LiteralPath $full -PathType Leaf)){throw "$Label not found: $full"}
   $parent=Split-Path $full -Parent
   return Assert-AplNoReparsePath -Path $full -AllowedRoot $parent -RequireFile
+}
+
+function Assert-ApprovedMarketContext([string]$Path){
+  $text=[IO.File]::ReadAllText($Path,[Text.Encoding]::UTF8)
+  $matches=@([regex]::Matches($text,'(?m)^\s*本期核心市場命題(?:是)?\s*[：:]\s*(.+?)\s*$'))
+  if($matches.Count-ne1){throw 'Approved Market Context must declare exactly one 本期核心市場命題 editorial-control line.'}
+  $thesis=$matches[0].Groups[1].Value.Trim()
+  if($thesis.Length-lt40){throw 'Approved Market Context 本期核心市場命題 must be substantive.'}
+  return $thesis
 }
 
 function Write-Utf8([string]$Path,[string]$Text,[string]$AllowedRoot){
@@ -67,13 +76,28 @@ if($Mode-ceq'Status'){
   exit 0
 }
 
-if($Mode-ceq'Initialize'){
-  if([string]::IsNullOrWhiteSpace($WeekLabel)){throw 'WeekLabel is required for Initialize.'}
+if($Mode-ceq'Initialize'-or$Mode-ceq'Supersede'){
+  if([string]::IsNullOrWhiteSpace($WeekLabel)){throw 'WeekLabel is required for Initialize or Supersede.'}
   if(Test-Path -LiteralPath $managedDate){throw "Managed input bundle already exists; refusing overwrite: $managedDate"}
-  if(Test-Path -LiteralPath $stagingDate){throw "Trigger C preparation staging already exists; refusing overwrite: $stagingDate"}
   $InputCsv=Assert-InputFile $InputCsv 'InputCsv'
   $TopGainersCsvPath=Assert-InputFile $TopGainersCsvPath 'TopGainersCsvPath'
   $MarketContextPath=Assert-InputFile $MarketContextPath 'MarketContextPath'
+  $coreMarketThesis=Assert-ApprovedMarketContext $MarketContextPath
+  $supersededStaging=''
+  if($Mode-ceq'Initialize'){
+    if(Test-Path -LiteralPath $stagingDate){throw "Trigger C preparation staging already exists; refusing overwrite: $stagingDate"}
+  }else{
+    $existingStaging=Assert-AplNoReparsePath -Path $stagingDate -AllowedRoot $stagingParent -RequireDirectory
+    $existingStatePath=Join-Path $existingStaging 'trigger-c-preparation.json'
+    if(!(Test-Path -LiteralPath $existingStatePath -PathType Leaf)){throw "Supersede requires a builder-owned staging state: $existingStatePath"}
+    $existingState=Read-AplStrictJson $existingStatePath $existingStaging
+    if([string]$existingState.SchemaVersion-cne'APL Trigger C Preparation v1.0'-or[string]$existingState.ScanDate-cne$ScanDate){throw 'Supersede requires a matching Trigger C preparation state.'}
+    $rejectedParent=Join-Path $stagingParent 'rejected'
+    if(!(Test-Path -LiteralPath $rejectedParent)){New-Item -ItemType Directory -Path $rejectedParent -Force|Out-Null}
+    $rejectedParent=Assert-AplNoReparsePath -Path $rejectedParent -AllowedRoot $stagingParent -RequireDirectory
+    $supersededStaging=Join-Path $rejectedParent ("$ScanDate-"+[datetime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ')+'-'+[guid]::NewGuid().ToString('N').Substring(0,8))
+    Move-Item -LiteralPath $existingStaging -Destination $supersededStaging
+  }
 
   $buildRoot=Join-Path $stagingParent ('.build-'+[guid]::NewGuid().ToString('N'))
   New-Item -ItemType Directory -Path $buildRoot|Out-Null
@@ -124,6 +148,10 @@ if($Mode-ceq'Initialize'){
       }
       NativeAssets=[ordered]@{
         CoverBrief='cover-brief.json'
+        CoverBriefSchema='tools/cover_image_brief.schema.json'
+        RequiredCoverBriefVersion='APL Cover Brief v1.1'
+        RequiredCoverBriefScanDate=$ScanDate
+        RequiredCoreMarketThesis=$coreMarketThesis
         CoverBackground='cover-background.png'
         SeoBackground='seo-background.png'
         CoverNativeContract='cover-native-contract.json'
@@ -159,7 +187,7 @@ if($Mode-ceq'Initialize'){
     }
   }
   $created=Read-AplStrictJson $statePath $stagingDate
-  [pscustomobject]@{Status=[string]$created.Status;ScanDate=$ScanDate;StagingRoot=$stagingDate;TriggerBMeta=(Join-Path $stagingDate "trigger-b\$ScanDate\APL_Momentum_Leaders_Meta_$ScanDate.json");WorkOrder=$created.WorkOrder}
+  [pscustomobject]@{Status=[string]$created.Status;ScanDate=$ScanDate;StagingRoot=$stagingDate;SupersededStaging=$supersededStaging;TriggerBMeta=(Join-Path $stagingDate "trigger-b\$ScanDate\APL_Momentum_Leaders_Meta_$ScanDate.json");WorkOrder=$created.WorkOrder}
   exit 0
 }
 

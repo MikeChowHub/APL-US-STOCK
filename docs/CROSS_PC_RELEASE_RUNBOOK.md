@@ -40,6 +40,8 @@ powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass `
 
 Finalize verifies the original source hashes, executes the full managed-input preflight against staging, and only after PASS atomically publishes `work/managed-inputs/<ScanDate>/`. On failure it leaves staging intact, does not create the final managed-input directory and does not start Production. `work/` remains local and must never be committed.
 
+If an approved intake source is corrected after Initialize, do not edit the hash-bound staging copy. Use `-Mode Supersede` with all three replacement inputs and the same ScanDate／WeekLabel. It first validates the new Market Context has exactly one substantive `本期核心市場命題：...` line, moves the matching old builder staging directory intact to `work/.staging/trigger-c/rejected/`, then creates a new source-bound staging bundle. It refuses to supersede a managed bundle or a directory without matching builder state.
+
 Run the preflight before Production:
 
 ```powershell
