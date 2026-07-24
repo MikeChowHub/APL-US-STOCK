@@ -71,6 +71,8 @@ try{
   Add-Result 'trigger-b-dated-artifacts-complete' ($triggerFiles.Count-eq9)
   $meta=Get-Content -LiteralPath (Join-Path $triggerRoot "APL_Momentum_Leaders_Meta_$ScanDate.json") -Raw -Encoding UTF8|ConvertFrom-Json
   Add-Result 'trigger-b-meta-portable-relative-ranking' (-not[IO.Path]::IsPathRooted([string]$meta.fullRankingCsv)-and(Test-Path -LiteralPath (Join-Path $triggerRoot ([string]$meta.fullRankingCsv))))
+  $validatorSource=[IO.File]::ReadAllText((Join-Path $ProjectRoot 'tools\validate_managed_inputs.ps1'),[Text.Encoding]::UTF8)
+  Add-Result 'formal-builder-staging-root-policy' ($validatorSource.Contains('(Test-AplPathInside $allowedRoot $formalStagingRoot)')) 'Formal Finalize must accept the exact work\.staging\trigger-c root passed by the builder.'
 
   $forbiddenCreated=@(
     'table-card-manifest.json','cover-brief.json','cover-background.png','seo-background.png','cover-native-contract.json','seo-native-contract.json',

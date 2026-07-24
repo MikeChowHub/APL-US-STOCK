@@ -352,8 +352,8 @@ if([string]::IsNullOrWhiteSpace($ManagedInputsRoot)){
   $allowedRoot=Get-AplFullPath $ManagedInputsRoot
   if($RegressionTest){
     if(-not(Test-AplPathInside $allowedRoot $regressionRoot)){throw "Regression ManagedInputsRoot must be inside '$regressionRoot'."}
-  }elseif(-not($allowedRoot.Equals($defaultManagedRoot,[StringComparison]::OrdinalIgnoreCase)-or$allowedRoot.StartsWith($formalStagingRoot.TrimEnd('\')+'\',[StringComparison]::OrdinalIgnoreCase))){
-    throw "Formal ManagedInputsRoot must be '$defaultManagedRoot' or a Trigger C preparation staging child."
+  }elseif(-not($allowedRoot.Equals($defaultManagedRoot,[StringComparison]::OrdinalIgnoreCase)-or(Test-AplPathInside $allowedRoot $formalStagingRoot))){
+    throw "Formal ManagedInputsRoot must be '$defaultManagedRoot' or the Trigger C preparation staging root."
   }
 }
 $allowedRootParent=if($RegressionTest){$regressionRoot}else{$workRoot}
