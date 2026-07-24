@@ -25,6 +25,8 @@ Cover／SEO overlay 的指定字型為中文 `Alibaba Sans HK`、英文／數字
 
 ## 2. Required inputs
 
+For a fresh date or fresh clone, create the complete managed bundle through `tools/prepare_trigger_c_managed_inputs.ps1 -Mode Initialize`, complete its Codex editorial／native work order, and run `-Mode Finalize`. Finalize is the only normal path that publishes `work/managed-inputs/<ScanDate>/`; it performs the same fail-closed preflight before the directory becomes authoritative. The daily runner consumes that finalized bundle and does not generate editorial content or native backgrounds itself.
+
 | Parameter | Required | Meaning |
 |---|---:|---|
 | `InputCsv` | Yes | 原始 scoring input CSV |

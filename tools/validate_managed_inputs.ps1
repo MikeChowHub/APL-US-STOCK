@@ -12,6 +12,7 @@ param(
   [Parameter(Mandatory=$true)][string]$CoverNativeContractPath,
   [Parameter(Mandatory=$true)][string]$SeoNativeContractPath,
   [Parameter(Mandatory=$true)][string]$PublishingArtifactsRoot,
+  [string]$ManagedInputsRoot='',
   [switch]$RegressionTest
 )
 $ErrorActionPreference='Stop'
@@ -135,6 +136,12 @@ function Assert-AplCompanyAnalysisTopSymbols([object[]]$Ranking,[string]$Company
   return $true
 }
 
+function Resolve-AplManagedMetaPath([string]$MetaPath,[string]$Value,[string]$AllowedRoot,[string]$Label){
+  if([string]::IsNullOrWhiteSpace($Value)){throw "$Label is empty."}
+  $candidate=if([IO.Path]::IsPathRooted($Value)){$Value}else{Join-Path (Split-Path $MetaPath -Parent) $Value}
+  return Assert-AplNoReparsePath -Path $candidate -AllowedRoot $AllowedRoot -RequireFile
+}
+
 function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[string]$WhatsAppPath,[string]$CompanyPath,[string]$MarketPath,[string]$TopGainersPath,[string]$MetaPath,[string]$AllowedRoot,[string]$ScanDate){
   $markdown=[IO.File]::ReadAllText($MarkdownPath,[Text.Encoding]::UTF8)
   $html=[IO.File]::ReadAllText($HtmlPath,[Text.Encoding]::UTF8)
@@ -200,7 +207,7 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
     if($value-match'\.'){ $pattern='(?<![0-9])'+$escaped+'0*(?![0-9])' }else{ $pattern='(?<![0-9])'+$escaped+'(?![0-9])' }
     if($overview-cnotmatch$pattern){throw "Blog Deep-Scan Overview does not match Trigger B metadata field: $field=$value"}
   }
-  $rankingPath=Assert-AplNoReparsePath -Path ([string]$meta.fullRankingCsv) -AllowedRoot $AllowedRoot -RequireFile
+  $rankingPath=Resolve-AplManagedMetaPath $MetaPath ([string]$meta.fullRankingCsv) $AllowedRoot 'Trigger B metadata fullRankingCsv'
   $ranking=@(Import-Csv -LiteralPath $rankingPath)
   Assert-AplCompanyAnalysisTopSymbols $ranking $company 30|Out-Null
   if((ConvertTo-AplPlainText $company).Length-lt800){throw 'Company Business Analysis is an empty or summary shell.'}
@@ -243,8 +250,8 @@ function Assert-AplCompanyIdentity([string]$Actual,[string]$Expected,[string]$La
   if($actualKey.Length-lt2-or$expectedKey.Length-lt2-or(-not$actualKey.StartsWith($expectedKey,[StringComparison]::Ordinal)-and-not$expectedKey.StartsWith($actualKey,[StringComparison]::Ordinal))){throw "$Label company identity does not match its source."}
 }
 
-function Assert-AplTableCardSourceIntegrity($Cards,$Meta,[string]$TopGainersPath,[string]$AllowedRoot){
-  $rankingPath=Assert-AplNoReparsePath -Path ([string]$Meta.fullRankingCsv) -AllowedRoot $AllowedRoot -RequireFile
+function Assert-AplTableCardSourceIntegrity($Cards,$Meta,[string]$MetaPath,[string]$TopGainersPath,[string]$AllowedRoot){
+  $rankingPath=Resolve-AplManagedMetaPath $MetaPath ([string]$Meta.fullRankingCsv) $AllowedRoot 'Trigger B metadata fullRankingCsv'
   $ranking=@(Import-Csv -LiteralPath $rankingPath)
   if($ranking.Count-lt30){throw 'Trigger B full ranking has fewer than 30 rows for Table Card source validation.'}
 
@@ -335,7 +342,22 @@ function Assert-AplNativeCompositionRecord($Record, [string]$ContractPath, [stri
 }
 
 Assert-AplScanDate $ScanDate|Out-Null
-$allowedRoot=if($RegressionTest){Join-Path $ProjectRoot 'tmp'}else{Join-Path $ProjectRoot 'work\managed-inputs'}
+$defaultManagedRoot=Get-AplFullPath (Join-Path $ProjectRoot 'work\managed-inputs')
+$workRoot=Get-AplFullPath (Join-Path $ProjectRoot 'work')
+$formalStagingRoot=Get-AplFullPath (Join-Path $workRoot '.staging\trigger-c')
+$regressionRoot=Get-AplFullPath (Join-Path $ProjectRoot 'tmp')
+if([string]::IsNullOrWhiteSpace($ManagedInputsRoot)){
+  $allowedRoot=if($RegressionTest){$regressionRoot}else{$defaultManagedRoot}
+}else{
+  $allowedRoot=Get-AplFullPath $ManagedInputsRoot
+  if($RegressionTest){
+    if(-not(Test-AplPathInside $allowedRoot $regressionRoot)){throw "Regression ManagedInputsRoot must be inside '$regressionRoot'."}
+  }elseif(-not($allowedRoot.Equals($defaultManagedRoot,[StringComparison]::OrdinalIgnoreCase)-or$allowedRoot.StartsWith($formalStagingRoot.TrimEnd('\')+'\',[StringComparison]::OrdinalIgnoreCase))){
+    throw "Formal ManagedInputsRoot must be '$defaultManagedRoot' or a Trigger C preparation staging child."
+  }
+}
+$allowedRootParent=if($RegressionTest){$regressionRoot}else{$workRoot}
+$allowedRoot=Assert-AplNoReparsePath -Path $allowedRoot -AllowedRoot $allowedRootParent -RequireDirectory
 $artifactContract=Read-AplStrictJson (Join-Path $ProjectRoot 'KnowledgeBase\Rules\APL_US_Stock_Production_Artifact_Contract.json') $ProjectRoot
 $readinessContract=$artifactContract.EditorialReadiness
 if($null-eq$readinessContract-or[string]::IsNullOrWhiteSpace([string]$readinessContract.SchemaVersion)-or@($readinessContract.RequiredSourceRoles).Count-lt1-or@($readinessContract.RequiredChecks).Count-lt1){throw 'Production Artifact Contract EditorialReadiness definition is invalid.'}
@@ -360,7 +382,7 @@ foreach($type in $requiredTypes){$records=@($manifest.Cards|Where-Object{[string
 $triggerBMeta=Read-AplStrictJson $TriggerBMetaPath $allowedRoot
 if([string]$triggerBMeta.scanDate-cne$ScanDate){throw 'Trigger B metadata ScanDate mismatch.'}
 if($csv.Rows.Count-ne[int]$triggerBMeta.universe){throw "Cumulative screener row count does not match Trigger B metadata universe. Csv=$($csv.Rows.Count); Meta=$($triggerBMeta.universe)."}
-$tableCardIntegrity=Assert-AplTableCardSourceIntegrity $tableCardSources $triggerBMeta $TopGainersCsvPath $allowedRoot
+$tableCardIntegrity=Assert-AplTableCardSourceIntegrity $tableCardSources $triggerBMeta $TriggerBMetaPath $TopGainersCsvPath $allowedRoot
 $brief=Read-AplStrictJson $CoverBriefPath $allowedRoot
 foreach($name in @('version','scanDate','composition','imageGenerationBrief','overlay')){if($null-eq$brief.PSObject.Properties[$name]){throw "Cover brief missing $name."}}
 if([string]$brief.version-cne'APL Cover Brief v1.1'-or[string]$brief.scanDate-cne$ScanDate){throw 'Cover brief schema/date mismatch.'}

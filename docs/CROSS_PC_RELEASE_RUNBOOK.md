@@ -12,7 +12,33 @@ The only successful environment result is `CROSS-PC ENVIRONMENT READY`. This com
 
 ## Managed inputs
 
-Place the new date's inputs under `work/managed-inputs/<ScanDate>/`; `work/` remains local and must never be committed. The managed bundle contains the source CSV, Top Gainers CSV, detailed Market Context source, Trigger B metadata, Table Card manifest and four semantic v1.1 inputs, Cover Brief, two native cinematic backgrounds, and the complete publishing materials root. Placeholder publishing files are forbidden.
+Do not manually construct `work/managed-inputs/<ScanDate>/`. Start the tracked Trigger C preparation workflow from the three approved intake files:
+
+```powershell
+powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass `
+  -File .\tools\prepare_trigger_c_managed_inputs.ps1 `
+  -Mode Initialize `
+  -ScanDate "<ScanDate>" `
+  -WeekLabel "<week-label>" `
+  -InputCsv "<cumulative-screener.csv>" `
+  -TopGainersCsvPath "<top-gainers.csv>" `
+  -MarketContextPath "<market-context.md>"
+```
+
+Initialize copies and hashes the three sources, runs the repository Trigger B implementation in isolated staging, preserves the dated ranking／metadata inside the preparation bundle, and writes `trigger-c-preparation.json`. It creates directories and an exact work order only; it never creates placeholder publishing or native files.
+
+Codex then completes the work order inside the reported staging root using the current Rules and Templates. This is the explicit editorial／image-generation boundary: issue-specific Blog／HTML／WhatsApp／Company Analysis and semantic cards require editorial judgment, while Cover／SEO require two image-generation calls. PowerShell must not invent this content.
+
+After every work-order artifact is complete, finalize the bundle:
+
+```powershell
+powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass `
+  -File .\tools\prepare_trigger_c_managed_inputs.ps1 `
+  -Mode Finalize `
+  -ScanDate "<ScanDate>"
+```
+
+Finalize verifies the original source hashes, executes the full managed-input preflight against staging, and only after PASS atomically publishes `work/managed-inputs/<ScanDate>/`. On failure it leaves staging intact, does not create the final managed-input directory and does not start Production. `work/` remains local and must never be committed.
 
 Run the preflight before Production:
 
