@@ -113,11 +113,11 @@ APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.md
 APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.html
 ```
 
-The `.md` file is the editorial manuscript and may retain text-only publishing metadata. The `.html` file is the publish-ready article source and contains article content only. Neither file may embed or reference images.
+The `.md` file is the editorial manuscript and must end with the Markdown-only `## SEO and Sharing` metadata block. The `.html` file is the publish-ready article source and contains article content only. Neither file may embed or reference images. A raw-code `.txt` presentation for operator viewing requires an explicit Production Artifact Contract migration; it must not silently rename or replace the required `.html` artifact.
 
 The same editorial preparation also creates two independent companion text artifacts:
 
-- `WhatsApp_<ScanDate>.md`: a concise distribution message whose first screen states the largest market change; it selects only the evidence needed for mobile reading and does not reproduce the complete Blog.
+- `WhatsApp_<ScanDate>.md`: a concise distribution message whose first screen states the largest market change; it selects only the evidence needed for mobile reading and does not reproduce the complete Blog. After its analysis and before its disclaimer, include `詳細文章：https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD`.
 - `APL_Momentum_Leaders_Top_30_Company_Business_Analysis_<ScanDate>.md`: a company and business-model reference for the current Top 30; it does not repeat the Blog's market argument.
 
 ## 4. Market Context detailed structure
@@ -248,3 +248,23 @@ Do not:
 - append URL, Page title or Page description metadata paragraphs to the HTML source;
 - treat APL Momentum Leaders 領導股 as investment advice;
 - include price targets or recommendations.
+
+---
+
+## 9. Markdown-only SEO and Sharing block
+
+Append this final block after `## Deep-Scan Conclusion` in the Markdown manuscript. Replace every field with issue-specific values.
+
+```markdown
+## SEO and Sharing
+
+詳細文章：https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD
+
+Page title：[Must exactly match the article title]
+
+Page description：[One issue-specific summary of APL Momentum Leaders, market leadership and the current theme.]
+
+Sharing summary：[One concise message for distribution.]
+```
+
+Do not copy this block to the independent HTML article source.

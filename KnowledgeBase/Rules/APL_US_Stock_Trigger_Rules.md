@@ -123,6 +123,7 @@ APL Momentum Leaders Overview
 Company Business Analysis
 Dashboard SVG / PNG
 Social Card SVG / PNG
+Social Radar SVG / PNG (complete Top 30 radar format)
 Research Outputs
 ```
 
@@ -181,10 +182,14 @@ SEO Image (independent artifact)
 Table Cards (independent artifacts)
 WhatsApp
 Social Publishing Materials
+Social Card PNG (mobile-first single-message visual)
+Social Radar PNG (complete Top 30 radar visual, converted from its SVG)
 Archive Package
 ```
 
 The `.md` manuscript, independent `.html` source and visual artifacts share the same-date Production Package but remain separate outputs. Visual artifacts must never be embedded or referenced inside either text file. HTML article subheadings use `<h3>` and HTML article paragraphs use `<p>`. URL, Page title and Page description metadata must not be appended to the HTML source.
+
+The Markdown manuscript must conclude with `## SEO and Sharing`, including the issue URL, Page title, Page description and a sharing summary. WhatsApp must include the same issue URL after its analysis and before its disclaimer. A raw-code `.txt` presentation of HTML source is an operator-delivery convention and requires an explicit Production Artifact Contract migration before it can replace or supplement the required `.html` artifact.
 
 ## Input Alone Rules
 

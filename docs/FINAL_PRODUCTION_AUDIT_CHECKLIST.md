@@ -11,7 +11,7 @@
 - [ ] Blog沒有placeholder、template instruction、英文test sentence、單段摘要殼或只有標題的section。
 - [ ] Market Context提出清楚核心命題，以受管事實形成因果推理，並自然帶入APL Momentum Leaders；沒有被Executive Summary取代。
 - [ ] Deep-Scan Overview數字與當次Trigger B metadata一致；Top Gainers section使用當次Top Gainers CSV證據。
-- [ ] WhatsApp第一屏交代最大市場改變，並只保留移動閱讀所需證據；Company Business Analysis涵蓋當次完整Top 30 symbols且不是空殼。
+- [ ] WhatsApp第一屏交代最大市場改變，並只保留移動閱讀所需證據；在分析後、disclaimer前包含與ScanDate完全相符的`詳細文章：https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD`；Company Business Analysis涵蓋當次完整Top 30 symbols且不是空殼。
 - [ ] Final authoritative state同時為`DailyProductionComplete=true`及`DailyProductionPublishable=true`；任一為false即FAIL。
 
 ### Cover／SEO native composition
@@ -30,7 +30,7 @@
 - [ ] `outputs/YYYY-MM-DD/` 已正式發布，沒有以 staging path 充當正式輸出。
 - [ ] 所有 runner required artifacts 存在且非空。
 - [ ] Ranking、Top 30、watchlist、SMA200 audits 與 metadata 數量一致。
-- [ ] Dashboard、Social、Table Cards、Cover、SEO 的 required render/validation steps PASS。
+- [ ] Dashboard、Social Card、Social Radar、Table Cards、Cover、SEO 的 required render/validation steps PASS；Social Radar保留完整Top 30、scan funnel、Buyability及sector distribution，Social Card保留單一命題的mobile-first訊息。
 - [ ] Table Card publication manifest（適用時）為 PASS。
 - [ ] 每張 required Table Card 的 input SHA 與 publication manifest 一致，並通過 `APL Table Card Input v1.1` semantic contract。
 - [ ] Table Card required semantic fields 全部非空；header/display column 數與 renderer mapping 一致；score、percentage、sector/theme、direction及symbols沒有錯欄。
@@ -56,7 +56,7 @@
 - [ ] Market Context沒有未受管事實、日期或數字；引用數據保持來源原意。
 - [ ] Trigger B數據、ranking、sector counts及Top Gainers結果沒有冒充Market Context原始來源。
 - [ ] Blog、WhatsApp、ExecutiveSummary Card、Social Card、Cover及SEO的核心市場命題方向一致；任何重複數字、公司身份及方向性判斷均沒有矛盾。
-- [ ] Blog保留完整推理鏈；WhatsApp是簡潔文字分發訊息，不是Blog縮寫或Dashboard數字清單。
+- [ ] Blog保留完整推理鏈；Markdown以`## SEO and Sharing`為最終metadata section，包含當期URL、Page title、Page description及sharing summary；HTML不得包含該metadata section。WhatsApp是簡潔文字分發訊息，不是Blog縮寫或Dashboard數字清單。
 - [ ] Dashboard保留完整系統性scan context；Social Card只傳遞一個mobile-first主訊息及最少必要證據，不是縮小版Dashboard。
 - [ ] Cover與SEO保持同一市場故事及視覺語言，但Cover使用較近4:5 Hero視角，SEO使用較遠16:9 search／share視角。
 - [ ] 四張required Table Cards各自完成priority synthesis、medium-term leaders、short-term gainers及group structure職責；沒有重複同一批rows或結論而不增加不同意義。

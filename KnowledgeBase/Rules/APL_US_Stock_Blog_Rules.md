@@ -36,10 +36,10 @@ Mechanical Completion PASS
 The Production Package must share one issue-specific core market proposition without turning every artifact into a duplicate of the Blog or Dashboard.
 
 - The Blog owns the complete market reasoning chain.
-- WhatsApp owns the concise text distribution message: the first screen states the largest market change, followed by only the evidence and call to action needed for that channel.
+- WhatsApp owns the concise text distribution message: the first screen states the largest market change, followed by only the evidence and call to action needed for that channel. It must include the issue-matched `詳細文章：https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD` link after its concise analysis and before the final disclaimer.
 - The `ExecutiveSummary` Table Card owns three to five client-priority observations and their implications.
 - Dashboard owns the complete systematic scan context, including the scan funnel, ranked structure, Buyability and sector distribution.
-- Social Card owns one mobile-first visual message supported by minimal current data.
+- Social has two independent roles: `Social Card` owns one mobile-first visual message supported by minimal current data; `Social Radar` owns a complete Top 30 radar view with the scan funnel, Buyability and sector distribution. Neither may re-score, re-rank or determine eligibility.
 - Cover and SEO own the visual market story; they share one scene concept but use role-specific native compositions.
 - `TopLeaders`, `TopGainers` and `SectorStructure` own company-level medium-term evidence, short-term price evidence and group-level structure respectively.
 - Company Business Analysis owns the company and business-model reference for the current Top 30; it is not a second market commentary.
@@ -75,10 +75,14 @@ Risk
 ↓
 Deep-Scan Conclusion
 ↓
-SEO / Publishing Notes
+SEO and Sharing
 ```
 
 The Blog Markdown file is the formal article text manuscript. Visual artifacts are not part of this reading-flow source and must not be embedded or referenced inside it.
+
+### SEO and Sharing metadata
+
+`## SEO and Sharing` is a required final Markdown-only section. It must follow `## Deep-Scan Conclusion` and include the current issue's `詳細文章：https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD`, `Page title：` matching the article title, `Page description：` summarising APL Momentum Leaders and the issue theme, and one concise sharing summary. This metadata must never be copied into the independent publish-ready HTML article source.
 
 This structure reflects the research logic:
 
