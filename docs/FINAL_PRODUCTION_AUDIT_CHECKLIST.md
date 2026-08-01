@@ -9,6 +9,7 @@
 - [ ] `APL_Editorial_Completion_Audit_<ScanDate>.json`為required publishing artifact，schema/date/status及四份editorial artifact SHA均PASS。
 - [ ] Blog Markdown及HTML均包含十個mandatory sections，順序一致且每節有實質內容。
 - [ ] Blog沒有placeholder、template instruction、英文test sentence、單段摘要殼或只有標題的section。
+- [ ] 自 2026-08-03 起，Blog Markdown `#` 與 HTML `<h1>` 均以固定身份前綴 `APL Deep-Scan 美股深海雷達` 開始，且其後接當期核心市場結論。
 - [ ] Market Context提出清楚核心命題，以受管事實形成因果推理，並自然帶入APL Momentum Leaders；沒有被Executive Summary取代。
 - [ ] Deep-Scan Overview數字與當次Trigger B metadata一致；Top Gainers section使用當次Top Gainers CSV證據。
 - [ ] WhatsApp第一屏交代最大市場改變，並只保留移動閱讀所需證據；在分析後、disclaimer前包含與ScanDate完全相符的`詳細文章：https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD`；Company Business Analysis涵蓋當次完整Top 30 symbols且不是空殼。
@@ -35,14 +36,14 @@
 - [ ] 每張 required Table Card 的 input SHA 與 publication manifest 一致，並通過 `APL Table Card Input v1.1` semantic contract。
 - [ ] Table Card required semantic fields 全部非空；header/display column 數與 renderer mapping 一致；score、percentage、sector/theme、direction及symbols沒有錯欄。
 - [ ] `TopLeaders`逐列rank／symbol／company identity／Composite Score與當次Trigger B full ranking一致；不得以其他日期或人工選股替代。
-- [ ] `TopGainers`逐列symbol／company identity／change percentage與當次TradingView Top Gainers CSV一致；重複的非Symbol header不影響核對。
+- [ ] `TopGainers`逐列symbol／company identity／change percentage與當次SPX／NDX／DJI成分股 Top Gainers CSV一致；重複的非Symbol header不影響核對。
 - [ ] `SectorStructure`每個representative symbol均存在於當次Trigger B Top 30，沒有跨群組重複或虛構代表股。
 - [ ] `ExecutiveSummary`包含3至5個當期最高優先觀察及其意義；沒有被固定Universe／Qualified／Leaders funnel佔據，亦沒有複製其他Table Card rows。
 - [ ] Editorial Completion Audit為v1.1、`ProductionReadiness=true`，14個source roles的relative path／bytes／SHA-256完整且唯一，Table Card及native composition integrity checks全部PASS。
 - [ ] Runner trace顯示`ManagedInputPreflight`在`ScoringRanking`之前PASS，並在其後完成`VerifyTriggerBEvidence`；正式run不可只依賴人工先行preflight。
 - [ ] `production-package/APL_Production_Package_Manifest_<ScanDate>.json` schema/date/status PASS，required id/path集合完整且沒有重複。
 - [ ] Package manifest file count、total bytes、逐檔relative path／size／SHA與實際package一致。
-- [ ] 四張Table Card只在`production-package/Table Cards/`；Dashboard、Social、Cover、SEO及WhatsApp只在package，日期根目錄沒有重複。
+- [ ] 四張Table Card只在`production-package/Table Cards/`；Dashboard、Social Card、Social Radar、Cover、SEO及WhatsApp只在package，日期根目錄沒有重複。Social Card與Social Radar均為required，且各自只有一張1080×1350 PNG。
 - [ ] 已發布 machine artifacts 的 bytes 與 SHA-256 和 runner 記錄一致。
 - [ ] 正式 Blog、HTML、Top 30 company analysis、publishing materials（若屬當次 Production scope）已置於日期輸出目錄。
 - [ ] Market Context只有一個清楚的核心市場命題，並說明結構變化如何影響資金成本、估值或資金流。
@@ -65,7 +66,7 @@
 - [ ] 全文有唯一、當期特定的核心市場命題；沒有預設固定股票、板塊或市場結論。
 - [ ] 每個主要 section 只完成一個明確推理任務，並建立在上一節的結果之上。
 - [ ] 沒有重複結論卻未新增證據、重新由零開始解釋市場背景，或可任意交換順序的獨立 section。
-- [ ] 最近7日 Top Gainers 與 Momentum Leaders 有清楚的短線／中期資金對照。
+- [ ] Top Gainers — Past 7 Days 與 Momentum Leaders 有清楚的短線／中期資金對照。
 - [ ] Sector Analysis 由個股強勢推進至產業群組判斷。
 - [ ] Relative Volume／Market Activity 實際參與確認或質疑核心命題，而非獨立描述成交量。
 - [ ] Risk 直接提出可能推翻核心命題的條件；Deep-Scan Conclusion 回答文章開頭的市場問題，且沒有新增前文未出現的論點。

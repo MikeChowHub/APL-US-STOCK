@@ -53,7 +53,7 @@ An allowlisted legacy date must not contain or claim a v2 PASS manifest. Moving 
 - Blog Markdown 與 HTML
 - Top 30、ranking、watchlist 與 company analysis
 - publishing materials 與 WhatsApp materials
-- Dashboard、Social Card、Table Cards
+- Dashboard、Social Card、Social Radar、Table Cards
 - Cover、SEO
 - publication manifest、Final Production Audit
 - 必要 contracts、audit 與 renderer logs

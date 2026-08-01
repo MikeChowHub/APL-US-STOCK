@@ -40,7 +40,7 @@
       "if": { "properties": { "CardType": { "const": "TopGainers" } }, "required": ["CardType"] },
       "then": {
         "properties": {
-          "Title": { "const": "最近7日 Top Gainers" },
+          "Title": { "const": "Top Gainers — Past 7 Days" },
           "Rows": { "items": { "$ref": "#/$defs/topGainerRow" } }
         }
       }

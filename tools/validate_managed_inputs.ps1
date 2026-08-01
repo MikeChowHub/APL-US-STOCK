@@ -20,7 +20,7 @@ $ProjectRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 . (Join-Path $PSScriptRoot 'production_archive_common.ps1')
 . (Join-Path $PSScriptRoot 'renderer_production_common.ps1')
 
-function Read-AplTradingViewCsv([string]$Path) {
+function Read-AplDelimitedCsv([string]$Path) {
   Add-Type -AssemblyName Microsoft.VisualBasic
   $parser = New-Object Microsoft.VisualBasic.FileIO.TextFieldParser -ArgumentList @($Path, [System.Text.Encoding]::UTF8, $true)
   $rows = New-Object System.Collections.Generic.List[object]
@@ -152,12 +152,13 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
   if($allEditorial-match'(?i)\bplaceholder\b|lorem ipsum|\bTODO\b|\bTBD\b|\[insert|\[market|\[section|test sentence|smoke test|dummy content|sample text'){throw 'Editorial artifacts contain placeholder or test content.'}
   if(@([regex]::Matches($markdown,'[\u3400-\u9FFF]')).Count-lt500){throw 'Blog Markdown does not contain substantive Chinese editorial analysis.'}
 
+  $topGainersHeading=Get-AplCanonicalTopGainersTitle
   $mandatory=[ordered]@{
     'Executive Summary'=80
     'Market Context'=160
     '為什麼要看 APL Momentum Leaders 領導股？'=120
     'Deep-Scan Overview'=120
-    '最近7日 Top Gainers'=150
+    $topGainersHeading=150
     'Momentum Leaders Analysis'=180
     'Sector Analysis'=120
     'Relative Volume / Market Activity'=120
@@ -184,6 +185,14 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
   }
   $mdTitle=[regex]::Match($markdown,'(?m)^#\s+(.+?)\s*$').Groups[1].Value.Trim();$htmlTitle=ConvertTo-AplPlainText ([regex]::Match($html,'(?is)<h1>\s*(.*?)\s*</h1>').Groups[1].Value)
   if([string]::IsNullOrWhiteSpace($mdTitle)-or$mdTitle-cne$htmlTitle){throw 'Blog Markdown/HTML title mismatch.'}
+  $titlePolicy=$artifactContract.EditorialReadiness.TitlePolicy
+  if($null-ne$titlePolicy){
+    $requiredPrefix=([string]$titlePolicy.RequiredPrefix).Trim();$effectiveFrom=([string]$titlePolicy.EffectiveFrom).Trim()
+    $effectiveDate=[datetime]::MinValue
+    if([string]::IsNullOrWhiteSpace($requiredPrefix)-or-not[datetime]::TryParseExact($effectiveFrom,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture,[Globalization.DateTimeStyles]::None,[ref]$effectiveDate)){throw 'Production Artifact Contract TitlePolicy is invalid.'}
+    $scanDateValue=[datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+    if($scanDateValue-ge$effectiveDate-and-not$mdTitle.StartsWith($requiredPrefix,[StringComparison]::Ordinal)){throw "Formal Blog title must begin with '$requiredPrefix' from $effectiveFrom onward."}
+  }
   $marketSection=Get-AplMarkdownSection $markdown 'Market Context'
   $coreThesis=Get-AplCoreMarketThesis $market 'Approved Market Context'
   $marketPlain=ConvertTo-AplPlainText $marketSection
@@ -212,11 +221,11 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
   Assert-AplCompanyAnalysisTopSymbols $ranking $company 30|Out-Null
   if((ConvertTo-AplPlainText $company).Length-lt800){throw 'Company Business Analysis is an empty or summary shell.'}
 
-  $topCsv=Read-AplTradingViewCsv $TopGainersPath
+  $topCsv=Read-AplDelimitedCsv $TopGainersPath
   $topSymbols=@($topCsv.Rows|Select-Object -First 3|ForEach-Object{[string]$_[$topCsv.SymbolIndex]})
-  $topSection=ConvertTo-AplPlainText (Get-AplMarkdownSection $markdown '最近7日 Top Gainers')
+  $topSection=ConvertTo-AplPlainText (Get-AplMarkdownSection $markdown $topGainersHeading)
   foreach($symbol in $topSymbols){if($topSection-cnotmatch("(?<![A-Z0-9.])"+[regex]::Escape($symbol)+"(?![A-Z0-9.])")){throw "Blog Top Gainers section missing source leader: $symbol"}}
-  if($topSection-cnotmatch'TradingView'){throw 'Blog Top Gainers section missing TradingView source disclosure.'}
+  foreach($scopeCode in @('SPX','NDX','DJI')){if($topSection-cnotmatch("(?<![A-Z0-9])"+$scopeCode+"(?![A-Z0-9])")){throw "Blog Top Gainers section missing required constituent scope: $scopeCode."}}
 
   $conclusion=ConvertTo-AplPlainText (Get-AplMarkdownSection $markdown 'Deep-Scan Conclusion')
   $keywords=@($sourceMarketHeadings|ForEach-Object{$_-split'[：，、／/\s]+'}|Where-Object{$_.Length-ge2-and$_-notin@('市場','背景','風險','重新','開始')})
@@ -270,7 +279,7 @@ function Assert-AplTableCardSourceIntegrity($Cards,$Meta,[string]$MetaPath,[stri
     if([Math]::Abs($actualScore-$expectedScore)-gt0.005){throw "TopLeaders row $($i+1) compositeScore does not match Trigger B ranking."}
   }
 
-  $topCsv=Read-AplTradingViewCsv $TopGainersPath
+  $topCsv=Read-AplDelimitedCsv $TopGainersPath
   $descriptionIndex=Get-AplUniqueCsvColumnIndex $topCsv 'Description'
   $changeIndex=Get-AplUniqueCsvColumnIndex $topCsv 'Price change %, 1 day'
   $gainerRows=@($Cards['TopGainers'].Json.Rows)
@@ -373,7 +382,7 @@ $CoverNativeContractPath=Assert-AplNoReparsePath -Path $CoverNativeContractPath 
 $SeoNativeContractPath=Assert-AplNoReparsePath -Path $SeoNativeContractPath -AllowedRoot $allowedRoot -RequireFile
 $PublishingArtifactsRoot=Assert-AplNoReparsePath -Path $PublishingArtifactsRoot -AllowedRoot $allowedRoot -RequireDirectory
 foreach($path in @($InputCsv,$TopGainersCsvPath,$MarketContextPath,$TriggerBMetaPath,$TableCardManifestPath,$CoverBriefPath,$CoverBackgroundPath,$SeoBackgroundPath,$CoverNativeContractPath,$SeoNativeContractPath,$PublishingArtifactsRoot)){if(-not(Test-AplPathInside $path (Join-Path $allowedRoot $ScanDate))){throw "Managed input must be inside the ScanDate directory: $path"}}
-$csv=Read-AplTradingViewCsv $InputCsv
+$csv=Read-AplDelimitedCsv $InputCsv
 $manifest=Read-AplStrictJson $TableCardManifestPath $allowedRoot
 if([string]$manifest.SchemaVersion-cne'APL Table Card Manifest v1.1'-or[string]$manifest.ScanDate-cne$ScanDate){throw 'Table Card manifest schema/date mismatch.'}
 $requiredTypes=@('ExecutiveSummary','TopLeaders','TopGainers','SectorStructure')
@@ -386,6 +395,13 @@ $tableCardIntegrity=Assert-AplTableCardSourceIntegrity $tableCardSources $trigge
 $brief=Read-AplStrictJson $CoverBriefPath $allowedRoot
 foreach($name in @('version','scanDate','composition','imageGenerationBrief','overlay')){if($null-eq$brief.PSObject.Properties[$name]){throw "Cover brief missing $name."}}
 if([string]$brief.version-cne'APL Cover Brief v1.1'-or[string]$brief.scanDate-cne$ScanDate){throw 'Cover brief schema/date mismatch.'}
+if($null-eq$brief.overlay){throw 'Cover brief overlay must be an object.'}
+$overlayAllowed=@('titleLines','subtitle','footer','accentWords','cover','seo')
+$overlayRequired=@('titleLines','subtitle')
+foreach($name in $overlayRequired){if($null-eq$brief.overlay.PSObject.Properties[$name]){throw "Cover brief overlay missing $name."}}
+foreach($name in @($brief.overlay.PSObject.Properties.Name)){if($overlayAllowed-notcontains$name){throw "Cover brief overlay contains retired or unsupported property: $name."}}
+if(@($brief.overlay.titleLines).Count-lt1-or@($brief.overlay.titleLines|Where-Object{[string]::IsNullOrWhiteSpace([string]$_)}).Count-gt0){throw 'Cover brief overlay titleLines must contain non-empty text.'}
+if([string]::IsNullOrWhiteSpace([string]$brief.overlay.subtitle)){throw 'Cover brief overlay subtitle must be non-empty.'}
 foreach($name in @('sceneConcept','nativeCompositions')){if($null-eq$brief.PSObject.Properties[$name]){throw "Cover brief missing $name."}}
 $sceneId=[string]$brief.sceneConcept.id
 if([string]::IsNullOrWhiteSpace($sceneId)){throw 'Cover brief sceneConcept.id must be non-empty.'}

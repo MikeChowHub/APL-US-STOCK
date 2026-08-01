@@ -33,7 +33,11 @@
       "IntakeSourceIntegrity",
       "TableCardSourceIntegrity",
       "NativeCompositionIntegrity"
-    ]
+    ],
+    "TitlePolicy": {
+      "RequiredPrefix": "APL Deep-Scan 美股深海雷達",
+      "EffectiveFrom": "2026-08-03"
+    }
   },
   "Required": [
     {
@@ -56,6 +60,7 @@
     { "Id": "production-package-manifest", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/APL_Production_Package_Manifest_{ScanDate}.json"] },
     { "Id": "dashboard-png", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/APL_DeepScan_Radar_Dashboard_Top30_{ScanDate}_1920x1080.png"] },
     { "Id": "social-card-png", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/APL_DeepScan_Social_Card_{ScanDate}_1080x1350.png"] },
+    { "Id": "social-radar-png", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/APL_DeepScan_Social_Radar_Top30_{ScanDate}_1080x1350.png"] },
     { "Id": "cover", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/APL_Momentum_Leaders_Blog_Cover_{ScanDate}_1080x1350.png"] },
     { "Id": "seo", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/APL_Momentum_Leaders_Blog_SEO_{ScanDate}_1280x720.png"] }
   ],

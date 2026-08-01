@@ -229,6 +229,9 @@ $dashboardLog = Join-Path $dateOut "APL_DeepScan_Radar_Dashboard_Top30_${ScanDat
 $socialSvg = Join-Path $dateOut "APL_DeepScan_Social_Card_${ScanDate}_1080x1350.svg"
 $socialPng = Join-Path $productionPackage "APL_DeepScan_Social_Card_${ScanDate}_1080x1350.png"
 $socialLog = Join-Path $dateOut "APL_DeepScan_Social_Card_${ScanDate}_Render_Log.txt"
+$socialRadarSvg = Join-Path $dateOut "APL_DeepScan_Social_Radar_Top30_${ScanDate}_1080x1350.svg"
+$socialRadarPng = Join-Path $productionPackage "APL_DeepScan_Social_Radar_Top30_${ScanDate}_1080x1350.png"
+$socialRadarLog = Join-Path $dateOut "APL_DeepScan_Social_Radar_Top30_${ScanDate}_Render_Log.txt"
 $coverOutput = Join-Path $productionPackage "APL_Momentum_Leaders_Blog_Cover_${ScanDate}_1080x1350.png"
 $coverLog = [System.IO.Path]::ChangeExtension($coverOutput, '.overlay-log.txt')
 $seoOutput = Join-Path $productionPackage "APL_Momentum_Leaders_Blog_SEO_${ScanDate}_1280x720.png"
@@ -239,11 +242,13 @@ $blogHtmlPackage = Join-Path $productionPackage "APL_Momentum_Leaders_Market_Ana
 $companyAnalysisPackage = Join-Path $productionPackage "table-card-log\APL_Momentum_Leaders_Top_30_Company_Business_Analysis_${ScanDate}.md"
 $editorialAuditPackage = Join-Path $productionPackage "APL_Editorial_Completion_Audit_${ScanDate}.json"
 $productionPackageManifest = Join-Path $productionPackage "APL_Production_Package_Manifest_${ScanDate}.json"
-$finalAuditPath = Assert-NewArtifact (Join-Path $finalDateOut "Final_Production_Audit_${ScanDate}.json") 'FinalProductionAudit'
+$finalAuditPath = Join-Path $finalDateOut "Final_Production_Audit_${ScanDate}.json"
+Assert-NewArtifact $finalAuditPath 'FinalProductionAudit' | Out-Null
+$stagingAuditPath = Join-Path $dateOut "Final_Production_Audit_${ScanDate}.json"
 
 $rootCopies = @()
 $tableCardExpectedArtifacts = @($tableCards | ForEach-Object { @($_.OutputPath,$_.LogPath) })
-$expectedArtifacts = @($rankingCsv,$topTxt,$topMd,$watchlistTxt,$removedAudit,$retainedAudit,$overviewMd,$metaJson,$sourceCopy,$dashboardContract,$socialContract,$dashboardSvg,$dashboardPng,$dashboardLog,$socialSvg,$socialPng,$socialLog,$coverOutput,$coverLog,$seoOutput,$seoLog,$productionPackageManifest) + $tableCardExpectedArtifacts + @($tableCardResultManifest | Where-Object { $_ }) + $rootCopies
+$expectedArtifacts = @($rankingCsv,$topTxt,$topMd,$watchlistTxt,$removedAudit,$retainedAudit,$overviewMd,$metaJson,$sourceCopy,$dashboardContract,$socialContract,$dashboardSvg,$dashboardPng,$dashboardLog,$socialSvg,$socialPng,$socialLog,$socialRadarSvg,$socialRadarPng,$socialRadarLog,$coverOutput,$coverLog,$seoOutput,$seoLog,$productionPackageManifest) + $tableCardExpectedArtifacts + @($tableCardResultManifest | Where-Object { $_ }) + $rootCopies
 function Get-PublishedPath([string]$StagePath) {
   $full = Get-AplFullPath $StagePath
   if ($full.StartsWith($dateOut.TrimEnd('\') + '\', [System.StringComparison]::OrdinalIgnoreCase)) { return Join-Path $finalDateOut $full.Substring($dateOut.TrimEnd('\').Length + 1) }
@@ -277,6 +282,8 @@ function Write-TableCardPublicationManifest {
 function Write-ProductionPackageManifest {
   foreach ($forbiddenRootArtifact in @(
     (Join-Path $dateOut (Split-Path $dashboardPng -Leaf)),
+    (Join-Path $dateOut (Split-Path $socialPng -Leaf)),
+    (Join-Path $dateOut (Split-Path $socialRadarPng -Leaf)),
     (Join-Path $dateOut (Split-Path $coverOutput -Leaf)),
     (Join-Path $dateOut (Split-Path $seoOutput -Leaf)),
     (Join-Path $dateOut (Split-Path $whatsAppPackage -Leaf))
@@ -295,6 +302,7 @@ function Write-ProductionPackageManifest {
   foreach ($definition in @(
     [pscustomobject]@{Id='dashboard-png';Path=$dashboardPng},
     [pscustomobject]@{Id='social-card-png';Path=$socialPng},
+    [pscustomobject]@{Id='social-radar-png';Path=$socialRadarPng},
     [pscustomobject]@{Id='cover';Path=$coverOutput},
     [pscustomobject]@{Id='seo';Path=$seoOutput},
     [pscustomobject]@{Id='whatsapp';Path=$whatsAppPackage},
@@ -399,6 +407,7 @@ $validatorScript = Join-Path $PSScriptRoot 'validate_renderer_inputs.ps1'
 $dashboardScript = Join-Path $PSScriptRoot 'render_deep_scan_dashboard_svg.ps1'
 $svgToPngScript = Join-Path $PSScriptRoot 'convert_svg_to_png.ps1'
 $socialScript = Join-Path $PSScriptRoot 'render_deep_scan_social_card_svg.ps1'
+$socialRadarScript = Join-Path $PSScriptRoot 'render_deep_scan_social_radar_svg.ps1'
 $tableScript = Join-Path $PSScriptRoot 'render_blog_table_cards.ps1'
 $overlayScript = Join-Path $PSScriptRoot 'render_blog_cover_overlay.ps1'
 $archiveScript = Join-Path $PSScriptRoot 'archive_daily_production.ps1'
@@ -495,6 +504,8 @@ try {
   Invoke-PipelineStep 'ExportDashboardPng' $svgToPngScript (@('-InputSvg',$dashboardSvg,'-OutputPng',$dashboardPng,'-Width','1920','-Height','1080') + $regressionArg) @($dashboardPng)
   Invoke-PipelineStep 'RenderSocialCard' $socialScript (@('-InputPath',$socialContract) + $regressionArg) @($socialSvg,$socialLog)
   Invoke-PipelineStep 'ExportSocialPng' $svgToPngScript (@('-InputSvg',$socialSvg,'-OutputPng',$socialPng,'-Width','1080','-Height','1350') + $regressionArg) @($socialPng)
+  Invoke-PipelineStep 'RenderSocialRadar' $socialRadarScript (@('-InputPath',$socialContract) + $regressionArg) @($socialRadarSvg,$socialRadarLog)
+  Invoke-PipelineStep 'ExportSocialRadarPng' $svgToPngScript (@('-InputSvg',$socialRadarSvg,'-OutputPng',$socialRadarPng,'-Width','1080','-Height','1350') + $regressionArg) @($socialRadarPng)
   foreach ($card in $tableCards) {
     $record = New-AplTableCardResult -Source ([pscustomobject]@{ CardType=$card.CardType; InputPath=$card.InputPath; InputSha256=(Get-FileHash -LiteralPath $card.InputPath -Algorithm SHA256).Hash; OutputName=$card.OutputName; Required=[bool]$card.Required; OutputPath=$null; LogPath=$null; Bytes=$null; Sha256=$null; LogBytes=$null; LogSha256=$null; Error=$null }) -Status PENDING
     try {
@@ -557,7 +568,7 @@ try {
     $publishedMeta.top30Txt = Join-Path $finalDateOut (Split-Path $topTxt -Leaf)
     Write-Utf8Text $metaJson ($publishedMeta | ConvertTo-Json -Depth 6)
     $tableCardLogs = @($tableCards | ForEach-Object { $_.LogPath } | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf })
-    foreach ($path in @($dashboardLog,$socialLog,$coverLog,$seoLog) + $tableCardLogs) {
+    foreach ($path in @($dashboardLog,$socialLog,$socialRadarLog,$coverLog,$seoLog) + $tableCardLogs) {
       $text = [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8)
       $text = $text.Replace($dateOut, $finalDateOut).Replace($OutputRoot, $publishRoot)
       Write-Utf8Text $path $text
@@ -580,6 +591,13 @@ try {
     Write-ProductionPackageManifest
   } @($productionPackageManifest)
 
+  # Final Audit is performed inside the per-run staging date directory.  Only a
+  # PASS audit is eligible to cross the atomic publish boundary into outputs/<ScanDate>.
+  $auditArgs = @('-ProductionDatePath',$dateOut,'-PublishedDatePath',$finalDateOut,'-ScanDate',$ScanDate,'-ContractPath',$ArtifactContractPath,'-AuditOutputPath',$stagingAuditPath)
+  if ($hasCompleteManagedInputs) { $auditArgs += @('-ManagedInputDatePath',$managedInputDateRoot) }
+  if ($RegressionTest) { $auditArgs += '-RegressionTest' }
+  Invoke-PipelineStep 'FinalProductionAudit' $artifactAuditScript $auditArgs @($stagingAuditPath)
+
   Complete-InternalStep 'PublishArtifacts' {
     if (Test-Path -LiteralPath $finalDateOut) { throw "Final date output appeared during staging: $finalDateOut" }
     Move-Item -LiteralPath $dateOut -Destination $finalDateOut
@@ -591,10 +609,6 @@ try {
   } @()
 
   $publishedArtifacts = @($publishedPaths | ForEach-Object { $item=Get-Item -LiteralPath $_; [ordered]@{ path=$item.FullName; bytes=$item.Length; sha256=(Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash } })
-  $auditArgs = @('-ProductionDatePath',$finalDateOut,'-ScanDate',$ScanDate,'-ContractPath',$ArtifactContractPath,'-AuditOutputPath',$finalAuditPath)
-  if ($hasCompleteManagedInputs) { $auditArgs += @('-ManagedInputDatePath',$managedInputDateRoot) }
-  if ($RegressionTest) { $auditArgs += '-RegressionTest' }
-  Invoke-PipelineStep 'FinalProductionAudit' $artifactAuditScript $auditArgs @($finalAuditPath)
   Set-AplPublishedFilesReadOnly @($finalAuditPath) $finalDateOut | Out-Null
 
   $status = 'PRODUCTION_PASS'

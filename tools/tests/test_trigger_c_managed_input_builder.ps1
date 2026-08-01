@@ -106,7 +106,8 @@ try{
   )}
   $leaderRows=@(for($i=0;$i-lt3;$i++){$row=$ranking[$i];[ordered]@{rank="#$($i+1)";symbol=[string]$row.Symbol;companyName=[string]$row.Name;coreBusiness='企業營運與市場服務';mainDriver='相對強勢及盈利能見度';compositeScore=[double]$row.'Composite Score'}})
   $leaders=[ordered]@{SchemaVersion='APL Table Card Input v1.1';CardType='TopLeaders';Title='領導公司';Rows=$leaderRows}
-  $gainersCard=[ordered]@{SchemaVersion='APL Table Card Input v1.1';CardType='TopGainers';Title='最近7日 Top Gainers';Rows=@(
+  $topGainersHeading=('Top Gainers '+[char]0x2014+' Past 7 Days')
+  $gainersCard=[ordered]@{SchemaVersion='APL Table Card Input v1.1';CardType='TopGainers';Title=$topGainersHeading;Rows=@(
     [ordered]@{symbol='T001';companyName='Alpha Research 1';sectorTheme='市場服務';changePct='+12.5%'},
     [ordered]@{symbol='T002';companyName='Alpha Research 2';sectorTheme='市場服務';changePct='+10.25%'},
     [ordered]@{symbol='T003';companyName='Alpha Research 3';sectorTheme='市場服務';changePct='+8%'}
@@ -130,17 +131,17 @@ try{
     'Market Context'='能源利率重估令企業成本與估值折現率同步受壓，市場因此不再只追逐表面增長，而是比較盈利兌現、自由現金流及管理層資本配置。這個結構變化令指數表現不足以解釋個別領導公司的相對強勢，因此需要進一步觀察量化領導股。'
     '為什麼要看 APL Momentum Leaders 領導股？'='當主要指數同時包含受壓與受惠公司，只看平均升跌會掩蓋資金真正選擇。領導股排名把相對強度、趨勢及參與度放在同一框架，讓分析可以判斷資金是否正建立新的中期方向。'
     'Deep-Scan Overview'=($overviewValues+' 整體數據顯示領導力仍然存在，但並非所有公司同步上升。數量與平均分數只用來判斷結構是否成立，下一步仍要比較短線升幅榜與中期排名是否指向相同風險取態。')
-    '最近7日 Top Gainers'='TradingView短線資料顯示T001、T002及T003位於升幅前列，反映資金願意追逐具催化因素的公司。短線價格領導提供即時風險偏好證據，但單周升幅不能單獨證明中期趨勢，因此需要與Momentum Leaders排名對照。'
+    $topGainersHeading='SPX、NDX及DJI成分股的短線資料顯示T001、T002及T003位於升幅前列，反映資金願意追逐具催化因素的公司。短線價格領導提供即時風險偏好證據，但單周升幅不能單獨證明中期趨勢，因此需要與Momentum Leaders排名對照。'
     'Momentum Leaders Analysis'='中期排名顯示領導公司同時保持相對強勢與較完整趨勢，資金不是無差別追價，而是集中於盈利路徑較清晰及資本效率較高的企業。這項結果承接短線證據，並帶出個股強勢能否形成群組。'
     'Sector Analysis'='由個股推進至群組後，可見選擇性領導並非單一偶然事件。代表公司在相近市場條件下維持強勢，說明資金正以盈利品質與催化因素組成新的結構，但群組能否成為主線仍需成交參與確認。'
     'Relative Volume / Market Activity'='成交與相對活躍度是確認領導結構的重要證據。若價格領導伴隨持續市場參與，群組延續機率較高；若成交迅速退潮，則目前結論只代表短期集中，而不是可靠的資金轉移。'
     'Risk'='核心命題可能被能源成本回落、利率預期逆轉、盈利不及預期或成交參與消失推翻。若領導公司失去相對強度並跌回主要趨勢下方，市場便可能重新回到指數主導而非選擇性領導。'
     'Deep-Scan Conclusion'='能源利率重估確實提高市場定價門檻，但量化結果仍顯示選擇性領導存在。最終判斷不是全面避險，而是資金轉向盈利能見度較高的公司；下一個確認訊號是成交參與與群組廣度能否持續。'
   }
-  $sectionMinimum=[ordered]@{'Executive Summary'=80;'Market Context'=160;'為什麼要看 APL Momentum Leaders 領導股？'=120;'Deep-Scan Overview'=120;'最近7日 Top Gainers'=150;'Momentum Leaders Analysis'=180;'Sector Analysis'=120;'Relative Volume / Market Activity'=120;'Risk'=120;'Deep-Scan Conclusion'=120}
+  $sectionMinimum=[ordered]@{'Executive Summary'=80;'Market Context'=160;'為什麼要看 APL Momentum Leaders 領導股？'=120;'Deep-Scan Overview'=120;$topGainersHeading=150;'Momentum Leaders Analysis'=180;'Sector Analysis'=120;'Relative Volume / Market Activity'=120;'Risk'=120;'Deep-Scan Conclusion'=120}
   $supportingSentence='這項證據必須與上一節的判斷連接，才能辨認資金選擇是否具有持續性，並為下一個分析問題建立可驗證的方向。'
   foreach($heading in $sectionMinimum.Keys){while(([string]$sections[$heading]).Length-lt([int]$sectionMinimum[$heading]+20)){$sections[$heading]=([string]$sections[$heading]+' '+$supportingSentence)}}
-  $title='APL Deep Scan 市場領導分析'
+  $title='APL Deep-Scan 美股深海雷達 | 市場領導分析'
   $markdown=New-Object Collections.Generic.List[string]
   $html=New-Object Collections.Generic.List[string]
   $markdown.Add("# $title");$markdown.Add('')
@@ -164,7 +165,7 @@ try{
     nativeCompositions=[ordered]@{cover=[ordered]@{aspect_ratio='4:5';camera_distance='medium-close';framing_description='直向集中視角';subject_placement='中央偏下';text_safe_area='上方標題區'};seo=[ordered]@{aspect_ratio='16:9';camera_distance='wide';framing_description='橫向延展視角';subject_placement='右側三分位';text_safe_area='左側標題區'}}
     composition=[ordered]@{textSafeArea='role-specific';storyArea='role-specific';rules=@('no text in background')}
     imageGenerationBrief=[ordered]@{sharedPrompt='同一能源與市場門檻場景';coverPrompt='直向中近距離視角';seoPrompt='橫向廣角環境視角';negativePrompt='文字、標誌、水印'}
-    overlay=[ordered]@{kicker='APL DEEP SCAN';titleLines=@('能源門檻提高','選擇性領導');subtitle='市場重新檢驗盈利能見度';series='APL US STOCK';date=$ScanDate;footer='Deep Scan'}
+    overlay=[ordered]@{titleLines=@('能源門檻提高','選擇性領導');subtitle='市場重新檢驗盈利能見度';footer='Deep Scan'}
   }
   Write-Json (Join-Path $StagingDate 'cover-brief.json') $brief
   $generatedUtc=[datetime]::UtcNow.ToString('o')

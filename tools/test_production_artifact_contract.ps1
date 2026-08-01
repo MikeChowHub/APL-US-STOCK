@@ -5,6 +5,7 @@ param(
   [string]$ContractPath = '',
   [string]$AuditOutputPath = '',
   [string]$ManagedInputDatePath = '',
+  [string]$PublishedDatePath = '',
   [switch]$RegressionTest
 )
 
@@ -17,6 +18,13 @@ Assert-AplScanDate $ScanDate | Out-Null
 $allowedRoot = if ($RegressionTest) { Join-Path $ProjectRoot 'tmp' } else { Join-Path $ProjectRoot 'outputs' }
 $ProductionDatePath = Assert-AplNoReparsePath -Path $ProductionDatePath -AllowedRoot $allowedRoot -RequireDirectory
 if ((Split-Path $ProductionDatePath -Leaf) -cne $ScanDate) { throw 'ProductionDatePath leaf must equal ScanDate.' }
+if ([string]::IsNullOrWhiteSpace($PublishedDatePath)) {
+  $PublishedDatePath = $ProductionDatePath
+} else {
+  $PublishedDatePath = Assert-AplNoReparsePath -Path $PublishedDatePath -AllowedRoot $allowedRoot
+  if ((Split-Path $PublishedDatePath -Leaf) -cne $ScanDate) { throw 'PublishedDatePath leaf must equal ScanDate.' }
+  if (-not $RegressionTest -and -not (Test-AplPathInside $ProductionDatePath (Join-Path $ProjectRoot 'outputs\.staging'))) { throw 'Formal PublishedDatePath override is allowed only when auditing a staging production directory.' }
+}
 if ([string]::IsNullOrWhiteSpace($ContractPath)) { $ContractPath = Join-Path $ProjectRoot 'KnowledgeBase\Rules\APL_US_Stock_Production_Artifact_Contract.json' }
 $ContractPath = Assert-AplNoReparsePath -Path $ContractPath -AllowedRoot $ProjectRoot -RequireFile
 if ([string]::IsNullOrWhiteSpace($AuditOutputPath)) { $AuditOutputPath = Join-Path $ProductionDatePath "Final_Production_Audit_${ScanDate}.json" }
@@ -91,7 +99,7 @@ try {
     $expectedTableRelative = "production-package/Table Cards/$outputName"
     $outputs = @($safeFiles | Where-Object { [string]$_.RelativePath -ceq $expectedTableRelative })
     if ($outputs.Count -ne 1) { throw "Required Table Card '$type' output expected exactly once; found $($outputs.Count)." }
-    $expectedPublishedInput = Get-AplCanonicalPath (Join-Path $ProductionDatePath $expectedTableRelative.Replace('/','\'))
+    $expectedPublishedInput = Get-AplCanonicalPath (Join-Path $PublishedDatePath $expectedTableRelative.Replace('/','\'))
     if ([string]$record.OutputPath -cne $expectedPublishedInput) { throw "Required Table Card '$type' publication manifest OutputPath is not the canonical package path." }
     if ([long]$record.Bytes -ne [long]$outputs[0].Size -or [string]$record.Sha256 -cne [string]$outputs[0].SHA256) { throw "Required Table Card '$type' size/SHA-256 mismatch." }
     if ([string]::IsNullOrWhiteSpace([string]$record.InputPath) -or [string]::IsNullOrWhiteSpace([string]$record.InputSha256)) { throw "Required Table Card '$type' publication record is missing semantic input evidence." }
@@ -130,6 +138,7 @@ try {
   }
   $expectedPackageRequired['dashboard-png'] = "APL_DeepScan_Radar_Dashboard_Top30_${ScanDate}_1920x1080.png"
   $expectedPackageRequired['social-card-png'] = "APL_DeepScan_Social_Card_${ScanDate}_1080x1350.png"
+  $expectedPackageRequired['social-radar-png'] = "APL_DeepScan_Social_Radar_Top30_${ScanDate}_1080x1350.png"
   $expectedPackageRequired['cover'] = "APL_Momentum_Leaders_Blog_Cover_${ScanDate}_1080x1350.png"
   $expectedPackageRequired['seo'] = "APL_Momentum_Leaders_Blog_SEO_${ScanDate}_1280x720.png"
   $expectedPackageRequired['whatsapp'] = "WhatsApp_${ScanDate}.md"
@@ -159,7 +168,7 @@ try {
   $editorialAuditPath = Assert-AplNoReparsePath -Path (Join-Path $packageRoot "APL_Editorial_Completion_Audit_${ScanDate}.json") -AllowedRoot $packageRoot -RequireFile
   $editorialAudit = Read-AplStrictJson $editorialAuditPath $packageRoot
   if ([string]$editorialAudit.SchemaVersion -cne [string]$readinessContract.SchemaVersion -or [string]$editorialAudit.ScanDate -cne $ScanDate -or [string]$editorialAudit.Status -cne 'PASS' -or $editorialAudit.EditorialCompletion -ne $true -or $editorialAudit.ProductionReadiness -ne $true -or $editorialAudit.DailyProductionPublishableCandidate -ne $true) { throw 'Editorial Completion Audit schema/date/status/readiness mismatch.' }
-  $mandatorySections=@('Executive Summary','Market Context','為什麼要看 APL Momentum Leaders 領導股？','Deep-Scan Overview','最近7日 Top Gainers','Momentum Leaders Analysis','Sector Analysis','Relative Volume / Market Activity','Risk','Deep-Scan Conclusion')
+  $mandatorySections=@('Executive Summary','Market Context','為什麼要看 APL Momentum Leaders 領導股？','Deep-Scan Overview',(Get-AplCanonicalTopGainersTitle),'Momentum Leaders Analysis','Sector Analysis','Relative Volume / Market Activity','Risk','Deep-Scan Conclusion')
   if(@($editorialAudit.MandatorySections).Count-ne$mandatorySections.Count){throw 'Editorial Completion Audit mandatory section count mismatch.'}
   for($i=0;$i-lt$mandatorySections.Count;$i++){if([string]$editorialAudit.MandatorySections[$i]-cne$mandatorySections[$i]){throw 'Editorial Completion Audit mandatory section order mismatch.'}}
   foreach($name in @($readinessContract.RequiredChecks)){if($null-eq$editorialAudit.Checks.PSObject.Properties[[string]$name]-or$editorialAudit.Checks.([string]$name)-ne$true){throw "Editorial Completion Audit check is not PASS: $name"}}

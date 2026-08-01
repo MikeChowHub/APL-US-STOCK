@@ -62,7 +62,7 @@ Minimum valid input:
 {
   "SchemaVersion": "APL Table Card Input v1.1",
   "CardType": "TopGainers",
-  "Title": "最近7日 Top Gainers",
+  "Title": "Top Gainers — Past 7 Days",
   "Rows": [
     {
       "symbol": "SYM",
@@ -74,7 +74,7 @@ Minimum valid input:
 }
 ```
 
-For `CardType: TopGainers`, `Title` must be exactly `最近7日 Top Gainers`. This is a fixed cross-output title and validation must fail if wording, spacing, capitalization or a suffix differs.
+For `CardType: TopGainers`, `Title` must be exactly `Top Gainers — Past 7 Days`. This is a fixed cross-output title and validation must fail if wording, spacing, capitalization or a suffix differs.
 
 Required:
 
@@ -137,7 +137,7 @@ Recommended row count:
 TopGainers cards should include or default to:
 
 ```text
-資料來源為 TradingView，排名、價格及升幅會隨市場變動。
+Scope: SPX／NDX／DJI constituents. Rankings, prices and changes are point-in-time market data and may change with the market.
 ```
 
 Do not wrap the note in HTML tags.
@@ -154,7 +154,7 @@ Example:
 {
   "Meta": {
     "Date": "2026-07-12",
-    "Source": "TradingView",
+    "Source": "SPX/NDX/DJI constituents",
     "MarketTheme": "AI Infrastructure / Healthcare",
     "ProductionNote": "Formal Blog table card"
   }

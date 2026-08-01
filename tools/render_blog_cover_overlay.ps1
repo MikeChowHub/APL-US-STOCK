@@ -276,12 +276,12 @@ try {
   $fontKicker = New-TrackedFont 'fontKicker' $script:latinFontFamily ([float]$layout.fontKicker) ([System.Drawing.FontStyle]::Bold)
   $fontTitle = New-TrackedFont 'fontTitle' $script:chineseFontFamily ([float]$layout.fontTitle) ([System.Drawing.FontStyle]::Bold)
   $fontSub = New-TrackedFont 'fontSubtitle' $script:chineseFontFamily ([float]$layout.fontSubtitle) ([System.Drawing.FontStyle]::Bold)
-  $fontMeta = New-TrackedFont 'fontMeta' $script:latinFontFamily ([float]$layout.fontMeta) ([System.Drawing.FontStyle]::Bold)
   $lineHeight = [float]$layout.titleLineHeight
 
   Draw-Logo $g $LogoPath $margin $top $logoW $logoH
   $kickerX = if ([string]::IsNullOrWhiteSpace($LogoPath)) { $margin } else { $margin + $logoW + $logoGap }
-  Draw-ShadowText $g ([string]$brief.overlay.kicker) $fontKicker $cyan $kickerX ($top + [float]$layout.kickerOffsetY) ($Width - $kickerX - $margin) ([float]$layout.kickerHeight) 'Near' ([float]$layout.trackingKicker)
+  $kicker = 'APL DEEP-SCAN | ' + ([string]$brief.scanDate)
+  Draw-ShadowText $g $kicker $fontKicker $cyan $kickerX ($top + [float]$layout.kickerOffsetY) ($Width - $kickerX - $margin) ([float]$layout.kickerHeight) 'Near' ([float]$layout.trackingKicker)
 
   $titleY = [float]$layout.titleY
   $titleLines = @($brief.overlay.titleLines)
@@ -294,9 +294,6 @@ try {
   if (-not [string]::IsNullOrWhiteSpace([string]$brief.overlay.subtitle)) {
     Draw-ShadowText $g ([string]$brief.overlay.subtitle) $fontSub $muted $margin $subY ($Width - $margin*2) ([float]$layout.subtitleHeight) 'Near' ([float]$layout.trackingSubtitle)
   }
-
-  $meta = ([string]$brief.overlay.series) + ' | ' + ([string]$brief.overlay.date)
-  Draw-ShadowText $g $meta $fontMeta $cyan $margin ($subY + [float]$layout.metaGap) ($Width - $margin*2) ([float]$layout.metaHeight) 'Near' ([float]$layout.trackingMeta)
 
   if ($Variant -eq 'Cover' -and -not [string]::IsNullOrWhiteSpace([string]$brief.overlay.footer)) {
     $fontFooter = New-TrackedFont 'fontFooter' $script:chineseFontFamily ([float]$layout.fontFooter) ([System.Drawing.FontStyle]::Regular)
@@ -311,7 +308,6 @@ try {
   if ($fontKicker) { $fontKicker.Dispose() }
   if ($fontTitle) { $fontTitle.Dispose() }
   if ($fontSub) { $fontSub.Dispose() }
-  if ($fontMeta) { $fontMeta.Dispose() }
   if ($cyan) { $cyan.Dispose() }
   if ($gold) { $gold.Dispose() }
   if ($white) { $white.Dispose() }

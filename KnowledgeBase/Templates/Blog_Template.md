@@ -7,7 +7,7 @@ It is used during Trigger C only:
 ```text
 Trigger C Inputs
 +
-最近7日 Top Gainers
+Top Gainers — Past 7 Days
 +
 Market Context
 ↓
@@ -15,6 +15,12 @@ Formal Blog Production
 ```
 
 This template is private editorial guidance, never a publishable artifact. Every bracketed instruction and example sentence must be replaced with issue-specific analysis before Managed Input Preflight. Copying the skeleton, emitting only one section, or using a short summary as the Blog must fail editorial completion.
+
+For newly created packages from 2026-08-03 onward, use this exact title structure in both Markdown and HTML:
+
+```text
+APL Deep-Scan 美股深海雷達：[當期核心市場結論]
+```
 
 Trigger C preparation order is fixed:
 
@@ -46,7 +52,7 @@ Market Context
 Deep-Scan Overview
 → Does quantitative evidence show leadership still exists?
 
-最近7日 Top Gainers
+Top Gainers — Past 7 Days
 → Is short-term capital defensive, rotating, or pursuing risk?
 
 Momentum Leaders Analysis
@@ -143,7 +149,7 @@ The managed source is authoritative for facts, dates, numbers, company names, ev
 ## 5. Publish-ready HTML Skeleton
 
 ```html
-<h1>[Article Title]</h1>
+<h1>APL Deep-Scan 美股深海雷達：[當期核心市場結論]</h1>
 
 <h3>Executive Summary</h3>
 <p>[One concise market observation.]</p>
@@ -162,9 +168,9 @@ The managed source is authoritative for facts, dates, numbers, company names, ev
 <h3>Deep-Scan Overview</h3>
 <p>[Transition from framework to evidence: explain what the quantitative results support or challenge in the core proposition, not only the counts. End by asking whether short-term capital selection is consistent.]</p>
 
-<h3>最近7日 Top Gainers</h3>
+<h3>Top Gainers — Past 7 Days</h3>
 <p>[Transition from overview: contrast short-term price leadership with medium-term leadership, then ask where medium-term capital is actually moving.]</p>
-<p>資料來源為 TradingView，排名、價格及升幅會隨市場變動。</p>
+<p>Scope: SPX／NDX／DJI constituents. The ranking, prices and changes are point-in-time market data and may change with the market.</p>
 
 <h3>Momentum Leaders Analysis</h3>
 <p>[Transition from short-term comparison: explain which companies and business models receive medium-term capital, then ask whether they form an industry group.]</p>
@@ -193,7 +199,7 @@ The fenced block above demonstrates the required source structure only. Write th
 
 The HTML file must not end with `詳細文章`, `Page title` or `Page description` paragraphs. Keep those fields outside the HTML source.
 
-`<h3>最近7日 Top Gainers</h3>` is canonical and immutable. Do not append `｜...`, a market theme or any issue-specific subtitle to this heading; place that context in the next `<p>`.
+`<h3>Top Gainers — Past 7 Days</h3>` is canonical and immutable. Do not append `｜...`, a market theme or any issue-specific subtitle to this heading; place that context in the next `<p>`.
 
 ---
 

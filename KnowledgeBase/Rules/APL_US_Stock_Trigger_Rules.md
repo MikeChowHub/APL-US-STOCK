@@ -153,7 +153,7 @@ Trigger C requires all of the following:
 ```text
 APL Breakout Screener Cumulative
 +
-最近7日 Top Gainers
+Top Gainers — Past 7 Days
 +
 Market Context
 ```
@@ -170,7 +170,7 @@ If a source correction is required before Finalize, `Supersede` is the only repl
 
 Only a PASS `APL Editorial Completion Audit v1.1` with `ProductionReadiness=true` may enter the Production runner. The runner must execute the managed-input preflight itself before scoring; a separately executed preflight is useful operator feedback but is not authority to bypass the runner gate. `DailyProductionComplete=true` without `DailyProductionPublishable=true` is not a completed Trigger C production.
 
-The v1.1 readiness evidence must bind the current cumulative screener, Trigger B metadata and full ranking, Top Gainers CSV, Market Context, all four Table Card semantic inputs, Cover Brief, the two distinct native backgrounds and both native composition records by path, byte size and SHA-256. Top Leaders rows must match the current Trigger B ranking in order, symbol, company identity and score; Top Gainers rows must match the current TradingView source in order, symbol, company identity and price change; and every Sector Structure representative must exist in the current Trigger B Top 30. Schema-only validation is insufficient.
+The v1.1 readiness evidence must bind the current cumulative screener, Trigger B metadata and full ranking, Top Gainers CSV, Market Context, all four Table Card semantic inputs, Cover Brief, the two distinct native backgrounds and both native composition records by path, byte size and SHA-256. Top Leaders rows must match the current Trigger B ranking in order, symbol, company identity and score; Top Gainers rows must match the current approved SPX／NDX／DJI constituent input in order, symbol, company identity and price change; and every Sector Structure representative must exist in the current Trigger B Top 30. Schema-only validation is insufficient.
 
 ### Allowed Outputs
 
@@ -186,6 +186,8 @@ Social Card PNG (mobile-first single-message visual)
 Social Radar PNG (complete Top 30 radar visual, converted from its SVG)
 Archive Package
 ```
+
+Both Social artifacts are required in every Trigger C Production Package. They are separate renderer outputs: `APL_DeepScan_Social_Card_<ScanDate>_1080x1350.png` carries the concise mobile-first message, while `APL_DeepScan_Social_Radar_Top30_<ScanDate>_1080x1350.png` carries the complete Top 30 radar view. The Radar must be rendered from its own SVG and validated as a fresh 1080x1350 PNG; it must never replace, crop, or be derived from the Social Card.
 
 The `.md` manuscript, independent `.html` source and visual artifacts share the same-date Production Package but remain separate outputs. Visual artifacts must never be embedded or referenced inside either text file. HTML article subheadings use `<h3>` and HTML article paragraphs use `<p>`. URL, Page title and Page description metadata must not be appended to the HTML source.
 

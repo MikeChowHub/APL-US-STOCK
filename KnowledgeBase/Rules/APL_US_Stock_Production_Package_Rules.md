@@ -20,6 +20,7 @@ production-package/
 |   `-- APL_Table_Card_Manifest_<ScanDate>.json
 |-- APL_DeepScan_Radar_Dashboard_Top30_<ScanDate>_1920x1080.png
 |-- APL_DeepScan_Social_Card_<ScanDate>_1080x1350.png
+|-- APL_DeepScan_Social_Radar_Top30_<ScanDate>_1080x1350.png
 |-- APL_Momentum_Leaders_Blog_Cover_<ScanDate>_1080x1350.png
 |-- APL_Momentum_Leaders_Blog_SEO_<ScanDate>_1280x720.png
 |-- WhatsApp_<ScanDate>.md
@@ -29,7 +30,7 @@ production-package/
 `-- APL_Production_Package_Manifest_<ScanDate>.json
 ```
 
-Dashboard SVG, Social SVG, scoring/ranking, watchlist, SMA200 audits, renderer input contracts and other machine records remain at the date root. Dashboard, Social, Table Card, Cover, SEO and WhatsApp publishing artifacts must not be duplicated at the date root.
+Dashboard SVG, Social Card SVG, Social Radar SVG, scoring/ranking, watchlist, SMA200 audits, renderer input contracts and other machine records remain at the date root. Dashboard, Social Card, Social Radar, Table Card, Cover, SEO and WhatsApp publishing artifacts must not be duplicated at the date root.
 
 ## Manifest and integrity
 

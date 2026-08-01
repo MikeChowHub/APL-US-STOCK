@@ -29,7 +29,7 @@ The standard daily Blog package requires these four cards:
 |---|---|---:|
 | `ExecutiveSummary` | Key Signals | Yes |
 | `TopLeaders` | Top 3／Top 5 Leaders | Yes |
-| `TopGainers` | TradingView Top Gainers | Yes |
+| `TopGainers` | SPX／NDX／DJI constituent Top Gainers | Yes |
 | `SectorStructure` | Leadership／sector structure | Yes |
 | `MarketObservation` | Additional issue-specific observation | No |
 | `Comparison` | Optional comparison when supported by the article | No |
@@ -165,11 +165,11 @@ Focus on why these leaders matter, not just their score.
 
 ### Purpose
 
-Show recent 7-day market temperature using TradingView Top Gainers.
+Show recent 7-day market temperature using the approved SPX／NDX／DJI constituent Top Gainers input.
 
 ### Fixed Elements
 
-- title: `最近7日 Top Gainers` — fixed canonical title; exact wording, capitalization and spacing required;
+- title: `Top Gainers — Past 7 Days` — fixed canonical English title; exact wording, capitalization, dash and spacing required;
 - source note;
 - leading sectors / companies;
 - market implication.
@@ -200,7 +200,7 @@ Change
 ### Required Source Note
 
 ```text
-資料來源為 TradingView，排名、價格及升幅會隨市場變動。
+Scope: SPX／NDX／DJI constituents. The ranking, prices and changes are point-in-time market data and may change with the market.
 ```
 
 ---

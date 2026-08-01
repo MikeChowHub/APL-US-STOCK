@@ -46,11 +46,32 @@ The Production Package must share one issue-specific core market proposition wit
 
 Cross-platform consistency means that any repeated date, number, company identity, ranking fact or directional judgment remains accurate and non-contradictory. It does not mean every artifact must display the same facts, wording, rows or conclusion.
 
+### Required Social publishing pair
+
+Every completed Trigger C package must contain both independent Social artifacts under `production-package/`:
+
+- `APL_DeepScan_Social_Card_<ScanDate>_1080x1350.png` — the concise, mobile-first message;
+- `APL_DeepScan_Social_Radar_Top30_<ScanDate>_1080x1350.png` — the complete Top 30 Radar, including scan funnel, Buyability and sector distribution.
+
+They must be rendered independently from the same validated Social runtime contract and each must pass fresh-PNG, 1080x1350, SHA/size, repository-font and zero-warning validation. A Social Card cannot substitute for the Radar; neither artifact may be created by cropping, resizing, re-encoding, or otherwise deriving it from the other.
+
 Do not use source-integrity requirements to force low-priority metrics into client-facing content. Structured validators, manifests and audit evidence establish provenance; editorial preparation selects what each platform needs.
 
 ---
 
 ## 1. Article Flow
+
+### Formal article-title prefix
+
+For every newly created managed editorial package from **2026-08-03** onward, the formal Markdown and HTML title must begin exactly with:
+
+```text
+APL Deep-Scan 美股深海雷達
+```
+
+The issue-specific market conclusion follows this fixed prefix, normally separated with `：`. Example: `APL Deep-Scan 美股深海雷達：能源風險回歸，AI 回報受驗證`.
+
+The prefix is a mandatory title identity, not a subtitle, image-overlay line, or optional branding treatment. Markdown `#` and HTML `<h1>` must be content-equivalent and use the same full title. This applies prospectively and does not alter already published outputs or Archive artifacts.
 
 Formal Blog articles should follow this reading flow:
 
@@ -63,7 +84,7 @@ Market Context
 ↓
 Deep-Scan Overview
 ↓
-最近7日 Top Gainers
+Top Gainers — Past 7 Days
 ↓
 Momentum Leaders Analysis
 ↓
@@ -112,7 +133,7 @@ Market Context
 Deep-Scan Overview
 → Does the quantitative result show that market leadership still exists?
 
-最近7日 Top Gainers
+Top Gainers — Past 7 Days
 → Is short-term capital defensive, rotating, or pursuing risk?
 
 Momentum Leaders Analysis
@@ -199,7 +220,7 @@ Editorial preparation must not:
 
 Executive Summary is a separate short-form observation and must not replace Market Context.
 
-Trigger B data, ranking results, sector counts and 最近7日 Top Gainers results must not be presented as if they were source Market Context. Those inputs belong in their own Blog sections and may only be related back to the market background through editorial analysis.
+Trigger B data, ranking results, sector counts and Top Gainers — Past 7 Days results must not be presented as if they were source Market Context. Those inputs belong in their own Blog sections and may only be related back to the market background through editorial analysis.
 
 Blog Markdown and Blog HTML must remain content-equivalent for the final edited Market Context. WhatsApp is an independent social summary and is not required to retain the same evidence or structure.
 
@@ -262,16 +283,16 @@ Internal data source names must not appear in client-facing text.
 
 ---
 
-## 6. 最近7日 Top Gainers
+## 6. Top Gainers — Past 7 Days
 
-Use 最近7日 Top Gainers to explain short-term market temperature.
+Use Top Gainers — Past 7 Days to explain short-term market temperature among the approved SPX／NDX／DJI constituent universe.
 
 It must contrast short-term price leadership with the medium-term Momentum Leaders structure, then lead into where medium-term capital is actually moving. Do not describe it as an independent market story.
 
-`最近7日 Top Gainers` is the fixed canonical section title across the Blog manuscript and TopGainers Table Card. It must be emitted exactly as:
+`Top Gainers — Past 7 Days` is the fixed canonical English section title across the Blog manuscript and TopGainers Table Card. It must be emitted exactly as:
 
 ```html
-<h3>最近7日 Top Gainers</h3>
+<h3>Top Gainers — Past 7 Days</h3>
 ```
 
 Do not append a theme, commentary or separator such as `｜...` to this heading. Put issue-specific interpretation in the following `<p>` paragraph instead.
@@ -287,7 +308,7 @@ medium-term leadership structure
 Required source note:
 
 ```text
-資料來源為 TradingView，排名、價格及升幅會隨市場變動。
+Scope: SPX／NDX／DJI constituents. The ranking, prices and changes are point-in-time market data and may change with the market.
 ```
 
 Top Gainers must not be treated as stock recommendations.
@@ -382,9 +403,9 @@ Always use:
 
 - `APL Momentum Leaders 領導股`
 - `APL Deep-Scan`
-- `最近7日 Top Gainers`
+- `Top Gainers — Past 7 Days`
 
-The capitalization, spacing and wording of `最近7日 Top Gainers` are fixed. Blog headings, Table Card contracts and renderer output must not substitute or extend this title.
+The capitalization, dash, spacing and wording of `Top Gainers — Past 7 Days` are fixed. Blog headings, Table Card contracts and renderer output must not substitute or extend this title. A platform name is not a client-facing source label for this section; the required disclosure is the SPX／NDX／DJI constituent scope.
 
 Do not use these internal terms in client-facing Blog text:
 

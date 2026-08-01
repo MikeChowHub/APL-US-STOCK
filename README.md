@@ -2,7 +2,7 @@
 
 Cross-PC setup and second-computer commands are documented in [Cross-PC Production Runbook](docs/CROSS_PC_RELEASE_RUNBOOK.md). Run `tools/validate_cross_pc_environment.ps1 -FullRegression` before supplying daily managed inputs; environment validation never starts Production.
 
-APL US Stock 是一套 Windows PowerShell 5.1 production pipeline，將既有 scoring／ranking、watchlist 與 SMA200 audit、renderer contract validation、Dashboard、Social Card、Table Card、Cover／SEO overlay，以及 UTF-8 log／JSONL trace 串成可追蹤、fail-fast、no-overwrite 的每日流程。
+APL US Stock 是一套 Windows PowerShell 5.1 production pipeline，將既有 scoring／ranking、watchlist 與 SMA200 audit、renderer contract validation、Dashboard、Social Card、完整 Social Radar、Table Card、Cover／SEO overlay，以及 UTF-8 log／JSONL trace 串成可追蹤、fail-fast、no-overwrite 的每日流程。
 
 ## Product release
 
@@ -12,7 +12,7 @@ v1.0.0 scope 包括：
 
 - 現有 scoring／ranking 邏輯的 production orchestration；
 - watchlist／SMA200 machine audit；
-- Dashboard、Social Card、Table Card runtime contract 與 renderer；
+- Dashboard、Social Card、Social Radar、Table Card runtime contract 與 renderer；
 - Cover／SEO local overlay；
 - production path guard、no-overwrite、failure staging、UTF-8 logs 與 JSONL trace；
 - 2026-07-12 regression-compatible workflow。

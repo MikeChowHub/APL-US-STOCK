@@ -21,7 +21,7 @@ git branch --show-current
 
 `System.Drawing` 與 `Microsoft.VisualBasic` 必須可載入。字型缺失時 renderer 可 fallback，但字寬、換行與像素輸出可能不同；需要 pixel-stable release 時，所有執行 PC 應使用相同核准字型集合。
 
-Cover／SEO overlay 的指定字型為中文 `Alibaba Sans HK`、英文／數字 `Montserrat`。每次 renderer 必須以 `System.Drawing.Font.Name` 記錄 `Requested Font`、`Resolved Font` 及 status，至少涵蓋 `fontTitle`、`fontSubtitle`、`fontMeta`。Production 預設沒有 `APL_ALLOW_FONT_FALLBACK=1`：requested 與 resolved 不一致時不得靜默 fallback 或輸出檔案。受控 comparison render 才可在其獨立 process 設定 `APL_ALLOW_FONT_FALLBACK=1`，並在 overlay log 明確記錄 `WARNING`；中文 fallback 為 `Microsoft JhengHei UI`，英文／數字 fallback 為 `Arial`。
+Cover／SEO overlay 的指定字型為中文 `Alibaba Sans HK`、英文／數字 `Montserrat`。每次 renderer 必須以 `System.Drawing.Font.Name` 記錄 `Requested Font`、`Resolved Font` 及 status，至少涵蓋 `fontKicker`、`fontTitle`、`fontSubtitle`。Production 預設沒有 `APL_ALLOW_FONT_FALLBACK=1`：requested 與 resolved 不一致時不得靜默 fallback 或輸出檔案。受控 comparison render 才可在其獨立 process 設定 `APL_ALLOW_FONT_FALLBACK=1`，並在 overlay log 明確記錄 `WARNING`；中文 fallback 為 `Microsoft JhengHei UI`，英文／數字 fallback 為 `Arial`。
 
 ## 2. Required inputs
 
@@ -32,7 +32,7 @@ For a fresh date or fresh clone, create the complete managed bundle through `too
 | `InputCsv` | Yes | 原始 scoring input CSV |
 | `ScanDate` | Yes | `YYYY-MM-DD` |
 | `WeekLabel` | Yes | 顯示用週期標籤 |
-| `TopGainersCsvPath` | Yes | 當日TradingView Top Gainers CSV；由preflight核對Table Card及Blog證據 |
+| `TopGainersCsvPath` | Yes | 當日 SPX／NDX／DJI 成分股 Top Gainers CSV；由preflight核對Table Card及Blog證據 |
 | `MarketContextPath` | Yes | 當日approved Market Context Markdown；必須有且只有一行`本期核心市場命題是：...` editorial-control metadata，其正規化文字必須與Cover Brief `sceneConcept.coreMarketThesis`相同，其餘為受管source evidence |
 | `TriggerBMetaPath` | Yes | Editorial preparation使用的當日Trigger B metadata；runner會核對其ranking SHA |
 | `TableCardManifestPath` | Yes | 符合 `tools/table_card_manifest.schema.json` 的 UTF-8 manifest；正式每日Trigger C必須列出4張required cards |
@@ -103,13 +103,13 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run_daily_produc
 
 ## 5. Step map and fail-fast behavior
 
-Runner 依序執行：ManagedInputPreflight → ScoringRanking → VerifyTriggerBEvidence → WatchlistSma200Audit → BuildRendererContracts → PrepareProductionPackage → Validate／Render Dashboard、Social及四張Table Card → RenderCoverOverlay／SEO → ImportPublishingArtifacts → NormalizeStagedArtifacts → FinalizeProductionPackageManifest → PublishArtifacts → Final Production Audit → Archive → authoritative completion。Preflight或Trigger B evidence任一不一致時立即fail closed。
+Runner 依序執行：ManagedInputPreflight → ScoringRanking → VerifyTriggerBEvidence → WatchlistSma200Audit → BuildRendererContracts → PrepareProductionPackage → Validate／Render Dashboard、Social Card、Social Radar及四張Table Card → RenderCoverOverlay／SEO → ImportPublishingArtifacts → NormalizeStagedArtifacts → FinalizeProductionPackageManifest → PublishArtifacts → Final Production Audit → Archive → authoritative completion。Preflight或Trigger B evidence任一不一致時立即fail closed。
 
 Standalone Trigger B 使用 `tools/process_apl_momentum_leaders.ps1` 而未傳入 `-OutputRoot` 時，正式輸出固定為 `outputs/trigger-b/<ScanDate>/`，不建立 `outputs/<ScanDate>/` 或 `outputs/trigger-b/` root copies。完整 Daily Production 仍由 runner 明確傳入 `outputs/.staging/<RunId>`，並只在 atomic publish 階段建立 `outputs/<ScanDate>/`。
 
 Dashboard production completeness要求同時發布1920×1080 SVG及PNG。PNG必須由已完成validation的SVG經`tools/convert_svg_to_png.ps1`及repository-pinned `tools/renderers/resvg/resvg.exe`產生；converter維持no-overwrite、resolved path guard、尺寸驗證及fail-fast，且不得 fallback到browser或system fonts。
 
-Social production completeness要求同時發布1080×1350 SVG及PNG。Social PNG同樣由已完成validation的SVG經`tools/convert_svg_to_png.ps1`產生，並寫入 `production-package/`。
+Social Card與Social Radar production completeness各自要求同時發布1080×1350 SVG及PNG。兩者均由已完成validation的SVG經`tools/convert_svg_to_png.ps1`產生，並以獨立PNG寫入 `production-package/`。
 
 PublishArtifacts 完成後，runner 必須執行 `LockPublishedArtifacts`：對正式日期目錄做安全inventory，將當時存在的全部machine及publishing artifacts設為Windows read-only，然後才計算及記錄final bytes／SHA-256。Final Production Audit其後獨立建立並立即設為read-only。任何lock failure都令run失敗。
 
@@ -128,7 +128,7 @@ PublishArtifacts 完成後，runner 必須執行 `LockPublishedArtifacts`：對�
 
 日期 Production Package 的 `production-package/` 子目錄原生保留：
 
-- Dashboard、Social、Cover及SEO PNG；
+- Dashboard、Social Card、Social Radar、Cover及SEO PNG；
 - `Table Cards/` 內四張required Table Card PNG、`.table-card-log.txt`及publication manifest；
 - `WhatsApp_<ScanDate>.md`；
 - `APL_Momentum_Leaders_Market_Analysis_Blog_<ScanDate>.md`；
@@ -136,7 +136,7 @@ PublishArtifacts 完成後，runner 必須執行 `LockPublishedArtifacts`：對�
 - `table-card-log/`內的Company Business Analysis；
 - `APL_Production_Package_Manifest_<ScanDate>.json`，記錄required mapping及全部package files的path／size／SHA。
 
-Dashboard／Social SVG、Dashboard input、source／ranking CSV、cumulative watchlist、SMA200 audit、其餘 contracts、renderer logs及其他machine records留在日期根目錄。Package publishing artifacts不得在日期根目錄保留副本。舊完成日期不作post-publish搬移；新結構只由下一次Step 1完整run或下一個ScanDate產生。
+Dashboard／Social Card／Social Radar SVG、Dashboard input、source／ranking CSV、cumulative watchlist、SMA200 audit、其餘 contracts、renderer logs及其他machine records留在日期根目錄。Package publishing artifacts不得在日期根目錄保留副本。舊完成日期不作post-publish搬移；新結構只由下一次Step 1完整run或下一個ScanDate產生。
 
 ### Published artifact immutability
 
@@ -206,7 +206,7 @@ outputs/YYYY-MM-DD/
 
 Archive executor 會：
 
-- 選取正式 Blog/HTML、Top 30 analysis、publishing materials、Dashboard、Social、Table Cards、Cover、SEO、manifest 與必要 audit/logs；
+- 選取正式 Blog/HTML、Top 30 analysis、publishing materials、Dashboard、Social Card、Social Radar、Table Cards、Cover、SEO、manifest 與必要 audit/logs；
 - 排除 `.staging`、staging、temporary、tmp、cache、typography comparisons、diagnostics 與暫存副檔名；
 - Copy 並保留 source relative paths，不 Move／Delete source；
 - 逐檔核對 relative path、file count、bytes 與 SHA-256；

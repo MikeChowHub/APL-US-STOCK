@@ -58,7 +58,8 @@ function Get-IndexContent([string]$Root, [object]$CurrentManifest, [object]$Poli
             $notes = 'V2 manifest verified'
           } elseif ([string]$existingManifest.Status -ceq 'PENDING_INDEX') {
             Assert-AplArchiveManifest $existingManifest $date 'PENDING_INDEX' $inventory | Out-Null
-            throw "Archive date remains PENDING_INDEX and must be resumed before another date can update the index: $date"
+            $status = 'PENDING_INDEX'
+            $notes = 'V2 copy verified; index/finalization pending'
           } else {
             throw "Archive date has unsupported manifest Status '$($existingManifest.Status)': $date"
           }
@@ -156,6 +157,20 @@ $yearRoot = Assert-AplNoReparsePath -Path $yearRoot -AllowedRoot $ArchiveRoot -R
 $destination = Join-Path $yearRoot $ScanDate
 $sourceInventory = @(Get-AplArchiveInventory $SourceDatePath)
 if ($sourceInventory.Count -eq 0) { throw 'Archive source inventory is empty.' }
+
+# A pending manifest for this ScanDate is resumable below.  A pending manifest
+# for any other date is an unresolved Archive state and blocks every new or
+# reused completion until it is finalized, so no run can bypass the index gate.
+$pendingDates = New-Object System.Collections.Generic.List[string]
+foreach ($yearDirectory in @(Get-ChildItem -LiteralPath $ArchiveRoot -Directory | Where-Object { $_.Name -match '^\d{4}$' })) {
+  foreach ($dateDirectory in @(Get-ChildItem -LiteralPath $yearDirectory.FullName -Directory | Where-Object { $_.Name -match '^\d{4}-\d{2}-\d{2}$' })) {
+    $pendingManifestPath = Join-Path $dateDirectory.FullName 'archive-manifest.json'
+    if (!(Test-Path -LiteralPath $pendingManifestPath -PathType Leaf)) { continue }
+    $pendingManifest = Read-AplStrictJson $pendingManifestPath $dateDirectory.FullName
+    if ([string]$pendingManifest.Status -ceq 'PENDING_INDEX' -and $dateDirectory.Name -cne $ScanDate) { [void]$pendingDates.Add($dateDirectory.Name) }
+  }
+}
+if ($pendingDates.Count -gt 0) { throw "Existing PENDING_INDEX Archive dates must be resumed before Archive can continue: $($pendingDates.ToArray() -join ', ')" }
 
 if (Test-Path -LiteralPath $destination) {
   $destination = Assert-AplNoReparsePath -Path $destination -AllowedRoot $ArchiveRoot -RequireDirectory

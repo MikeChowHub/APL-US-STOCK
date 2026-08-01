@@ -68,7 +68,7 @@ function Get-DefaultTitle([string]$type) {
   switch ($type) {
     'ExecutiveSummary' { return 'Executive Summary' }
     'TopLeaders' { return 'Top Leaders' }
-    'TopGainers' { return ((-join (@(0x6700,0x8FD1,0x0037,0x65E5) | ForEach-Object { [char]$_ })) + ' Top Gainers') }
+    'TopGainers' { return (Get-AplCanonicalTopGainersTitle) }
     'SectorStructure' { return 'Sector Structure' }
     'MarketObservation' { return 'Market Observation' }
     'Comparison' { return 'Comparison' }
@@ -195,13 +195,12 @@ $footerNote = if ($null -ne $card.FooterNote) { [string]$card.FooterNote } else 
 $columns = [object[]]$cardContract.Presentation.Columns
 $rows = [object[]]$cardContract.Presentation.Rows
 if ($rows.Count -gt 8) { throw 'Table card input Rows exceeds schema maximum 8.' }
-function Get-TradingViewSourceNote {
-  $codes = @(0x8CC7,0x6599,0x4F86,0x6E90,0x70BA,0x0020,0x0054,0x0072,0x0061,0x0064,0x0069,0x006E,0x0067,0x0056,0x0069,0x0065,0x0077,0xFF0C,0x6392,0x540D,0x3001,0x50F9,0x683C,0x53CA,0x5347,0x5E45,0x6703,0x96A8,0x5E02,0x5834,0x8B8A,0x52D5,0x3002)
-  return -join ($codes | ForEach-Object { [char]$_ })
+function Get-TopGainersScopeNote {
+  return 'Scope: SPX / NDX / DJI constituents'
 }
 
 if ($CardType -eq 'TopGainers' -and [string]::IsNullOrWhiteSpace($sourceNote)) {
-  $sourceNote = Get-TradingViewSourceNote
+  $sourceNote = Get-TopGainersScopeNote
 }
 if ([string]::IsNullOrWhiteSpace($OutputName)) {
   $datePart = if ([string]::IsNullOrWhiteSpace($Date)) { (Get-Date -Format 'yyyy-MM-dd') } else { $Date }

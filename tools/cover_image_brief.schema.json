@@ -105,9 +105,9 @@
     },
     "overlay": {
       "type": "object",
-      "required": ["kicker", "titleLines", "subtitle", "series", "date"],
+      "required": ["titleLines", "subtitle"],
+      "additionalProperties": false,
       "properties": {
-        "kicker": { "type": "string" },
         "titleLines": {
           "type": "array",
           "items": { "type": "string" },
@@ -115,8 +115,6 @@
           "maxItems": 4
         },
         "subtitle": { "type": "string" },
-        "series": { "type": "string" },
-        "date": { "type": "string" },
         "footer": { "type": "string" },
         "accentWords": {
           "type": "array",

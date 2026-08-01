@@ -198,6 +198,10 @@ function Get-AplTableCardPresentation([object]$Json, [string]$CardType) {
   return [pscustomobject]@{ Columns=[object[]]$columns.ToArray(); Rows=[object[]]$displayRows.ToArray() }
 }
 
+function Get-AplCanonicalTopGainersTitle {
+  return ('Top Gainers ' + [char]0x2014 + ' Past 7 Days')
+}
+
 function Assert-AplTableCardContract($Json, [string]$ExpectedCardType = '') {
   $label = 'Table card input'
   $allowed = @('SchemaVersion','CardType','Title','Subtitle','Columns','Rows','SourceNote','FooterNote','Meta')
@@ -211,7 +215,7 @@ function Assert-AplTableCardContract($Json, [string]$ExpectedCardType = '') {
   if ($cardTypes -notcontains [string]$Json.CardType) { throw "$label CardType '$($Json.CardType)' is invalid." }
   if (-not [string]::IsNullOrWhiteSpace($ExpectedCardType) -and [string]$Json.CardType -ne $ExpectedCardType) { throw "$label CardType '$($Json.CardType)' does not match expected '$ExpectedCardType'." }
   $effectiveCardType = [string]$Json.CardType
-  $canonicalTopGainersTitle = ((-join (@(0x6700,0x8FD1,0x0037,0x65E5) | ForEach-Object { [char]$_ })) + ' Top Gainers')
+  $canonicalTopGainersTitle = Get-AplCanonicalTopGainersTitle
   if ($effectiveCardType -eq 'TopGainers' -and [string]$Json.Title -cne $canonicalTopGainersTitle) { throw "$label Title for TopGainers must match the canonical title exactly." }
   if ($Json.Rows -isnot [array]) { throw "$label Rows must be a JSON array." }
   $rows = @($Json.Rows)

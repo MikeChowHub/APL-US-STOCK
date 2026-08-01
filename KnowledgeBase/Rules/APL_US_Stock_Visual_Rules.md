@@ -79,6 +79,12 @@ AI-generated cinematic background
 local-rendered Chinese text overlay
 ```
 
+## Cover／SEO overlay identity
+
+The renderer, not an issue brief, owns the identity kicker. It must generate exactly `APL DEEP-SCAN | YYYY-MM-DD` from the managed `scanDate` for both Cover and SEO.
+
+`overlay.series` is retired and must not be supplied or rendered. In particular, the renderer must never generate a second `APL 美股深海雷達 | YYYY-MM-DD` line, because it duplicates the fixed kicker. The issue brief supplies only the editorial title lines, subtitle and optional footer.
+
 ChatGPT / ImageGen is responsible for the cinematic background.
 
 Codex / local post-production is responsible only for accurate text, logo, spacing, date, and final export.

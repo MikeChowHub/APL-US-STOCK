@@ -74,7 +74,7 @@ Trigger A must not produce:
 - Top 30
 - Company Analysis
 - Dashboard
-- Social Card
+- Social Card and Social Radar (two independent required 1080x1350 artifacts: concise mobile message and complete Top 30 radar)
 - Formal Blog
 - Blog Cover
 - SEO Image
@@ -125,7 +125,7 @@ Top 30
 ↓
 Company Analysis
 ↓
-Dashboard / Social Card
+Dashboard / Social Card / Social Radar
 ↓
 Research Outputs
 ```
@@ -172,10 +172,12 @@ Trigger B may produce:
 - Full Ranking CSV
 - Cumulative TradingView Watchlist
 - Dashboard
-- Social Card
+- Social Card and Social Radar
 - Company Analysis
 - Research Outputs
 - Basic research summary
+
+For a completed Trigger C package, Social Card and Social Radar are separate required renderer steps. Both consume the validated `Social` runtime contract but produce independent SVG and fresh 1080x1350 PNG artifacts under `production-package/`. Failure, absence, duplicate path, font fallback, geometry warning, stale image, invalid size, SHA mismatch or substitution of one Social artifact for the other fails Final Production Audit.
 
 ## Forbidden Actions
 
@@ -258,7 +260,7 @@ Trigger C may produce:
 
 # Input / Output Matrix
 
-| Input | Watchlist | Scoring | Ranking | Top 30 | Dashboard | Social Card | Company Analysis | Blog | Cover | SEO | Table Cards | WhatsApp | Archive |
+| Input | Watchlist | Scoring | Ranking | Top 30 | Dashboard | Social Card | Social Radar | Company Analysis | Blog | Cover | SEO | Table Cards | WhatsApp | Archive |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | APL Breakout Screener | Yes | No | No | No | No | No | No | No | No | No | No | No | No |
 | APL Breakout Screener Cumulative | Yes | Yes | Yes | Yes | Yes | Yes | Yes | No | No | No | No | No | Required after complete Production PASS |
@@ -272,7 +274,7 @@ Trigger C may produce:
 
 | Mode | Forbidden Actions |
 |---|---|
-| Watchlist Update Mode | Must not run SMA200 removal, calculate scores, rank Top 30, create Dashboard, create Social Card, create Blog, create Cover, create SEO image, create Table Cards |
+| Watchlist Update Mode | Must not run SMA200 removal, calculate scores, rank Top 30, create Dashboard, create Social Card, create Social Radar, create Blog, create Cover, create SEO image, create Table Cards |
 | Deep-Scan Research Mode | Must not create Formal Blog, Cover, SEO Image, Blog Table Cards, final WhatsApp publishing post, or full Social Publishing Materials unless Trigger C requirements are met |
 | Top Gainers Input Only | Must not trigger scoring, Watchlist update, Dashboard, Blog, or Social package |
 | Market Context Input Only | Must not trigger scoring, Watchlist update, Dashboard, Blog, or Social package |
@@ -304,7 +306,8 @@ flowchart TD
     D8 --> D10["Company Analysis"]
     D8 --> D11["Dashboard"]
     D8 --> D12["Social Card"]
-    D8 --> D13["Research Outputs"]
+    D8 --> D13["Social Radar"]
+    D8 --> D14["Research Outputs"]
 
     E["Trigger C Requirements"] --> F["Cumulative Screener"]
     E --> G["Top Gainers"]
