@@ -142,6 +142,22 @@ function Resolve-AplManagedMetaPath([string]$MetaPath,[string]$Value,[string]$Al
   return Assert-AplNoReparsePath -Path $candidate -AllowedRoot $AllowedRoot -RequireFile
 }
 
+function Assert-AplWhatsAppSequence([string]$Text,[string]$ScanDate){
+  $effectiveDate=[datetime]::ParseExact('2026-08-05','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+  $scanDateValue=[datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+  if($scanDateValue-lt$effectiveDate){return $true}
+  $articleUrl='https://www.goinvestingnow.com/blog/apl-momentum-leaders-'+$ScanDate
+  if([int]$Text.IndexOf($articleUrl,[StringComparison]::Ordinal)-lt0){throw 'WhatsApp must contain the exact-date article URL.'}
+  if([int]$Text.IndexOf('APL Deep-Scan',[StringComparison]::Ordinal)-lt0-and[int]$Text.IndexOf('APL Momentum Leaders',[StringComparison]::Ordinal)-lt0){throw 'WhatsApp must contain an explicit APL viewpoint.'}
+  if([string]$Text -notmatch '觀察|關注|投資者|下一步|watch|Watch'){throw 'WhatsApp must state investor watchpoints or next confirmation signals.'}
+  if([string]$Text -notmatch '不構成投資建議|研究摘要'){throw 'WhatsApp must end with a research disclaimer.'}
+  $explicitMarkers=@('市場事件：','APL 觀點：','投資者應關注：','詳細文章：')
+  $positions=@($explicitMarkers|ForEach-Object{[int]$Text.IndexOf($_,[StringComparison]::Ordinal)})
+  $present=@($positions|Where-Object{$_-ge0})
+  if($present.Count-eq$explicitMarkers.Count){for($i=1;$i-lt$positions.Count;$i++){if($positions[$i]-le$positions[$i-1]){throw 'Explicit WhatsApp labels are out of order.'}}}
+  return $true
+}
+
 function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[string]$WhatsAppPath,[string]$CompanyPath,[string]$MarketPath,[string]$TopGainersPath,[string]$MetaPath,[string]$AllowedRoot,[string]$ScanDate){
   $markdown=[IO.File]::ReadAllText($MarkdownPath,[Text.Encoding]::UTF8)
   $html=[IO.File]::ReadAllText($HtmlPath,[Text.Encoding]::UTF8)
@@ -152,19 +168,18 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
   if($allEditorial-match'(?i)\bplaceholder\b|lorem ipsum|\bTODO\b|\bTBD\b|\[insert|\[market|\[section|test sentence|smoke test|dummy content|sample text'){throw 'Editorial artifacts contain placeholder or test content.'}
   if(@([regex]::Matches($markdown,'[\u3400-\u9FFF]')).Count-lt500){throw 'Blog Markdown does not contain substantive Chinese editorial analysis.'}
 
-  $topGainersHeading=Get-AplCanonicalTopGainersTitle
-  $mandatory=[ordered]@{
-    'Executive Summary'=80
-    'Market Context'=160
-    '為什麼要看 APL Momentum Leaders 領導股？'=120
-    'Deep-Scan Overview'=120
-    $topGainersHeading=150
-    'Momentum Leaders Analysis'=180
-    'Sector Analysis'=120
-    'Relative Volume / Market Activity'=120
-    'Risk'=120
-    'Deep-Scan Conclusion'=120
-  }
+  $headingMap=Get-AplBlogHeadingMap -ScanDate $ScanDate
+  $topGainersHeading=[string]$headingMap.TopGainers
+  $mandatory=[ordered]@{}
+  $mandatory[[string]$headingMap.ExecutiveSummary]=80
+  $mandatory[[string]$headingMap.MarketContext]=160
+  $mandatory[[string]$headingMap.WhyAPL]=120
+  $mandatory[[string]$headingMap.DeepScanOverview]=120
+  $mandatory[[string]$headingMap.TopGainers]=150
+  $mandatory[[string]$headingMap.MomentumLeaders]=180
+  $mandatory[[string]$headingMap.SectorAnalysis]=120
+  $mandatory[[string]$headingMap.Risk]=120
+  $mandatory[[string]$headingMap.DeepScanConclusion]=120
   $mdHeadings=@([regex]::Matches($markdown,'(?m)^##\s+(.+?)\s*$')|ForEach-Object{$_.Groups[1].Value.Trim()})
   $htmlHeadings=@([regex]::Matches($html,'(?is)<h3>\s*(.*?)\s*</h3>')|ForEach-Object{ConvertTo-AplPlainText $_.Groups[1].Value})
   $previousMd=-1;$previousHtml=-1
@@ -193,24 +208,24 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
     $scanDateValue=[datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
     if($scanDateValue-ge$effectiveDate-and-not$mdTitle.StartsWith($requiredPrefix,[StringComparison]::Ordinal)){throw "Formal Blog title must begin with '$requiredPrefix' from $effectiveFrom onward."}
   }
-  $marketSection=Get-AplMarkdownSection $markdown 'Market Context'
+  $marketSection=Get-AplMarkdownSection $markdown ([string]$headingMap.MarketContext)
   $coreThesis=Get-AplCoreMarketThesis $market 'Approved Market Context'
   $marketPlain=ConvertTo-AplPlainText $marketSection
   if(@([regex]::Matches($marketPlain,'[\u3400-\u9FFF]')).Count-lt80){throw 'Blog Market Context is only a heading, placeholder, or extremely short summary.'}
   $marketBlocks=@($marketSection-split'(?:\r?\n){2,}'|ForEach-Object{$_.Trim()}|Where-Object{-not[string]::IsNullOrWhiteSpace($_)-and$_-notmatch'^###\s+'})
   if($marketBlocks.Count-lt1-or@($marketBlocks|Where-Object{$_-notmatch'(?m)^\s*(?:[-*+]|\d+[.)])\s+'}).Count-eq0){throw 'Blog Market Context is only a news list without analytical prose.'}
-  $executivePlain=ConvertTo-AplPlainText (Get-AplMarkdownSection $markdown 'Executive Summary')
+  $executivePlain=ConvertTo-AplPlainText (Get-AplMarkdownSection $markdown ([string]$headingMap.ExecutiveSummary))
   if($marketPlain-ceq$executivePlain){throw 'Blog Market Context is replaced by the Executive Summary.'}
   $sourceNumbers=@(Get-AplNumericClaims $market)
   $blogNumbers=@(Get-AplNumericClaims $marketSection)
   foreach($number in $blogNumbers){if($sourceNumbers-cnotcontains$number){throw "Blog Market Context contains a numeric claim not found in the approved source: $number"}}
   $sourceMarketHeadings=@([regex]::Matches($market,'(?m)^#{2,3}\s+(.+?)\s*$')|ForEach-Object{$_.Groups[1].Value.Trim()})
-  $outsideContext=$html-replace'(?is)<h3>\s*Market Context\s*</h3>.*?(?=<h3>)',''
+  $outsideContext=$html-replace("(?is)<h3>\s*"+[regex]::Escape([string]$headingMap.MarketContext)+"\s*</h3>.*?(?=<h3>)"),''
   if($outsideContext-match'(?is)<h4>'){throw 'HTML h4 is allowed only inside Market Context.'}
 
   $meta=Read-AplStrictJson $MetaPath $AllowedRoot
   if([string]$meta.scanDate-cne$ScanDate){throw 'Trigger B metadata ScanDate mismatch.'}
-  $overview=ConvertTo-AplPlainText (Get-AplMarkdownSection $markdown 'Deep-Scan Overview')
+  $overview=ConvertTo-AplPlainText (Get-AplMarkdownSection $markdown ([string]$headingMap.DeepScanOverview))
   foreach($field in @('universe','qualified','leaders','leaderLock','removedBelowSma200Count','finalWatchlistCount','averageMomentum','averageBuyability')){
     $value=[string]$meta.$field;$escaped=[regex]::Escape($value)
     if($value-match'\.'){ $pattern='(?<![0-9])'+$escaped+'0*(?![0-9])' }else{ $pattern='(?<![0-9])'+$escaped+'(?![0-9])' }
@@ -227,12 +242,13 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
   foreach($symbol in $topSymbols){if($topSection-cnotmatch("(?<![A-Z0-9.])"+[regex]::Escape($symbol)+"(?![A-Z0-9.])")){throw "Blog Top Gainers section missing source leader: $symbol"}}
   foreach($scopeCode in @('SPX','NDX','DJI')){if($topSection-cnotmatch("(?<![A-Z0-9])"+$scopeCode+"(?![A-Z0-9])")){throw "Blog Top Gainers section missing required constituent scope: $scopeCode."}}
 
-  $conclusion=ConvertTo-AplPlainText (Get-AplMarkdownSection $markdown 'Deep-Scan Conclusion')
+  $conclusion=ConvertTo-AplPlainText (Get-AplMarkdownSection $markdown ([string]$headingMap.DeepScanConclusion))
   $keywords=@($sourceMarketHeadings|ForEach-Object{$_-split'[：，、／/\s]+'}|Where-Object{$_.Length-ge2-and$_-notin@('市場','背景','風險','重新','開始')})
   if($keywords.Count-gt0-and@($keywords|Where-Object{$conclusion.Contains($_)}).Count-lt1){throw 'Deep-Scan Conclusion does not respond to the Market Context proposition.'}
   if((ConvertTo-AplPlainText $whatsApp).Length-lt250){throw 'WhatsApp artifact is an empty or summary shell.'}
   $firstScreen=(ConvertTo-AplPlainText $whatsApp);if($firstScreen.Length-gt400){$firstScreen=$firstScreen.Substring(0,400)}
   if($keywords.Count-gt0-and@($keywords|Where-Object{$firstScreen.Contains($_)}).Count-lt1){throw 'WhatsApp first screen does not state the main market change.'}
+  Assert-AplWhatsAppSequence $whatsApp $ScanDate|Out-Null
   return [pscustomobject]@{MandatorySections=[string[]]$mandatory.Keys;Sections=$sections;TriggerBMeta=$meta;TopGainers=[string[]]$topSymbols;MarkdownTitle=$mdTitle;MarketContextIntegrity=[pscustomobject]@{CoreThesis=$coreThesis;MarkdownCharacters=$marketPlain.Length;ChineseCharacters=@([regex]::Matches($marketPlain,'[\u3400-\u9FFF]')).Count;NumericClaimsValidated=[string[]]$blogNumbers;NotExecutiveSummary=$true;MechanicalIntegrity=$true}}
 }
 
@@ -386,8 +402,11 @@ $csv=Read-AplDelimitedCsv $InputCsv
 $manifest=Read-AplStrictJson $TableCardManifestPath $allowedRoot
 if([string]$manifest.SchemaVersion-cne'APL Table Card Manifest v1.1'-or[string]$manifest.ScanDate-cne$ScanDate){throw 'Table Card manifest schema/date mismatch.'}
 $requiredTypes=@('ExecutiveSummary','TopLeaders','TopGainers','SectorStructure')
+$directionEffectiveDate=[datetime]::ParseExact('2026-08-05','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+$requireChineseDirection=([datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)-ge$directionEffectiveDate)
+$requireChineseExecutiveSummary=$requireChineseDirection
 $tableCardSources=@{}
-foreach($type in $requiredTypes){$records=@($manifest.Cards|Where-Object{[string]$_.CardType-eq$type-and$_.Required-eq$true});if($records.Count-ne 1){throw "Managed inputs require exactly one $type card."};$input=[string]$records[0].InputPath;$base=Split-Path $TableCardManifestPath -Parent;$path=if([IO.Path]::IsPathRooted($input)){$input}else{Join-Path $base $input};$path=Assert-AplNoReparsePath -Path $path -AllowedRoot $allowedRoot -RequireFile;$json=Read-AplStrictJson $path $allowedRoot;[void](Assert-AplTableCardContract $json $type);$tableCardSources[$type]=[pscustomobject]@{Path=$path;Json=$json}}
+foreach($type in $requiredTypes){$records=@($manifest.Cards|Where-Object{[string]$_.CardType-eq$type-and$_.Required-eq$true});if($records.Count-ne 1){throw "Managed inputs require exactly one $type card."};$input=[string]$records[0].InputPath;$base=Split-Path $TableCardManifestPath -Parent;$path=if([IO.Path]::IsPathRooted($input)){$input}else{Join-Path $base $input};$path=Assert-AplNoReparsePath -Path $path -AllowedRoot $allowedRoot -RequireFile;$json=Read-AplStrictJson $path $allowedRoot;[void](Assert-AplTableCardContract $json $type -RequireChineseDirection:$requireChineseDirection -RequireChineseExecutiveSummary:$requireChineseExecutiveSummary);$tableCardSources[$type]=[pscustomobject]@{Path=$path;Json=$json}}
 $triggerBMeta=Read-AplStrictJson $TriggerBMetaPath $allowedRoot
 if([string]$triggerBMeta.scanDate-cne$ScanDate){throw 'Trigger B metadata ScanDate mismatch.'}
 if($csv.Rows.Count-ne[int]$triggerBMeta.universe){throw "Cumulative screener row count does not match Trigger B metadata universe. Csv=$($csv.Rows.Count); Meta=$($triggerBMeta.universe)."}

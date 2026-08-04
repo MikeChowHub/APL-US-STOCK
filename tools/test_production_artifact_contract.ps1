@@ -168,7 +168,18 @@ try {
   $editorialAuditPath = Assert-AplNoReparsePath -Path (Join-Path $packageRoot "APL_Editorial_Completion_Audit_${ScanDate}.json") -AllowedRoot $packageRoot -RequireFile
   $editorialAudit = Read-AplStrictJson $editorialAuditPath $packageRoot
   if ([string]$editorialAudit.SchemaVersion -cne [string]$readinessContract.SchemaVersion -or [string]$editorialAudit.ScanDate -cne $ScanDate -or [string]$editorialAudit.Status -cne 'PASS' -or $editorialAudit.EditorialCompletion -ne $true -or $editorialAudit.ProductionReadiness -ne $true -or $editorialAudit.DailyProductionPublishableCandidate -ne $true) { throw 'Editorial Completion Audit schema/date/status/readiness mismatch.' }
-  $mandatorySections=@('Executive Summary','Market Context','為什麼要看 APL Momentum Leaders 領導股？','Deep-Scan Overview',(Get-AplCanonicalTopGainersTitle),'Momentum Leaders Analysis','Sector Analysis','Relative Volume / Market Activity','Risk','Deep-Scan Conclusion')
+  $headingMap=Get-AplBlogHeadingMap -ScanDate $ScanDate
+  $mandatorySections=@(
+    [string]$headingMap.ExecutiveSummary,
+    [string]$headingMap.MarketContext,
+    [string]$headingMap.WhyAPL,
+    [string]$headingMap.DeepScanOverview,
+    [string]$headingMap.TopGainers,
+    [string]$headingMap.MomentumLeaders,
+    [string]$headingMap.SectorAnalysis,
+    [string]$headingMap.Risk,
+    [string]$headingMap.DeepScanConclusion
+  )
   if(@($editorialAudit.MandatorySections).Count-ne$mandatorySections.Count){throw 'Editorial Completion Audit mandatory section count mismatch.'}
   for($i=0;$i-lt$mandatorySections.Count;$i++){if([string]$editorialAudit.MandatorySections[$i]-cne$mandatorySections[$i]){throw 'Editorial Completion Audit mandatory section order mismatch.'}}
   foreach($name in @($readinessContract.RequiredChecks)){if($null-eq$editorialAudit.Checks.PSObject.Properties[[string]$name]-or$editorialAudit.Checks.([string]$name)-ne$true){throw "Editorial Completion Audit check is not PASS: $name"}}

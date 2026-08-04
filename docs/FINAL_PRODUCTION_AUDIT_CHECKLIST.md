@@ -1,5 +1,12 @@
 # Final Production Audit Checklist
 
+## Blog heading language gate
+
+- [ ] For ScanDate 2026-08-05 and later, all nine major Blog headings use `English｜short Chinese gloss` in both Markdown and HTML, in the fixed order: `Executive Summary｜執行摘要`, `Market Context｜市場背景`, `Why APL Momentum Leaders Matter｜為什麼要看領導股？`, `Deep-Scan Overview｜深度掃描概覽`, `Top Gainers — Past 7 Days｜最近七日升幅榜`, `Momentum Leaders Analysis｜動能領導股分析`, `Sector Analysis｜板塊結構分析`, `Risk｜風險`, `Deep-Scan Conclusion｜深度掃描結論`.
+- [ ] The bilingual `Top Gainers — Past 7 Days｜最近七日升幅榜` form is a Blog heading only; the TopGainers Table Card title remains exact English `Top Gainers — Past 7 Days`.
+- [ ] Packages before 2026-08-05 retain their legacy English-only headings and are not rewritten.
+- [ ] `SectorStructure.direction` contains a concise Chinese market-direction／capital-structure summary; English-only text fails the Table Card semantic gate. `representativeSymbols` remains the only symbol-list field.
+
 本 checklist 是 Archive gate。所有必要項目 PASS 後，runner 才可自動進入 Archive。
 
 ## Production output
@@ -7,12 +14,12 @@
 ### Editorial completion gate
 
 - [ ] `APL_Editorial_Completion_Audit_<ScanDate>.json`為required publishing artifact，schema/date/status及四份editorial artifact SHA均PASS。
-- [ ] Blog Markdown及HTML均包含十個mandatory sections，順序一致且每節有實質內容。
+- [ ] Blog Markdown及HTML均包含九個mandatory sections，順序一致且每節有實質內容；Relative Volume / Market Activity 不再是必需 Blog section。
 - [ ] Blog沒有placeholder、template instruction、英文test sentence、單段摘要殼或只有標題的section。
 - [ ] 自 2026-08-03 起，Blog Markdown `#` 與 HTML `<h1>` 均以固定身份前綴 `APL Deep-Scan 美股深海雷達` 開始，且其後接當期核心市場結論。
 - [ ] Market Context提出清楚核心命題，以受管事實形成因果推理，並自然帶入APL Momentum Leaders；沒有被Executive Summary取代。
 - [ ] Deep-Scan Overview數字與當次Trigger B metadata一致；Top Gainers section使用當次Top Gainers CSV證據。
-- [ ] WhatsApp第一屏交代最大市場改變，並只保留移動閱讀所需證據；在分析後、disclaimer前包含與ScanDate完全相符的`詳細文章：https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD`；Company Business Analysis涵蓋當次完整Top 30 symbols且不是空殼。
+- [ ] WhatsApp第一屏交代最大市場改變，並只保留移動閱讀所需證據；新日期按「標題／文章 URL → 市場事件 → APL 觀點 → 投資者關注與風險 → CTA／disclaimer」的自然敘事順序，包含與ScanDate完全相符的文章 URL及研究 disclaimer；Company Business Analysis涵蓋當次完整Top 30 symbols且不是空殼。2026-08-04 legacy Archive不回寫。
 - [ ] Final authoritative state同時為`DailyProductionComplete=true`及`DailyProductionPublishable=true`；任一為false即FAIL。
 
 ### Cover／SEO native composition
@@ -39,6 +46,7 @@
 - [ ] `TopGainers`逐列symbol／company identity／change percentage與當次SPX／NDX／DJI成分股 Top Gainers CSV一致；重複的非Symbol header不影響核對。
 - [ ] `SectorStructure`每個representative symbol均存在於當次Trigger B Top 30，沒有跨群組重複或虛構代表股。
 - [ ] `ExecutiveSummary`包含3至5個當期最高優先觀察及其意義；沒有被固定Universe／Qualified／Leaders funnel佔據，亦沒有複製其他Table Card rows。
+- [ ] 新日期 `ExecutiveSummary` 的 `observation`／`meaning` 均為中文讀者向文字；數字必須連接至市場含義，且 Leader Lock、Buyability 等術語已在 meaning 解釋。只有 raw metric dump、英文-only 或未解釋術語必須令 semantic gate FAIL；2026-08-04 legacy Archive 維持 immutable。
 - [ ] Editorial Completion Audit為v1.1、`ProductionReadiness=true`，14個source roles的relative path／bytes／SHA-256完整且唯一，Table Card及native composition integrity checks全部PASS。
 - [ ] Runner trace顯示`ManagedInputPreflight`在`ScoringRanking`之前PASS，並在其後完成`VerifyTriggerBEvidence`；正式run不可只依賴人工先行preflight。
 - [ ] `production-package/APL_Production_Package_Manifest_<ScanDate>.json` schema/date/status PASS，required id/path集合完整且沒有重複。
@@ -66,9 +74,11 @@
 - [ ] 全文有唯一、當期特定的核心市場命題；沒有預設固定股票、板塊或市場結論。
 - [ ] 每個主要 section 只完成一個明確推理任務，並建立在上一節的結果之上。
 - [ ] 沒有重複結論卻未新增證據、重新由零開始解釋市場背景，或可任意交換順序的獨立 section。
+- [ ] 已對九個主要 section 做 normalized paragraph comparison；沒有同一個長段落／完整 Market Context source block 在三個或以上 section 重複，亦沒有以重複文字滿足長度或字符 gate。
+- [ ] Executive Summary、Top Gainers、Momentum Leaders、Sector、Risk 及 Conclusion 都有自己的新推論；任何跨 section 重複句只可作短句承接，不可承載整段分析。
 - [ ] Top Gainers — Past 7 Days 與 Momentum Leaders 有清楚的短線／中期資金對照。
 - [ ] Sector Analysis 由個股強勢推進至產業群組判斷。
-- [ ] Relative Volume／Market Activity 實際參與確認或質疑核心命題，而非獨立描述成交量。
+- [ ] 如 Blog 選擇保留 Relative Volume／Market Activity，該段只能作補充證據，不得重新成為必需 section 或獨立市場評論。
 - [ ] Risk 直接提出可能推翻核心命題的條件；Deep-Scan Conclusion 回答文章開頭的市場問題，且沒有新增前文未出現的論點。
 - [ ] 移除任一主要分析 section 會令推理鏈中斷，證明各 section 不可任意交換。
 - [ ] Final audit 證據已寫入 `Final_Production_Audit_YYYY-MM-DD.json`，`Status=PASS`。

@@ -65,7 +65,7 @@
       "type": "object",
       "required": ["observation", "meaning"],
       "additionalProperties": false,
-      "properties": { "observation": { "$ref": "#/$defs/nonBlank" }, "meaning": { "$ref": "#/$defs/nonBlank" } }
+      "properties": { "observation": { "type": "string", "minLength": 1, "pattern": "[\\u3400-\\u9FFF]" }, "meaning": { "type": "string", "minLength": 1, "pattern": "[\\u3400-\\u9FFF]" } }
     },
     "topLeaderRow": {
       "type": "object",
@@ -98,7 +98,7 @@
       "properties": {
         "theme": { "$ref": "#/$defs/nonBlank" },
         "count": { "type": "integer", "minimum": 1 },
-        "direction": { "$ref": "#/$defs/nonBlank" },
+        "direction": { "type": "string", "minLength": 1, "pattern": "[\\u3400-\\u9FFF]" },
         "representativeSymbols": { "type": "string", "pattern": "^[A-Z0-9][A-Z0-9.-]*(?:,\\s*[A-Z0-9][A-Z0-9.-]*)*$" }
       }
     },

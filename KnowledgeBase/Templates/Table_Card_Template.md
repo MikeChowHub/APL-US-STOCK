@@ -85,6 +85,8 @@ Summarize the issue's most important observations.
 - 3–5 key observations;
 - short implication for each observation.
 
+For new packages, write both `Observation` and `Meaning` as concise Chinese reader-facing prose. Do not paste raw field labels such as `Universe 604; qualified 314`, or unexplained English-only metric names. If a metric is material, state what it implies for concentration, breadth, participation or entry difficulty; explain `Leader Lock`, `Buyability` and similar terms in the paired `Meaning` text.
+
 ### Variable Elements
 
 - market theme;
@@ -109,6 +111,17 @@ Meaning
 - raw CSV fields.
 - a fixed Universe／Qualified／Leaders funnel that duplicates Deep-Scan Overview or Dashboard;
 - row-level repetition of the TopLeaders, TopGainers or SectorStructure cards.
+
+### ExecutiveSummary writing example
+
+Use a short Chinese observation that gives the figure a reader-facing meaning, followed by a Chinese explanation:
+
+```text
+Observation：數據現狀：全市場 604 檔，經篩選後合格者 314 檔，最終 Top 30 僅佔 9.5%，顯示資金集中度極高。
+Meaning：這個集中度表示指數反彈未等於全面擴散，後續要看領導股能否由少數個股擴展至更多產業群組。
+```
+
+Do not start the observation with raw labels such as `Universe`, `qualified`, `average Momentum` or `final watchlist`. Explain `Leader Lock` and `Buyability` in `Meaning` when those terms are material to the issue.
 
 ### Example Content Logic
 

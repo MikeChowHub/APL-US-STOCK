@@ -16,11 +16,15 @@ Formal Blog Production
 
 This template is private editorial guidance, never a publishable artifact. Every bracketed instruction and example sentence must be replaced with issue-specific analysis before Managed Input Preflight. Copying the skeleton, emitting only one section, or using a short summary as the Blog must fail editorial completion.
 
-For newly created packages from 2026-08-03 onward, use this exact title structure in both Markdown and HTML:
+For newly created packages from 2026-08-03 onward, use this exact full title structure in Markdown, HTML and the Page title metadata:
 
 ```text
-APL Deep-Scan 美股深海雷達：[當期核心市場結論]
+APL Deep-Scan 美股深海雷達: [當期核心市場結論] | YYYY-MM-DD
 ```
+
+The market conclusion is mandatory. Use an ASCII colon and the exact separator ` | ` before the ISO date. A prefix-only title or a prefix followed only by a date is invalid; `#`, `<h1>` and `Page title：` must use the same full string.
+
+For newly created packages from 2026-08-05 onward, major Blog headings use English first followed by a short Chinese gloss with `｜`. Packages before that date retain English-only headings and are not rewritten. This presentation rule applies to Blog Markdown and Blog HTML only; Table Card semantic titles remain governed by their own contracts.
 
 Trigger C preparation order is fixed:
 
@@ -43,31 +47,30 @@ Do not use this template for Trigger A or Trigger B alone.
 Before drafting, define one issue-specific core market proposition. It is editorial guidance only and must not appear as a labelled field in the formal Blog.
 
 ```text
-Market Context
+Executive Summary｜執行摘要
+↓
+Market Context｜市場背景
 → What is the largest structural market change?
 
-為什麼要看 APL Momentum Leaders 領導股？
+Why APL Momentum Leaders Matter｜為什麼要看領導股？
 → Why is the broad index insufficient for understanding capital flow?
 
-Deep-Scan Overview
+Deep-Scan Overview｜深度掃描概覽
 → Does quantitative evidence show leadership still exists?
 
-Top Gainers — Past 7 Days
+Top Gainers — Past 7 Days｜最近七日升幅榜
 → Is short-term capital defensive, rotating, or pursuing risk?
 
-Momentum Leaders Analysis
+Momentum Leaders Analysis｜動能領導股分析
 → Which companies and business models are receiving medium-term capital?
 
-Sector Analysis
+Sector Analysis｜板塊結構分析
 → Has individual strength formed an industry group?
 
-Relative Volume / Market Activity
-→ Is the leadership structure confirmed by volume and market participation?
-
-Risk
+Risk｜風險
 → What could disprove the interpretation?
 
-Deep-Scan Conclusion
+Deep-Scan Conclusion｜深度掃描結論
 → What answers the opening question, and what is the next confirmation signal?
 ```
 
@@ -87,6 +90,10 @@ For Market Context, also answer privately before drafting:
 - 是否有兩項以上證據其實支持同一論點，可以合併？
 - 是否重複解釋相同的估值、利率或資本回報概念？
 - Market Context 是否能在最少必要篇幅內完成推理？
+
+### Editorial contamination preflight
+
+Before submitting the managed package, compare the normalized paragraphs in every major section. Do not copy the core thesis, the full Market Context source list or one long paragraph into multiple sections. Each section must contain a new section-specific inference and a transition to the next question. If a repeated block appears in three or more sections, rewrite the sections before preflight; character count and numeric-source coverage are not evidence of editorial completion.
 
 Each section completes one reasoning task, begins with an issue-specific transition from the preceding conclusion, and ends by naturally introducing the next question. Sections must not be independently exchangeable.
 
@@ -123,7 +130,27 @@ The `.md` file is the editorial manuscript and must end with the Markdown-only `
 
 The same editorial preparation also creates two independent companion text artifacts:
 
-- `WhatsApp_<ScanDate>.md`: a concise distribution message whose first screen states the largest market change; it selects only the evidence needed for mobile reading and does not reproduce the complete Blog. After its analysis and before its disclaimer, include `詳細文章：https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD`.
+- `WhatsApp_<ScanDate>.md`: a concise distribution message whose first screen states the largest market change; it selects only the evidence needed for mobile reading and does not reproduce the complete Blog. From 2026-08-05, use this narrative order: title／article URL, market event, APL Deep-Scan viewpoint, investor watchpoints／risk, reading CTA and disclaimer. Short paragraphs and `•` bullets are encouraged; literal block labels are optional. The article URL must match the ScanDate exactly.
+
+Recommended WhatsApp shape:
+
+```markdown
+**APL Deep-Scan 美股深海雷達**
+**[Issue-specific conclusion] | YYYY-MM-DD**
+https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD
+
+[Market event and why the market standard changed.]
+
+📊 **APL Deep-Scan 觀察近期美股領導結構**，[APL interpretation and sectors/business models.]
+
+• [Investor watchpoint 1]
+• [Investor watchpoint 2]
+• [Risk or falsification condition]
+
+🐧 APL Deep-Scan [reading CTA].
+
+研究摘要，不構成投資建議。
+```
 - `APL_Momentum_Leaders_Top_30_Company_Business_Analysis_<ScanDate>.md`: a company and business-model reference for the current Top 30; it does not repeat the Blog's market argument.
 
 ## 4. Market Context detailed structure
@@ -151,10 +178,10 @@ The managed source is authoritative for facts, dates, numbers, company names, ev
 ```html
 <h1>APL Deep-Scan 美股深海雷達：[當期核心市場結論]</h1>
 
-<h3>Executive Summary</h3>
+<h3>Executive Summary｜執行摘要</h3>
 <p>[One concise market observation.]</p>
 
-<h3>Market Context</h3>
+<h3>Market Context｜市場背景</h3>
 
 <h4>[市場背景小標題一]</h4>
 <p>[One or more paragraphs interpreting this market background through capital flow and leadership structure.]</p>
@@ -162,29 +189,26 @@ The managed source is authoritative for facts, dates, numbers, company names, ev
 <h4>[市場背景小標題二]</h4>
 <p>[One or more paragraphs preserving the next major market argument.]</p>
 
-<h3>為什麼要看 APL Momentum Leaders 領導股？</h3>
+<h3>Why APL Momentum Leaders Matter｜為什麼要看領導股？</h3>
 <p>[Transition from Market Context: explain why the broad index cannot reveal the capital shift, then explain the framework. End by asking whether the quantitative evidence still shows leadership. Not a recommendation list.]</p>
 
-<h3>Deep-Scan Overview</h3>
+<h3>Deep-Scan Overview｜深度掃描概覽</h3>
 <p>[Transition from framework to evidence: explain what the quantitative results support or challenge in the core proposition, not only the counts. End by asking whether short-term capital selection is consistent.]</p>
 
-<h3>Top Gainers — Past 7 Days</h3>
+<h3>Top Gainers — Past 7 Days｜最近七日升幅榜</h3>
 <p>[Transition from overview: contrast short-term price leadership with medium-term leadership, then ask where medium-term capital is actually moving.]</p>
 <p>Scope: SPX／NDX／DJI constituents. The ranking, prices and changes are point-in-time market data and may change with the market.</p>
 
-<h3>Momentum Leaders Analysis</h3>
+<h3>Momentum Leaders Analysis｜動能領導股分析</h3>
 <p>[Transition from short-term comparison: explain which companies and business models receive medium-term capital, then ask whether they form an industry group.]</p>
 
-<h3>Sector Analysis</h3>
+<h3>Sector Analysis｜板塊結構分析</h3>
 <p>[Transition from individual leaders: determine whether the strength forms an industry group, then ask whether participation confirms it.]</p>
 
-<h3>Relative Volume / Market Activity</h3>
-<p>[Transition from group structure: use volume and participation to confirm or question the leadership thesis, then identify its vulnerabilities.]</p>
+<h3>Risk｜風險</h3>
+<p>[Transition from sector structure: identify conditions that could disprove the core proposition, then lead to the final judgment without investment advice.]</p>
 
-<h3>Risk</h3>
-<p>[Transition from participation evidence: identify conditions that could disprove the core proposition, then lead to the final judgment without investment advice.]</p>
-
-<h3>Deep-Scan Conclusion</h3>
+<h3>Deep-Scan Conclusion｜深度掃描結論</h3>
 <p>[Return to the Market Context opening question; integrate only prior evidence and state the next confirmation signal without adding a new argument.]</p>
 
 <h3>Call to Action</h3>
@@ -199,7 +223,7 @@ The fenced block above demonstrates the required source structure only. Write th
 
 The HTML file must not end with `詳細文章`, `Page title` or `Page description` paragraphs. Keep those fields outside the HTML source.
 
-`<h3>Top Gainers — Past 7 Days</h3>` is canonical and immutable. Do not append `｜...`, a market theme or any issue-specific subtitle to this heading; place that context in the next `<p>`.
+From 2026-08-05, the Blog heading is `<h3>Top Gainers — Past 7 Days｜最近七日升幅榜</h3>`. The Table Card title remains exact English `Top Gainers — Past 7 Days` and must not receive the Chinese suffix. Put issue-specific interpretation in the following `<p>`.
 
 ---
 

@@ -77,6 +77,32 @@ APL Breakout Screener Cumulative_YYYY-MM-DD_<suffix>.csv
 | Market Context only | Supporting input only | Record and validate the input; wait for the remaining Trigger C inputs | No scoring, Watchlist update, Dashboard, Blog, or Social package |
 | Unknown CSV filename | Unclassified input | Inspect non-destructively, then ask a focused classification question | Do not infer Trigger A, B, or C |
 
+## 4A. External upload intake and Trigger A output boundary
+
+An uploaded CSV may initially be located in `Downloads` or another path outside the repository. That path is intake-only and must never be passed directly to a production script. The workflow must first copy the file into the repository-managed, date-scoped intake directory:
+
+```text
+work/trigger-a-inputs/YYYY-MM-DD/
+```
+
+The source and managed copy must have identical bytes and SHA-256. The managed copy is then parsed with the approved robust CSV parser; ordinary `Import-Csv` must not be used when duplicate headers are present. Trigger A must run in this order:
+
+```text
+Repository intake copy
+→ SHA-256 verification
+→ robust CSV validation
+→ Trigger A dry-run
+→ Trigger A write-output
+```
+
+The dry-run must pass before any output write. The only Trigger A output is written to:
+
+```text
+outputs/trigger-a/YYYY-MM-DD/APL_Quant_Cumulative_Watchlist_YYYY-MM-DD.txt
+```
+
+Trigger A must never create `outputs/YYYY-MM-DD/`, which is reserved for the complete atomic Production package. The intake copy is an input fixture, not a rule source, and must not be used to bypass the canonical repository-managed watchlist baseline.
+
 ## 5. Trigger A automatic response
 
 For a canonical daily input such as:

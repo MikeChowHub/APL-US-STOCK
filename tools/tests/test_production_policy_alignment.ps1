@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param()
 
 $ErrorActionPreference='Stop'
@@ -43,12 +43,17 @@ try{
   Invoke-Expression (Get-FunctionDefinition 'tools\validate_managed_inputs.ps1' 'ConvertTo-AplPlainText')
   Invoke-Expression (Get-FunctionDefinition 'tools\validate_managed_inputs.ps1' 'Get-AplCoreMarketThesis')
   Invoke-Expression (Get-FunctionDefinition 'tools\validate_managed_inputs.ps1' 'Assert-AplCoreMarketThesisAlignment')
+  Invoke-Expression (Get-FunctionDefinition 'tools\validate_managed_inputs.ps1' 'Assert-AplWhatsAppSequence')
   $thesis='Energy risk raises the inflation threshold while AI capital spending must convert into earnings and cash flow.'
   try{$actual=Get-AplCoreMarketThesis "$thesisLabel$thesis`r`n`r`n## Evidence" 'fixture';Add-Result 'single-core-thesis-pass' ($actual-ceq$thesis)}catch{Add-Result 'single-core-thesis-pass' $false $_.Exception.Message}
   try{Get-AplCoreMarketThesis '## Evidence only' 'fixture'|Out-Null;Add-Result 'missing-core-thesis-fail' $false 'not rejected'}catch{Add-Result 'missing-core-thesis-fail' $true}
   try{Get-AplCoreMarketThesis "$thesisLabel$thesis`r`n$thesisLabel$thesis" 'fixture'|Out-Null;Add-Result 'duplicate-core-thesis-fail' $false 'not rejected'}catch{Add-Result 'duplicate-core-thesis-fail' $true}
   try{$aligned=Assert-AplCoreMarketThesisAlignment $thesis "  $thesis  ";Add-Result 'cross-platform-thesis-match-pass' ($aligned-ceq$thesis)}catch{Add-Result 'cross-platform-thesis-match-pass' $false $_.Exception.Message}
   try{Assert-AplCoreMarketThesisAlignment $thesis 'A different Cover Brief proposition that does not match the managed source.'|Out-Null;Add-Result 'cross-platform-thesis-mismatch-fail' $false 'not rejected'}catch{Add-Result 'cross-platform-thesis-mismatch-fail' $true}
+  $whatsappPass='**APL Deep-Scan 美股深海雷達**`n**能源風險緩和但 AI 回報進入驗證期 | 2040-01-02**`nhttps://www.goinvestingnow.com/blog/apl-momentum-leaders-2040-01-02`n`n能源風險緩和，指數反彈，但市場仍然選擇性配置。`n`n📊 **APL Deep-Scan 觀察近期美股領導結構**，領導股仍需盈利與成交確認。`n`n• 投資者應關注能源成本、AI 現金流及領導廣度。`n• 下一步觀察成交參與能否擴散。`n`n🐧 APL Deep-Scan 持續追蹤市場變化。`n`n研究摘要，不構成投資建議。'
+  try{Assert-AplWhatsAppSequence $whatsappPass '2040-01-02'|Out-Null;Add-Result 'whatsapp-sequence-pass' $true}catch{Add-Result 'whatsapp-sequence-pass' $false $_.Exception.Message}
+  try{Assert-AplWhatsAppSequence ($whatsappPass-replace'APL Deep-Scan','') '2040-01-02'|Out-Null;Add-Result 'whatsapp-viewpoint-missing-fail' $false 'not rejected'}catch{Add-Result 'whatsapp-viewpoint-missing-fail' $true}
+  try{Assert-AplWhatsAppSequence ($whatsappPass-replace'2040-01-02','2040-01-03') '2040-01-02'|Out-Null;Add-Result 'whatsapp-sequence-date-fail' $false 'not rejected'}catch{Add-Result 'whatsapp-sequence-date-fail' $true}
 
   $runner=Read-RepoText 'tools\run_daily_production.ps1'
   Add-Result 'runner-package-lock-integration' ($runner.Contains('Set-AplPublishedPackageReadOnly $finalDateOut')-and$runner.Contains('Set-AplPublishedFilesReadOnly @($finalAuditPath) $finalDateOut'))

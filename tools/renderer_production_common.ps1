@@ -82,7 +82,7 @@ function Assert-AplStringProperty($Object, [string]$Name, [string]$Label, [switc
   if ($NonEmpty -and [string]::IsNullOrWhiteSpace([string]$property.Value)) { throw "$Label property '$Name' cannot be empty." }
 }
 
-function Get-AplTableCardPresentation([object]$Json, [string]$CardType) {
+function Get-AplTableCardPresentation([object]$Json, [string]$CardType, [switch]$RequireChineseDirection, [switch]$RequireChineseExecutiveSummary) {
   $columns = New-Object System.Collections.Generic.List[object]
   $displayRows = New-Object System.Collections.Generic.List[object]
   $rowIndex = 0
@@ -99,6 +99,9 @@ function Get-AplTableCardPresentation([object]$Json, [string]$CardType) {
         $rowIndex++
         Assert-AplObjectProperties $row @('observation','meaning') @('observation','meaning') "Table card input ExecutiveSummary row $rowIndex"
         foreach ($key in @('observation','meaning')) { Assert-AplStringProperty $row $key "Table card input ExecutiveSummary row $rowIndex" -Required -NonEmpty }
+        if ($RequireChineseExecutiveSummary -and [string]$row.observation -notmatch '[\u3400-\u9FFF]') { throw "Table card input ExecutiveSummary row $rowIndex observation must contain Chinese reader-facing analysis." }
+        if ($RequireChineseExecutiveSummary -and [string]$row.meaning -notmatch '[\u3400-\u9FFF]') { throw "Table card input ExecutiveSummary row $rowIndex meaning must contain Chinese explanation." }
+        if ($RequireChineseExecutiveSummary -and [string]$row.observation -match '^\s*(?:Universe|qualified|Top\s*30|Leader\s*Lock|average\s+Momentum|average\s+Buyability|final\s+watchlist)\b') { throw "Table card input ExecutiveSummary row $rowIndex observation cannot be a raw machine metric label dump." }
         [void]$displayRows.Add([object[]]@([string]$row.observation,[string]$row.meaning))
       }
     }
@@ -157,6 +160,7 @@ function Get-AplTableCardPresentation([object]$Json, [string]$CardType) {
         $symbolListPattern = '^[A-Z0-9][A-Z0-9.-]*(?:,\s*[A-Z0-9][A-Z0-9.-]*)*$'
         if ([string]$row.representativeSymbols -notmatch $symbolListPattern) { throw "Table card input SectorStructure row $rowIndex representativeSymbols must be a comma-separated symbol list." }
         if ([string]$row.direction -match $symbolListPattern) { throw "Table card input SectorStructure row $rowIndex direction cannot contain only symbols." }
+        if ($RequireChineseDirection -and [string]$row.direction -notmatch '[\u3400-\u9FFF]') { throw "Table card input SectorStructure row $rowIndex direction must contain Chinese market-structure text." }
         [void]$displayRows.Add([object[]]@("$($row.theme) | $([int]$row.count)",[string]$row.direction,[string]$row.representativeSymbols))
       }
     }
@@ -202,7 +206,44 @@ function Get-AplCanonicalTopGainersTitle {
   return ('Top Gainers ' + [char]0x2014 + ' Past 7 Days')
 }
 
-function Assert-AplTableCardContract($Json, [string]$ExpectedCardType = '') {
+function Get-AplBlogHeadingMap {
+  param([Parameter(Mandatory = $true)][string]$ScanDate)
+  $scanDateValue = [datetime]::ParseExact($ScanDate, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+  $bilingualFrom = [datetime]::ParseExact('2026-08-05', 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+  $bilingual = $scanDateValue -ge $bilingualFrom
+  $englishTopGainers = Get-AplCanonicalTopGainersTitle
+  if ($bilingual) {
+    return [ordered]@{
+      ExecutiveSummary = 'Executive Summary' + [char]0xFF5C + [char]0x57F7 + [char]0x884C + [char]0x6458 + [char]0x8981
+      MarketContext = 'Market Context' + [char]0xFF5C + [char]0x5E02 + [char]0x5834 + [char]0x80CC + [char]0x666F
+      WhyAPL = 'Why APL Momentum Leaders Matter' + [char]0xFF5C + [char]0x70BA + [char]0x4EC0 + [char]0x9EBC + [char]0x8981 + [char]0x770B + [char]0x9818 + [char]0x5C0E + [char]0x80A1 + [char]0xFF1F
+      DeepScanOverview = 'Deep-Scan Overview' + [char]0xFF5C + [char]0x6DF1 + [char]0x5EA6 + [char]0x6383 + [char]0x63CF + [char]0x6982 + [char]0x89BD
+      TopGainers = $englishTopGainers + [char]0xFF5C + [char]0x6700 + [char]0x8FD1 + [char]0x4E03 + [char]0x65E5 + [char]0x5347 + [char]0x5E45 + [char]0x699C
+      MomentumLeaders = 'Momentum Leaders Analysis' + [char]0xFF5C + [char]0x52D5 + [char]0x80FD + [char]0x9818 + [char]0x5C0E + [char]0x80A1 + [char]0x5206 + [char]0x6790
+      SectorAnalysis = 'Sector Analysis' + [char]0xFF5C + [char]0x677F + [char]0x584A + [char]0x7D50 + [char]0x69CB + [char]0x5206 + [char]0x6790
+      Risk = 'Risk' + [char]0xFF5C + [char]0x98A8 + [char]0x96AA
+      DeepScanConclusion = 'Deep-Scan Conclusion' + [char]0xFF5C + [char]0x6DF1 + [char]0x5EA6 + [char]0x6383 + [char]0x7D50 + [char]0x8AD6
+    }
+  }
+  return [ordered]@{
+    ExecutiveSummary = 'Executive Summary'
+    MarketContext = 'Market Context'
+    WhyAPL = '' + [char]0x70BA + [char]0x4EC0 + [char]0x9EBC + [char]0x8981 + [char]0x770B + ' APL Momentum Leaders ' + [char]0x9818 + [char]0x5C0E + [char]0x80A1 + [char]0xFF1F
+    DeepScanOverview = 'Deep-Scan Overview'
+    TopGainers = $englishTopGainers
+    MomentumLeaders = 'Momentum Leaders Analysis'
+    SectorAnalysis = 'Sector Analysis'
+    Risk = 'Risk'
+    DeepScanConclusion = 'Deep-Scan Conclusion'
+  }
+}
+
+function Get-AplCanonicalBlogTopGainersTitle {
+  param([Parameter(Mandatory = $true)][string]$ScanDate)
+  return [string]((Get-AplBlogHeadingMap -ScanDate $ScanDate).TopGainers)
+}
+
+function Assert-AplTableCardContract($Json, [string]$ExpectedCardType = '', [switch]$RequireChineseDirection, [switch]$RequireChineseExecutiveSummary) {
   $label = 'Table card input'
   $allowed = @('SchemaVersion','CardType','Title','Subtitle','Columns','Rows','SourceNote','FooterNote','Meta')
   Assert-AplObjectProperties $Json $allowed @('SchemaVersion','CardType','Title','Rows') $label
@@ -229,7 +270,7 @@ function Assert-AplTableCardContract($Json, [string]$ExpectedCardType = '') {
     foreach ($name in @('Date','Source','MarketTheme','ProductionNote')) { Assert-AplStringProperty $Json.Meta $name "$label Meta" }
     if ($null -ne $Json.Meta.PSObject.Properties['Date'] -and [string]$Json.Meta.Date -notmatch '^\d{4}-\d{2}-\d{2}$') { throw "$label Meta.Date must use YYYY-MM-DD." }
   }
-  $presentation = Get-AplTableCardPresentation $Json $effectiveCardType
+  $presentation = Get-AplTableCardPresentation $Json $effectiveCardType -RequireChineseDirection:$RequireChineseDirection -RequireChineseExecutiveSummary:$RequireChineseExecutiveSummary
   return [pscustomobject]@{ SchemaVersion=[string]$Json.SchemaVersion; CardType=$effectiveCardType; Rows=$rows.Count; Columns=@($presentation.Columns).Count; Presentation=$presentation }
 }
 

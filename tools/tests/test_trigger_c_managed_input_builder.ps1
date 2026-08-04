@@ -3,6 +3,7 @@ param()
 
 $ErrorActionPreference='Stop'
 $ProjectRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
+. (Join-Path $ProjectRoot 'tools\renderer_production_common.ps1')
 $Script=Join-Path $ProjectRoot 'tools\prepare_trigger_c_managed_inputs.ps1'
 $Runner=Join-Path $ProjectRoot 'tools\run_daily_production.ps1'
 $ScanDate='2040-02-07'
@@ -106,7 +107,9 @@ try{
   )}
   $leaderRows=@(for($i=0;$i-lt3;$i++){$row=$ranking[$i];[ordered]@{rank="#$($i+1)";symbol=[string]$row.Symbol;companyName=[string]$row.Name;coreBusiness='企業營運與市場服務';mainDriver='相對強勢及盈利能見度';compositeScore=[double]$row.'Composite Score'}})
   $leaders=[ordered]@{SchemaVersion='APL Table Card Input v1.1';CardType='TopLeaders';Title='領導公司';Rows=$leaderRows}
-  $topGainersHeading=('Top Gainers '+[char]0x2014+' Past 7 Days')
+  $headingMap=Get-AplBlogHeadingMap -ScanDate $ScanDate
+  $topGainersHeading=Get-AplCanonicalTopGainersTitle
+  $blogTopGainersHeading=[string]$headingMap.TopGainers
   $gainersCard=[ordered]@{SchemaVersion='APL Table Card Input v1.1';CardType='TopGainers';Title=$topGainersHeading;Rows=@(
     [ordered]@{symbol='T001';companyName='Alpha Research 1';sectorTheme='市場服務';changePct='+12.5%'},
     [ordered]@{symbol='T002';companyName='Alpha Research 2';sectorTheme='市場服務';changePct='+10.25%'},
@@ -127,18 +130,26 @@ try{
   $meta=Get-Content -LiteralPath (Join-Path $triggerRoot "APL_Momentum_Leaders_Meta_$ScanDate.json") -Raw -Encoding UTF8|ConvertFrom-Json
   $overviewValues="Universe $($meta.universe)，Qualified $($meta.qualified)，Leaders $($meta.leaders)，Leader Lock $($meta.leaderLock)，Removed $($meta.removedBelowSma200Count)，Final Watchlist $($meta.finalWatchlistCount)，Average Momentum $($meta.averageMomentum)，Average Buyability $($meta.averageBuyability)。"
   $sections=[ordered]@{
-    'Executive Summary'='能源與利率門檻提高後，市場沒有全面失去領導力，但資金更重視盈利能見度、現金流及資本效率。本文沿同一命題檢查短線與中期證據，並評估成交參與能否確認新結構。'
-    'Market Context'='能源利率重估令企業成本與估值折現率同步受壓，市場因此不再只追逐表面增長，而是比較盈利兌現、自由現金流及管理層資本配置。這個結構變化令指數表現不足以解釋個別領導公司的相對強勢，因此需要進一步觀察量化領導股。'
-    '為什麼要看 APL Momentum Leaders 領導股？'='當主要指數同時包含受壓與受惠公司，只看平均升跌會掩蓋資金真正選擇。領導股排名把相對強度、趨勢及參與度放在同一框架，讓分析可以判斷資金是否正建立新的中期方向。'
-    'Deep-Scan Overview'=($overviewValues+' 整體數據顯示領導力仍然存在，但並非所有公司同步上升。數量與平均分數只用來判斷結構是否成立，下一步仍要比較短線升幅榜與中期排名是否指向相同風險取態。')
-    $topGainersHeading='SPX、NDX及DJI成分股的短線資料顯示T001、T002及T003位於升幅前列，反映資金願意追逐具催化因素的公司。短線價格領導提供即時風險偏好證據，但單周升幅不能單獨證明中期趨勢，因此需要與Momentum Leaders排名對照。'
-    'Momentum Leaders Analysis'='中期排名顯示領導公司同時保持相對強勢與較完整趨勢，資金不是無差別追價，而是集中於盈利路徑較清晰及資本效率較高的企業。這項結果承接短線證據，並帶出個股強勢能否形成群組。'
-    'Sector Analysis'='由個股推進至群組後，可見選擇性領導並非單一偶然事件。代表公司在相近市場條件下維持強勢，說明資金正以盈利品質與催化因素組成新的結構，但群組能否成為主線仍需成交參與確認。'
-    'Relative Volume / Market Activity'='成交與相對活躍度是確認領導結構的重要證據。若價格領導伴隨持續市場參與，群組延續機率較高；若成交迅速退潮，則目前結論只代表短期集中，而不是可靠的資金轉移。'
-    'Risk'='核心命題可能被能源成本回落、利率預期逆轉、盈利不及預期或成交參與消失推翻。若領導公司失去相對強度並跌回主要趨勢下方，市場便可能重新回到指數主導而非選擇性領導。'
-    'Deep-Scan Conclusion'='能源利率重估確實提高市場定價門檻，但量化結果仍顯示選擇性領導存在。最終判斷不是全面避險，而是資金轉向盈利能見度較高的公司；下一個確認訊號是成交參與與群組廣度能否持續。'
+    ([string]$headingMap.ExecutiveSummary)='能源與利率門檻提高後，市場沒有全面失去領導力，但資金更重視盈利能見度、現金流及資本效率。本文沿同一命題檢查短線與中期證據，並評估成交參與能否確認新結構。'
+    ([string]$headingMap.MarketContext)='能源利率重估令企業成本與估值折現率同步受壓，市場因此不再只追逐表面增長，而是比較盈利兌現、自由現金流及管理層資本配置。這個結構變化令指數表現不足以解釋個別領導公司的相對強勢，因此需要進一步觀察量化領導股。'
+    ([string]$headingMap.WhyAPL)='當主要指數同時包含受壓與受惠公司，只看平均升跌會掩蓋資金真正選擇。領導股排名把相對強度、趨勢及參與度放在同一框架，讓分析可以判斷資金是否正建立新的中期方向。'
+    ([string]$headingMap.DeepScanOverview)=($overviewValues+' 整體數據顯示領導力仍然存在，但並非所有公司同步上升。數量與平均分數只用來判斷結構是否成立，下一步仍要比較短線升幅榜與中期排名是否指向相同風險取態。')
+    $blogTopGainersHeading='SPX、NDX及DJI成分股的短線資料顯示T001、T002及T003位於升幅前列，反映資金願意追逐具催化因素的公司。短線價格領導提供即時風險偏好證據，但單周升幅不能單獨證明中期趨勢，因此需要與Momentum Leaders排名對照。'
+    ([string]$headingMap.MomentumLeaders)='中期排名顯示領導公司同時保持相對強勢與較完整趨勢，資金不是無差別追價，而是集中於盈利路徑較清晰及資本效率較高的企業。這項結果承接短線證據，並帶出個股強勢能否形成群組。'
+    ([string]$headingMap.SectorAnalysis)='由個股推進至群組後，可見選擇性領導並非單一偶然事件。代表公司在相近市場條件下維持強勢，說明資金正以盈利品質與催化因素組成新的結構，但群組能否成為主線仍需成交參與確認。'
+    ([string]$headingMap.Risk)='核心命題可能被能源成本回落、利率預期逆轉、盈利不及預期或成交參與消失推翻。若領導公司失去相對強度並跌回主要趨勢下方，市場便可能重新回到指數主導而非選擇性領導。'
+    ([string]$headingMap.DeepScanConclusion)='能源利率重估確實提高市場定價門檻，但量化結果仍顯示選擇性領導存在。最終判斷不是全面避險，而是資金轉向盈利能見度較高的公司；下一個確認訊號是成交參與與群組廣度能否持續。'
   }
-  $sectionMinimum=[ordered]@{'Executive Summary'=80;'Market Context'=160;'為什麼要看 APL Momentum Leaders 領導股？'=120;'Deep-Scan Overview'=120;$topGainersHeading=150;'Momentum Leaders Analysis'=180;'Sector Analysis'=120;'Relative Volume / Market Activity'=120;'Risk'=120;'Deep-Scan Conclusion'=120}
+  $sectionMinimum=[ordered]@{}
+  $sectionMinimum[[string]$headingMap.ExecutiveSummary]=80
+  $sectionMinimum[[string]$headingMap.MarketContext]=160
+  $sectionMinimum[[string]$headingMap.WhyAPL]=120
+  $sectionMinimum[[string]$headingMap.DeepScanOverview]=120
+  $sectionMinimum[[string]$headingMap.TopGainers]=150
+  $sectionMinimum[[string]$headingMap.MomentumLeaders]=180
+  $sectionMinimum[[string]$headingMap.SectorAnalysis]=120
+  $sectionMinimum[[string]$headingMap.Risk]=120
+  $sectionMinimum[[string]$headingMap.DeepScanConclusion]=120
   $supportingSentence='這項證據必須與上一節的判斷連接，才能辨認資金選擇是否具有持續性，並為下一個分析問題建立可驗證的方向。'
   foreach($heading in $sectionMinimum.Keys){while(([string]$sections[$heading]).Length-lt([int]$sectionMinimum[$heading]+20)){$sections[$heading]=([string]$sections[$heading]+' '+$supportingSentence)}}
   $title='APL Deep-Scan 美股深海雷達 | 市場領導分析'
@@ -150,7 +161,7 @@ try{
   $package=Join-Path $StagingDate 'publishing\production-package'
   Write-Utf8 (Join-Path $package "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md") ($markdown-join[Environment]::NewLine)
   Write-Utf8 (Join-Path $package "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.html") ($html-join[Environment]::NewLine)
-  Write-Utf8 (Join-Path $package "WhatsApp_$ScanDate.md") ('能源利率重估正在提高估值與盈利門檻，市場資金轉向盈利能見度及資本效率較清晰的公司。量化領導股仍然存在，但成交參與尚需持續確認。短線升幅與中期排名共同顯示選擇性領導，而不是所有風險資產同步上升。投資者下一步應觀察相對強度、成交活躍度及群組廣度，並留意能源成本、利率預期及企業盈利變化可能推翻目前判斷。領導公司若能維持趨勢、成交與群組廣度，才足以確認資金已經建立新的中期方向；若相對強度迅速消失，則目前訊號只屬短期輪動。分析必須同時比較市場背景、價格表現、公司業務與風險條件，不能因單一指標改善便忽略反證。這份分析只用於市場研究及風險觀察，不構成個別證券投資建議。')
+  Write-Utf8 (Join-Path $package "WhatsApp_$ScanDate.md") ('**APL Deep-Scan 美股深海雷達**`n**能源與利率門檻提高 | '+$ScanDate+'**`nhttps://www.goinvestingnow.com/blog/apl-momentum-leaders-'+$ScanDate+'`n`n能源利率重估提高估值與盈利門檻，市場資金由全面追逐轉向選擇性配置。`n`n📊 **APL Deep-Scan 觀察近期美股領導結構**，量化領導股仍然存在，但成交參與與群組廣度尚需確認。`n`n• 投資者應關注相對強度、成交活躍度、能源成本及企業盈利。`n• 下一步觀察領導廣度能否擴散。`n`n🐧 APL Deep-Scan 持續追蹤市場變化。`n`n研究摘要，不構成投資建議。')
   $companyLines=New-Object Collections.Generic.List[string]
   $companyLines.Add('# Top 30 Company Business Analysis')
   foreach($row in @($ranking|Select-Object -First 30)){$companyLines.Add("## $($row.Symbol) $($row.Name)");$companyLines.Add('公司核心業務涵蓋企業營運、市場服務及客戶解決方案，收入增長需要由產品需求、執行能力、成本控制與現金流共同支持。本期排名只代表相對市場領導，仍需持續檢查商業模式、盈利能見度與主要風險。')}

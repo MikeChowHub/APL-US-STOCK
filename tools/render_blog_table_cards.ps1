@@ -187,7 +187,7 @@ function Save-Card([string]$fileName, [string]$title, [string]$subtitle, [array]
 }
 
 $card = Read-CardInput $InputPath $InputJson
-$cardContract = Assert-AplTableCardContract $card $CardType
+$cardContract = Assert-AplTableCardContract $card $CardType -RequireChineseDirection -RequireChineseExecutiveSummary
 $title = if ($null -ne $card.Title -and -not [string]::IsNullOrWhiteSpace([string]$card.Title)) { [string]$card.Title } else { Get-DefaultTitle $CardType }
 $subtitle = if ($null -ne $card.Subtitle) { [string]$card.Subtitle } else { '' }
 $sourceNote = if ($null -ne $card.SourceNote) { [string]$card.SourceNote } else { '' }

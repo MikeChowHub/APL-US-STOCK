@@ -52,8 +52,12 @@ Output Updated Cumulative Watchlist
 ### Allowed Output
 
 ```text
-APL_Quant_Cumulative_Watchlist_YYYY-MM-DD.txt
+outputs/trigger-a/YYYY-MM-DD/APL_Quant_Cumulative_Watchlist_YYYY-MM-DD.txt
 ```
+
+### Intake and execution order
+
+If the uploaded daily CSV is outside the repository, first copy it to the managed intake path `work/trigger-a-inputs/YYYY-MM-DD/` and verify source／copy SHA-256 equality. Production scripts must reject direct `Downloads` or other external paths. Validate the CSV with the robust parser, run `tools/run_trigger_a.ps1` in `dry-run` mode, and only after PASS run it in `write-output` mode. Trigger A must not create `outputs/YYYY-MM-DD/`; that namespace belongs only to complete atomic Production.
 
 ### Forbidden Actions
 

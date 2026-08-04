@@ -46,7 +46,7 @@ function Validate-SectorMap($path) {
 function Validate-TableCardInput($path, [string]$expectedCardType) {
   Assert-File $path 'TableCardInputPath'
   $json = Read-Utf8Json $path
-  return Assert-AplTableCardContract $json $expectedCardType
+  return Assert-AplTableCardContract $json $expectedCardType -RequireChineseDirection -RequireChineseExecutiveSummary
 }
 
 $result = [ordered]@{

@@ -26,6 +26,7 @@ Each asset has a specific job in the production system:
 | SEO Image | Search / share thumbnail | Preserve the Cover story in a wider composition optimized for thumbnail recognition |
 | Dashboard | Research UI | Present the complete systematic scan structure and quantitative context |
 | Social Card | Mobile-first summary | Communicate one primary issue-specific message with only the minimum supporting data |
+| Social Radar | Complete Top 30 radar | Present the full ranked-leader funnel, Buyability distribution and sector structure in a mobile-ready radar view |
 | Table Card | Companion research information card | Explain one structured observation through a role-specific evidence set |
 | Charts | Data explanation | Explain a numeric relationship that is not clear from prose alone |
 
@@ -115,6 +116,10 @@ Dashboard explains the data.
 Table Card explains a specific observation.
 
 Social Card summarizes for mobile.
+
+Social Radar presents the complete current Top 30 radar evidence for mobile distribution. It may show the scan funnel, Leader Lock／Buyability distribution and sector distribution, but it must consume the validated Social runtime contract without re-scoring or re-ranking.
+
+Social Card and Social Radar are independent required artifacts. The Radar must be rendered from its own SVG and fresh 1080×1350 PNG; it must not replace, crop, resize, re-encode or otherwise derive one artifact from the other.
 
 Blog Cover sells the market story visually.
 

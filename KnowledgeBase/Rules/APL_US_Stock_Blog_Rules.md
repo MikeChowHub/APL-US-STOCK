@@ -16,7 +16,7 @@ Visual styling belongs to Visual Rules and Templates.
 
 Trigger C editorial preparation is a required stage between verified Trigger B outputs and Managed Input Preflight. The runner does not write, expand or correct editorial content; it only copies validated publishing artifacts.
 
-Editorial completion requires both Blog formats to contain the ten mandatory analysis sections with substantive issue-specific content, detailed Market Context derived from the approved market-topic input, current Trigger B numbers, current Top Gainers evidence, a continuous reasoning chain, a responsive conclusion, a substantive WhatsApp summary and non-empty Company Business Analysis. Template placeholders, test sentences, summary shells and headings without analysis are not publishing artifacts.
+Editorial completion requires both Blog formats to contain the nine mandatory analysis sections with substantive issue-specific content, detailed Market Context derived from the approved market-topic input, current Trigger B numbers, current Top Gainers evidence, a continuous reasoning chain, a responsive conclusion, a substantive WhatsApp summary and non-empty Company Business Analysis. Relative Volume / Market Activity is no longer a mandatory Blog section; its metrics may remain in structured cards, Dashboard or internal audit evidence. Template placeholders, test sentences, summary shells and headings without analysis are not publishing artifacts.
 
 `tools/validate_managed_inputs.ps1` is the fail-closed executable gate. It creates `APL_Editorial_Completion_Audit_<ScanDate>.json` v1.1 only after content, source evidence, Markdown／HTML equivalence, Table Card source integrity and distinct native-composition integrity pass. `tools/run_daily_production.ps1` must invoke this gate before scoring and must then prove that its newly generated Trigger B ranking is byte-identical to the ranking used during editorial preparation. Mechanical Production completion without this PASS evidence is not publishable completion.
 
@@ -44,6 +44,8 @@ The Production Package must share one issue-specific core market proposition wit
 - `TopLeaders`, `TopGainers` and `SectorStructure` own company-level medium-term evidence, short-term price evidence and group-level structure respectively.
 - Company Business Analysis owns the company and business-model reference for the current Top 30; it is not a second market commentary.
 
+For new managed packages from 2026-08-05 onward, WhatsApp must follow one natural mobile-reading chain: issue-specific title and article URL → market event and core change → APL Deep-Scan／APL Momentum Leaders interpretation → investor watchpoints and falsification risk → reading CTA and disclaimer. Visible labels such as `市場事件：` or `APL 觀點：` are optional; the order is semantic and may be expressed as short paragraphs and bullet points. The message must contain the exact-date article URL, an explicit APL viewpoint, observable next signals, and a research disclaimer. The 2026-08-04 Archive message remains immutable legacy output.
+
 Cross-platform consistency means that any repeated date, number, company identity, ranking fact or directional judgment remains accurate and non-contradictory. It does not mean every artifact must display the same facts, wording, rows or conclusion.
 
 ### Required Social publishing pair
@@ -63,47 +65,71 @@ Do not use source-integrity requirements to force low-priority metrics into clie
 
 ### Formal article-title prefix
 
-For every newly created managed editorial package from **2026-08-03** onward, the formal Markdown and HTML title must begin exactly with:
+For every newly created managed editorial package from **2026-08-03** onward, the formal article title and Page title must use this exact structure:
 
 ```text
-APL Deep-Scan 美股深海雷達
+APL Deep-Scan 美股深海雷達: [issue-specific market conclusion] | YYYY-MM-DD
 ```
 
-The issue-specific market conclusion follows this fixed prefix, normally separated with `：`. Example: `APL Deep-Scan 美股深海雷達：能源風險回歸，AI 回報受驗證`.
+The issue-specific market conclusion is mandatory; it is not a placeholder and must be written for the current market evidence. Use the ASCII colon, one space after the colon, and one space on each side of the date separator (` | `). Example: `APL Deep-Scan 美股深海雷達: 能源風險回歸，AI 回報受驗證 | 2026-08-04`.
 
-The prefix is a mandatory title identity, not a subtitle, image-overlay line, or optional branding treatment. Markdown `#` and HTML `<h1>` must be content-equivalent and use the same full title. This applies prospectively and does not alter already published outputs or Archive artifacts.
+The full string is the article title, the Markdown `#` value, the HTML `<h1>` value and the SEO／Sharing `Page title` value. They must be byte-equivalent after UTF-8 decoding. The title is not a subtitle, image-overlay line, or optional branding treatment; a prefix-only title or a prefix followed only by a date is invalid. This applies prospectively and does not alter already published outputs or Archive artifacts.
 
 Formal Blog articles should follow this reading flow:
 
 ```text
-Executive Summary
+Executive Summary｜執行摘要
 ↓
-Market Context
+Market Context｜市場背景
 ↓
-為什麼要看 APL Momentum Leaders 領導股？
+Why APL Momentum Leaders Matter｜為什麼要看領導股？
 ↓
-Deep-Scan Overview
+Deep-Scan Overview｜深度掃描概覽
 ↓
-Top Gainers — Past 7 Days
+Top Gainers — Past 7 Days｜最近七日升幅榜
 ↓
-Momentum Leaders Analysis
+Momentum Leaders Analysis｜動能領導股分析
 ↓
-Sector Analysis
+Sector Analysis｜板塊結構分析
 ↓
-Relative Volume / Market Activity
+Risk｜風險
 ↓
-Risk
-↓
-Deep-Scan Conclusion
+Deep-Scan Conclusion｜深度掃描結論
 ↓
 SEO and Sharing
 ```
 
 The Blog Markdown file is the formal article text manuscript. Visual artifacts are not part of this reading-flow source and must not be embedded or referenced inside it.
 
+### Blog section heading language contract
+
+For newly created managed Blog packages from **2026-08-05** onward, every major Blog section heading must place the English label first and a short, clear Chinese gloss second, separated by the full-width vertical bar `｜`:
+
+```text
+Executive Summary｜執行摘要
+Market Context｜市場背景
+Why APL Momentum Leaders Matter｜為什麼要看領導股？
+Deep-Scan Overview｜深度掃描概覽
+Top Gainers — Past 7 Days｜最近七日升幅榜
+Momentum Leaders Analysis｜動能領導股分析
+Sector Analysis｜板塊結構分析
+Risk｜風險
+Deep-Scan Conclusion｜深度掃描結論
+```
+
+The gloss is presentation text only; semantic roles, audit keys and renderer contracts remain unchanged. The `Top Gainers — Past 7 Days` Table Card title remains exact English with no suffix. Blog packages before 2026-08-05 retain the legacy English-only headings and are not rewritten.
+
 ### SEO and Sharing metadata
 
 `## SEO and Sharing` is a required final Markdown-only section. It must follow `## Deep-Scan Conclusion` and include the current issue's `詳細文章：https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD`, `Page title：` matching the article title, `Page description：` summarising APL Momentum Leaders and the issue theme, and one concise sharing summary. This metadata must never be copied into the independent publish-ready HTML article source.
+
+### HTML source viewing rule
+
+The independent `.html` artifact is publish-ready HTML. Opening it in a browser is expected to render the tags, so the browser view will not display the literal `<h1>`, `<h3>`, `<p>` or `<span>` characters.
+
+When an operator needs to inspect or copy the raw HTML source, Production must provide a separate UTF-8 text artifact with a `.txt` extension (for example `APL_Momentum_Leaders_Market_Analysis_Blog_<ScanDate>.html.txt`). That file must contain the exact HTML source, including the literal angle brackets, without escaping, browser rendering, crop, or reformatting. The `.txt` source is a viewing／copying artifact and does not replace the publish-ready `.html` file unless the Production Artifact Contract is explicitly migrated and its validators／manifest／tests are updated together.
+
+Never instruct an operator to use the browser-rendered `.html` file as a raw-source viewer, and never silently rename `.html` to `.txt` after publish.
 
 This structure reflects the research logic:
 
@@ -124,31 +150,30 @@ Each issue must define one core market proposition. It is an issue-specific ques
 The article is a continuous reasoning chain, not a set of independent short articles. Each section performs one reasoning task, builds on the conclusion of the preceding section, and should end by naturally raising the next question. Do not restart the market background in each section or repeat the same conclusion without adding evidence or analytical progress.
 
 ```text
-Market Context
+Executive Summary｜執行摘要
+↓
+Market Context｜市場背景
 → What is the largest structural market change?
 
-為什麼要看 APL Momentum Leaders 領導股？
+Why APL Momentum Leaders Matter｜為什麼要看領導股？
 → Why is the broad index insufficient for understanding capital flow?
 
-Deep-Scan Overview
+Deep-Scan Overview｜深度掃描概覽
 → Does the quantitative result show that market leadership still exists?
 
-Top Gainers — Past 7 Days
+Top Gainers — Past 7 Days｜最近七日升幅榜
 → Is short-term capital defensive, rotating, or pursuing risk?
 
-Momentum Leaders Analysis
+Momentum Leaders Analysis｜動能領導股分析
 → Which companies and business models are receiving medium-term capital?
 
-Sector Analysis
+Sector Analysis｜板塊結構分析
 → Has individual strength formed an industry group?
 
-Relative Volume / Market Activity
-→ Is the new leadership structure confirmed by volume and market participation?
-
-Risk
+Risk｜風險
 → What could disprove the interpretation?
 
-Deep-Scan Conclusion
+Deep-Scan Conclusion｜深度掃描結論
 → What answers the opening market question, and what is the next confirmation signal?
 ```
 
@@ -226,6 +251,18 @@ Blog Markdown and Blog HTML must remain content-equivalent for the final edited 
 
 `Market Context must not become a news dump` means do not pile up unconnected headlines or repeat individual news items without analysis. Editorial preparation should omit or merge weaker items, while retaining enough managed evidence to make the selected causal argument complete.
 
+### Editorial contamination guard
+
+A managed input is not editorially complete merely because it contains the required headings, enough characters or source numbers. The following are hard FAIL conditions:
+
+- copying the same Market Context paragraph, thesis sentence or raw news block into three or more major sections;
+- appending the full approved Market Context to Executive Summary, Top Gainers, Momentum Leaders, Sector, Relative Volume, Risk or Conclusion without a new section-specific inference;
+- using a mechanically repeated paragraph to satisfy minimum length, Chinese-character or source-coverage checks;
+- putting ranking, Top Gainers or sector evidence into Market Context as if it were original market-context evidence;
+- allowing a section to be removed or reordered without changing the reasoning chain.
+
+Final Audit must compare normalized paragraph blocks across the nine mandatory sections, record any repeated long block, and fail closed when repeated material is not accompanied by a distinct section conclusion. A PASS requires each section to add new evidence, interpretation or a falsifiable next question. This guard applies to Markdown, HTML, WhatsApp, Company Business Analysis and Table Card semantic inputs; structured fields must remain concise and role-specific rather than carrying Blog prose.
+
 ### Market Context hierarchy
 
 The Blog's main `Market Context` section remains Markdown H2 and HTML `<h3>`. Subsections are optional. When used:
@@ -289,13 +326,13 @@ Use Top Gainers — Past 7 Days to explain short-term market temperature among t
 
 It must contrast short-term price leadership with the medium-term Momentum Leaders structure, then lead into where medium-term capital is actually moving. Do not describe it as an independent market story.
 
-`Top Gainers — Past 7 Days` is the fixed canonical English section title across the Blog manuscript and TopGainers Table Card. It must be emitted exactly as:
+`Top Gainers — Past 7 Days` remains the fixed canonical English title for the TopGainers Table Card. For Blog packages from 2026-08-05 onward, the Blog heading uses the bilingual presentation form `Top Gainers — Past 7 Days｜最近七日升幅榜`; legacy Blog packages before that date retain the English-only heading.
 
 ```html
-<h3>Top Gainers — Past 7 Days</h3>
+<h3>Top Gainers — Past 7 Days｜最近七日升幅榜</h3>
 ```
 
-Do not append a theme, commentary or separator such as `｜...` to this heading. Put issue-specific interpretation in the following `<p>` paragraph instead.
+Do not append any other theme, commentary or date to this heading. Put issue-specific interpretation in the following `<p>` paragraph instead.
 
 It should help compare:
 
@@ -352,17 +389,7 @@ If structured data needs a visual treatment, generate a separate Blog Table Card
 
 ---
 
-## 9. Relative Volume / Market Activity
-
-Relative Volume should be interpreted as market activity, not as a standalone buy signal.
-
-It must be evidence that confirms or questions the new leadership structure, then lead into its vulnerabilities and the Risk section.
-
-Explain whether capital participation is broad, concentrated, or selective.
-
----
-
-## 10. Risk
+## 9. Risk
 
 Risk section is mandatory.
 
@@ -385,7 +412,7 @@ Do not imply certainty.
 
 ---
 
-## 11. Deep-Scan Conclusion
+## 10. Deep-Scan Conclusion
 
 The conclusion should summarize the market state and identify what deserves continued observation.
 
@@ -397,15 +424,16 @@ It should end with a research-style market observation.
 
 ---
 
-## 12. Client-facing Naming
+## 11. Client-facing Naming
 
 Always use:
 
 - `APL Momentum Leaders 領導股`
 - `APL Deep-Scan`
-- `Top Gainers — Past 7 Days`
+- Blog heading: `Top Gainers — Past 7 Days｜最近七日升幅榜` from 2026-08-05 onward;
+- Table Card title: `Top Gainers — Past 7 Days` (exact English, immutable).
 
-The capitalization, dash, spacing and wording of `Top Gainers — Past 7 Days` are fixed. Blog headings, Table Card contracts and renderer output must not substitute or extend this title. A platform name is not a client-facing source label for this section; the required disclosure is the SPX／NDX／DJI constituent scope.
+The capitalization, dash, spacing and wording of the English Table Card title are fixed. A platform name is not a client-facing source label for this section; the required disclosure is the SPX／NDX／DJI constituent scope.
 
 Do not use these internal terms in client-facing Blog text:
 
@@ -417,7 +445,7 @@ Do not use these internal terms in client-facing Blog text:
 
 ---
 
-## 13. Blog Manuscript and Visual Artifact Separation
+## 12. Blog Manuscript and Visual Artifact Separation
 
 The formal article manuscript filename is:
 
@@ -471,7 +499,11 @@ The standard Trigger C Production Package must publish the successful required e
 
 Required Table Cards are source-bound publishing evidence, not free-form illustrations. `TopLeaders` must reproduce the selected current Trigger B ranking rows in rank order with matching symbols, company identities and Composite Scores; `TopGainers` must reproduce the selected current Top Gainers CSV rows in source order with matching symbols, company identities and percentage changes; and `SectorStructure` representative symbols must belong to the current Trigger B Top 30. Any displayed source fact that does not match the current managed evidence is a preflight failure and Production must not start.
 
+`SectorStructure.direction` is a concise Chinese market-direction／capital-structure summary and must contain Chinese text. English-only direction values are invalid; symbols belong only in `representativeSymbols`. This rule applies to new managed packages from 2026-08-05 onward. Existing 2026-08-04 Archive artifacts remain immutable legacy output and are not silently rewritten.
+
 `ExecutiveSummary` must contain three to five issue-specific priority observations with a short implication for each. Universe, qualified, leaders, Leader Lock or other scan metrics may appear only when they materially support one of those priority observations. They are not mandatory content because Deep-Scan Overview and Dashboard already own the complete scan context.
+
+For new managed packages, every `ExecutiveSummary` `observation` must be reader-facing Chinese prose, not an English-only label or a raw machine metric dump. When figures are used, the sentence must connect the numbers to a market implication (for example, concentration, breadth or difficulty of entry). The paired `meaning` field must explain the implication in Chinese and define specialist terms such as `Leader Lock` and `Buyability` when they appear. A row that only lists numbers, leaves the implication implicit, or uses unexplained English terminology fails the semantic gate. This rule is effective from 2026-08-05; the 2026-08-04 archived card remains immutable legacy output.
 
 The four required cards must not collapse into four presentations of the same data:
 
@@ -482,7 +514,7 @@ The four required cards must not collapse into four presentations of the same da
 
 ---
 
-## 14. HTML Source Contract
+## 13. HTML Source Contract
 
 The publish-ready HTML source must be delivered as a separate same-date file:
 
@@ -528,7 +560,7 @@ These publishing metadata values may remain in the separate `.md` manuscript or 
 
 ---
 
-## 15. URL and Publishing
+## 14. URL and Publishing
 
 Formal Blog URL format:
 
@@ -542,7 +574,7 @@ Page description should summarize APL Momentum Leaders 領導股, market leaders
 
 ---
 
-## 16. Prohibited Blog Patterns
+## 15. Prohibited Blog Patterns
 
 ### Published artifact immutability
 
