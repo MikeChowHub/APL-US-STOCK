@@ -82,7 +82,7 @@ try{
   $forbiddenCreated=@(
     'table-card-manifest.json','cover-brief.json','cover-background.png','seo-background.png','cover-native-contract.json','seo-native-contract.json',
     "publishing\production-package\APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md",
-    "publishing\production-package\APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.html",
+    "publishing\production-package\APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.html.txt",
     "publishing\production-package\WhatsApp_$ScanDate.md"
   )
   Add-Result 'no-placeholder-artifacts-created' (@($forbiddenCreated|Where-Object{Test-Path -LiteralPath (Join-Path $StagingDate $_)}).Count-eq0)
@@ -128,17 +128,17 @@ try{
   Write-Json (Join-Path $StagingDate 'table-card-manifest.json') ([ordered]@{SchemaVersion='APL Table Card Manifest v1.1';ScanDate=$ScanDate;Cards=$cards})
 
   $meta=Get-Content -LiteralPath (Join-Path $triggerRoot "APL_Momentum_Leaders_Meta_$ScanDate.json") -Raw -Encoding UTF8|ConvertFrom-Json
-  $overviewValues="Universe $($meta.universe)，Qualified $($meta.qualified)，Leaders $($meta.leaders)，Leader Lock $($meta.leaderLock)，Removed $($meta.removedBelowSma200Count)，Final Watchlist $($meta.finalWatchlistCount)，Average Momentum $($meta.averageMomentum)，Average Buyability $($meta.averageBuyability)。"
+  $overviewValues="本期掃描 $($meta.universe) 檔公司，其中 $($meta.qualified) 檔符合基本條件，最終保留 $($meta.leaders) 檔領導股；強勢鎖定群組有 $($meta.leaderLock) 檔，另有 $($meta.removedBelowSma200Count) 檔因低於長期趨勢被剔除，觀察名單最後為 $($meta.finalWatchlistCount) 檔。領導股平均動能為 $($meta.averageMomentum)，平均可買性為 $($meta.averageBuyability)。"
   $sections=[ordered]@{
     ([string]$headingMap.ExecutiveSummary)='能源與利率門檻提高後，市場沒有全面失去領導力，但資金更重視盈利能見度、現金流及資本效率。本文沿同一命題檢查短線與中期證據，並評估成交參與能否確認新結構。'
-    ([string]$headingMap.MarketContext)='能源利率重估令企業成本與估值折現率同步受壓，市場因此不再只追逐表面增長，而是比較盈利兌現、自由現金流及管理層資本配置。這個結構變化令指數表現不足以解釋個別領導公司的相對強勢，因此需要進一步觀察量化領導股。'
+    ([string]$headingMap.MarketContext)="能源利率重估令企業成本與估值折現率同步受壓，市場因此不再只追逐表面增長，而是比較盈利兌現、自由現金流及管理層資本配置。這代表市場選股門檻已經提高。`r`n`r`n指數仍可由少數大型公司支撐，但這種平均表現不足以解釋個別領導公司的相對強勢，因此需要進一步觀察量化領導股，判斷資金是否真正形成中期方向。"
     ([string]$headingMap.WhyAPL)='當主要指數同時包含受壓與受惠公司，只看平均升跌會掩蓋資金真正選擇。領導股排名把相對強度、趨勢及參與度放在同一框架，讓分析可以判斷資金是否正建立新的中期方向。'
     ([string]$headingMap.DeepScanOverview)=($overviewValues+' 整體數據顯示領導力仍然存在，但並非所有公司同步上升。數量與平均分數只用來判斷結構是否成立，下一步仍要比較短線升幅榜與中期排名是否指向相同風險取態。')
-    $blogTopGainersHeading='SPX、NDX及DJI成分股的短線資料顯示T001、T002及T003位於升幅前列，反映資金願意追逐具催化因素的公司。短線價格領導提供即時風險偏好證據，但單周升幅不能單獨證明中期趨勢，因此需要與Momentum Leaders排名對照。'
-    ([string]$headingMap.MomentumLeaders)='中期排名顯示領導公司同時保持相對強勢與較完整趨勢，資金不是無差別追價，而是集中於盈利路徑較清晰及資本效率較高的企業。這項結果承接短線證據，並帶出個股強勢能否形成群組。'
-    ([string]$headingMap.SectorAnalysis)='由個股推進至群組後，可見選擇性領導並非單一偶然事件。代表公司在相近市場條件下維持強勢，說明資金正以盈利品質與催化因素組成新的結構，但群組能否成為主線仍需成交參與確認。'
-    ([string]$headingMap.Risk)='核心命題可能被能源成本回落、利率預期逆轉、盈利不及預期或成交參與消失推翻。若領導公司失去相對強度並跌回主要趨勢下方，市場便可能重新回到指數主導而非選擇性領導。'
-    ([string]$headingMap.DeepScanConclusion)='能源利率重估確實提高市場定價門檻，但量化結果仍顯示選擇性領導存在。最終判斷不是全面避險，而是資金轉向盈利能見度較高的公司；下一個確認訊號是成交參與與群組廣度能否持續。'
+    $blogTopGainersHeading="SPX、NDX及DJI成分股的短線資料顯示T001、T002及T003位於升幅前列，反映資金願意追逐具催化因素的公司。短線價格領導提供即時風險偏好證據，但單周升幅不能單獨證明中期趨勢，因此需要與Momentum Leaders排名對照。`r`n`r`nScope: SPX／NDX／DJI constituents. The ranking, prices and changes are point-in-time market data and may change with the market."
+    ([string]$headingMap.MomentumLeaders)="中期排名顯示領導公司同時保持相對強勢與較完整趨勢，資金不是無差別追價，而是集中於盈利路徑較清晰及資本效率較高的企業，因此短線升幅只能作為第一層證據。`r`n`r`n進一步比較商業模式後，可以看到資金選擇具有共同的盈利與需求條件。這項結果承接短線證據，並帶出個股強勢能否形成產業群組。"
+    ([string]$headingMap.SectorAnalysis)="由個股推進至群組後，可見選擇性領導並非單一偶然事件。代表公司在相近市場條件下維持強勢，說明資金正以盈利品質與催化因素組成新的結構。`r`n`r`n群組之間仍有參與度差異，因此不能把個股強勢直接等同全面板塊突破。下一步需要確認成交與市場廣度是否支持這條主線。"
+    ([string]$headingMap.Risk)="核心命題可能被能源成本回落、利率預期逆轉或盈利不及預期推翻，因此第一步要檢查企業收入與現金流是否支持相對強勢。若商業證據失效，短線價格便不足以證明中期領導。`r`n`r`n第二個反證是成交參與與群組廣度消失。若領導公司失去相對強度並跌回主要趨勢下方，市場便可能重新回到指數主導，而不是選擇性領導。`r`n`r`n第三個風險來自外部成本與估值門檻。若能源、利率或融資壓力再次上升，盈利尚未兌現的公司會首先受壓；然而若合同、需求與成交同步改善，核心命題才可維持。"
+    ([string]$headingMap.DeepScanConclusion)="能源利率重估確實提高市場定價門檻，但量化結果仍顯示選擇性領導存在。因此開頭問題的答案不是全面避險，而是資金轉向盈利能見度較高的公司。`r`n`r`n短線升幅與中期領導只有逐步重合，才代表新結構具有持續性。這項判斷亦要由企業需求、成本控制與現金流共同支持，不能只依賴單日價格。`r`n`r`n下一個確認訊號是成交參與與群組廣度能否持續。若兩者同步擴散，核心命題會加強；若領導重新收窄或主要公司失去趨勢，便應下修判斷。"
   }
   $sectionMinimum=[ordered]@{}
   $sectionMinimum[[string]$headingMap.ExecutiveSummary]=80
@@ -148,19 +148,28 @@ try{
   $sectionMinimum[[string]$headingMap.TopGainers]=150
   $sectionMinimum[[string]$headingMap.MomentumLeaders]=180
   $sectionMinimum[[string]$headingMap.SectorAnalysis]=120
-  $sectionMinimum[[string]$headingMap.Risk]=120
-  $sectionMinimum[[string]$headingMap.DeepScanConclusion]=120
+  $sectionMinimum[[string]$headingMap.Risk]=300
+  $sectionMinimum[[string]$headingMap.DeepScanConclusion]=300
   $supportingSentence='這項證據必須與上一節的判斷連接，才能辨認資金選擇是否具有持續性，並為下一個分析問題建立可驗證的方向。'
   foreach($heading in $sectionMinimum.Keys){while(([string]$sections[$heading]).Length-lt([int]$sectionMinimum[$heading]+20)){$sections[$heading]=([string]$sections[$heading]+' '+$supportingSentence)}}
-  $title='APL Deep-Scan 美股深海雷達 | 市場領導分析'
+  $title="APL Deep-Scan 美股深海雷達: 市場領導分析 | $ScanDate"
   $markdown=New-Object Collections.Generic.List[string]
   $html=New-Object Collections.Generic.List[string]
   $markdown.Add("# $title");$markdown.Add('')
   $html.Add("<h1>$title</h1>")
-  foreach($heading in $sections.Keys){$markdown.Add("## $heading");$markdown.Add('');$markdown.Add([string]$sections[$heading]);$markdown.Add('');$html.Add("<h3>$heading</h3>");$html.Add("<p>$($sections[$heading])</p>")}
+  foreach($heading in $sections.Keys){
+    $markdown.Add("## $heading");$markdown.Add('')
+    $paragraphs=@(([string]$sections[$heading])-split'(?:\r?\n){2,}')
+    foreach($paragraph in $paragraphs){$markdown.Add($paragraph);$markdown.Add('');$html.Add("<h3>$heading</h3>")|Out-Null;break}
+    for($paragraphIndex=0;$paragraphIndex-lt$paragraphs.Count;$paragraphIndex++){
+      if($paragraphIndex-gt0){$markdown.Add($paragraphs[$paragraphIndex]);$markdown.Add('')}
+      $html.Add("<p>$($paragraphs[$paragraphIndex])</p>")
+    }
+  }
+  $markdown.Add('## SEO and Sharing');$markdown.Add('');$markdown.Add("詳細文章：https://www.goinvestingnow.com/blog/apl-momentum-leaders-$ScanDate");$markdown.Add('');$markdown.Add("Page title：$title");$markdown.Add('');$markdown.Add('Page description：APL Momentum Leaders追蹤市場領導結構、盈利能見度與資本效率。');$markdown.Add('');$markdown.Add('Sharing summary：市場選股門檻提高，資金轉向具盈利與現金流證據的領導公司。');$markdown.Add('')
   $package=Join-Path $StagingDate 'publishing\production-package'
   Write-Utf8 (Join-Path $package "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md") ($markdown-join[Environment]::NewLine)
-  Write-Utf8 (Join-Path $package "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.html") ($html-join[Environment]::NewLine)
+  Write-Utf8 (Join-Path $package "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.html.txt") ($html-join[Environment]::NewLine)
   Write-Utf8 (Join-Path $package "WhatsApp_$ScanDate.md") ('**APL Deep-Scan 美股深海雷達**`n**能源與利率門檻提高 | '+$ScanDate+'**`nhttps://www.goinvestingnow.com/blog/apl-momentum-leaders-'+$ScanDate+'`n`n能源利率重估提高估值與盈利門檻，市場資金由全面追逐轉向選擇性配置。`n`n📊 **APL Deep-Scan 觀察近期美股領導結構**，量化領導股仍然存在，但成交參與與群組廣度尚需確認。`n`n• 投資者應關注相對強度、成交活躍度、能源成本及企業盈利。`n• 下一步觀察領導廣度能否擴散。`n`n🐧 APL Deep-Scan 持續追蹤市場變化。`n`n研究摘要，不構成投資建議。')
   $companyLines=New-Object Collections.Generic.List[string]
   $companyLines.Add('# Top 30 Company Business Analysis')
@@ -192,6 +201,8 @@ try{
   Add-Result 'final-state-preflight-pass' ([string]$finalState.Status-ceq'PREFLIGHT_PASS')
   Add-Result 'editorial-audit-created' (Test-Path -LiteralPath (Join-Path $ManagedDate "publishing\production-package\APL_Editorial_Completion_Audit_$ScanDate.json") -PathType Leaf)
   $productionRoot=Join-Path $FixtureRoot 'production'
+  $runnerErrorAction=$ErrorActionPreference
+  $ErrorActionPreference='Continue'
   $runnerOutput=@(& powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $Runner -RegressionTest `
     -InputCsv (Join-Path $ManagedDate 'source.csv') -TopGainersCsvPath (Join-Path $ManagedDate 'top-gainers.csv') `
     -MarketContextPath (Join-Path $ManagedDate 'market-context.md') -TriggerBMetaPath (Join-Path $ManagedDate "trigger-b\$ScanDate\APL_Momentum_Leaders_Meta_$ScanDate.json") `
@@ -199,9 +210,12 @@ try{
     -CoverBackgroundPath (Join-Path $ManagedDate 'cover-background.png') -SeoBackgroundPath (Join-Path $ManagedDate 'seo-background.png') `
     -CoverNativeContractPath (Join-Path $ManagedDate 'cover-native-contract.json') -SeoNativeContractPath (Join-Path $ManagedDate 'seo-native-contract.json') `
     -PublishingArtifactsRoot (Join-Path $ManagedDate 'publishing') -ScanDate $ScanDate -WeekLabel 'Regression' -OutputRoot $productionRoot 2>&1)
-  Add-Result 'daily-production-consumes-finalized-bundle' ($LASTEXITCODE-eq0) ($runnerOutput-join' ')
-  $dailyState=Get-Content -LiteralPath (Join-Path $productionRoot "logs\daily-production-state-$ScanDate.json") -Raw -Encoding UTF8|ConvertFrom-Json
-  Add-Result 'daily-production-complete' ($dailyState.DailyProductionComplete-eq$true-and[string]$dailyState.Status-ceq'PASS')
+  $runnerExit=$LASTEXITCODE
+  $ErrorActionPreference=$runnerErrorAction
+  Add-Result 'daily-production-consumes-finalized-bundle' ($runnerExit-eq0) ($runnerOutput-join' ')
+  $dailyStatePath=Join-Path $productionRoot "logs\daily-production-state-$ScanDate.json"
+  if(Test-Path -LiteralPath $dailyStatePath){$dailyState=Get-Content -LiteralPath $dailyStatePath -Raw -Encoding UTF8|ConvertFrom-Json;Add-Result 'daily-production-complete' ($dailyState.DailyProductionComplete-eq$true-and[string]$dailyState.Status-ceq'PASS')}
+  else{Add-Result 'daily-production-complete' $false 'Authoritative state was not created.'}
   $invalidMarket=Join-Path $FixtureRoot 'market-context-missing-thesis.md'
   Write-Utf8 $invalidMarket '## 市場背景`r`n這是一段沒有受管核心命題的市場說明。'
   $previous=$ErrorActionPreference

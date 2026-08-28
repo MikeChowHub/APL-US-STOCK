@@ -31,9 +31,14 @@
       "WhatsAppFirstScreen",
       "CompanyAnalysis",
       "IntakeSourceIntegrity",
-      "TableCardSourceIntegrity",
-      "NativeCompositionIntegrity"
-    ],
+                           "TableCardSourceIntegrity",
+                           "NativeCompositionIntegrity",
+                           "NaturalEditorialQuality",
+                           "ClientFacingLanguage",
+                           "TopGainersPresentation",
+                           "CtaDisclaimer",
+                           "CoverSubtitleSemantic"
+                       ],
     "TitlePolicy": {
       "RequiredPrefix": "APL Deep-Scan 美股深海雷達",
       "EffectiveFrom": "2026-08-03"
@@ -52,7 +57,8 @@
     { "Id": "removed-sma200-audit", "Category": "Machine", "Match": "ExactlyOne", "Patterns": ["removed-below-sma200-{ScanDate}.txt"] },
     { "Id": "retained-sma200-audit", "Category": "Machine", "Match": "ExactlyOne", "Patterns": ["retained-missing-sma200-{ScanDate}.txt"] },
     { "Id": "publishing-notes", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["APL_Momentum_Leaders_Overview_{ScanDate}.md"] },
-    { "Id": "formal-blog", "Category": "Publishing", "Match": "AtLeastOne", "Patterns": ["production-package/APL_Momentum_Leaders_Market_Analysis_Blog_{ScanDate}.md", "production-package/APL_Momentum_Leaders_Market_Analysis_Blog_{ScanDate}.html"] },
+    { "Id": "formal-blog-markdown", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/APL_Momentum_Leaders_Market_Analysis_Blog_{ScanDate}.md"] },
+    { "Id": "formal-blog-html-source", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/APL_Momentum_Leaders_Market_Analysis_Blog_{ScanDate}.html.txt"] },
     { "Id": "company-business-analysis", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/table-card-log/APL_Momentum_Leaders_Top_30_Company_Business_Analysis_{ScanDate}.md"] },
     { "Id": "social-push", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/WhatsApp_{ScanDate}.md"] },
     { "Id": "editorial-completion-audit", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/APL_Editorial_Completion_Audit_{ScanDate}.json"] },
@@ -65,9 +71,8 @@
     { "Id": "seo", "Category": "Publishing", "Match": "ExactlyOne", "Patterns": ["production-package/APL_Momentum_Leaders_Blog_SEO_{ScanDate}_1280x720.png"] }
   ],
   "Optional": [
-    { "Id": "blog-second-format", "Category": "Publishing", "Patterns": ["production-package/APL_Momentum_Leaders_Market_Analysis_Blog_{ScanDate}.md", "production-package/APL_Momentum_Leaders_Market_Analysis_Blog_{ScanDate}.html"] },
     { "Id": "machine-support", "Category": "Machine", "Patterns": ["*.svg", "*_Render_Log.txt", "APL_DeepScan_*_Input_{ScanDate}.json", "APL_Momentum_Leaders_Source_{ScanDate}.csv", "APL_Quant_Top_30_{ScanDate}.txt", "APL_Momentum_Leaders_Watchlist_{ScanDate}.txt", "production-package/*.overlay-log.txt", "production-package/Table Cards/*.table-card-log.txt"] },
-    { "Id": "additional-approved-publishing", "Category": "Publishing", "Patterns": ["production-package/*.png", "production-package/*.txt", "production-package/*.md", "production-package/*.html", "production-package/Table Cards/*.png"] }
+    { "Id": "additional-approved-publishing", "Category": "Publishing", "Patterns": ["production-package/*.png", "production-package/*.txt", "production-package/*.md", "production-package/Table Cards/*.png"] }
   ],
   "RequiredTableCardTypes": ["ExecutiveSummary", "TopLeaders", "TopGainers", "SectorStructure"]
 }

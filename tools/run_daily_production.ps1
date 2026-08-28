@@ -238,7 +238,7 @@ $seoOutput = Join-Path $productionPackage "APL_Momentum_Leaders_Blog_SEO_${ScanD
 $seoLog = [System.IO.Path]::ChangeExtension($seoOutput, '.overlay-log.txt')
 $whatsAppPackage = Join-Path $productionPackage "WhatsApp_${ScanDate}.md"
 $blogMarkdownPackage = Join-Path $productionPackage "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.md"
-$blogHtmlPackage = Join-Path $productionPackage "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.html"
+$blogHtmlSourcePackage = Join-Path $productionPackage "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.html.txt"
 $companyAnalysisPackage = Join-Path $productionPackage "table-card-log\APL_Momentum_Leaders_Top_30_Company_Business_Analysis_${ScanDate}.md"
 $editorialAuditPackage = Join-Path $productionPackage "APL_Editorial_Completion_Audit_${ScanDate}.json"
 $productionPackageManifest = Join-Path $productionPackage "APL_Production_Package_Manifest_${ScanDate}.json"
@@ -307,7 +307,7 @@ function Write-ProductionPackageManifest {
     [pscustomobject]@{Id='seo';Path=$seoOutput},
     [pscustomobject]@{Id='whatsapp';Path=$whatsAppPackage},
     [pscustomobject]@{Id='formal-blog-markdown';Path=$blogMarkdownPackage},
-    [pscustomobject]@{Id='formal-blog-html';Path=$blogHtmlPackage},
+    [pscustomobject]@{Id='formal-blog-html-source';Path=$blogHtmlSourcePackage},
     [pscustomobject]@{Id='company-business-analysis';Path=$companyAnalysisPackage},
     [pscustomobject]@{Id='editorial-completion-audit';Path=$editorialAuditPackage}
   )) { [void]$requiredDefinitions.Add($definition) }

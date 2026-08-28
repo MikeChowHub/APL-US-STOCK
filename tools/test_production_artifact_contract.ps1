@@ -143,7 +143,7 @@ try {
   $expectedPackageRequired['seo'] = "APL_Momentum_Leaders_Blog_SEO_${ScanDate}_1280x720.png"
   $expectedPackageRequired['whatsapp'] = "WhatsApp_${ScanDate}.md"
   $expectedPackageRequired['formal-blog-markdown'] = "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.md"
-  $expectedPackageRequired['formal-blog-html'] = "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.html"
+  $expectedPackageRequired['formal-blog-html-source'] = "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.html.txt"
   $expectedPackageRequired['company-business-analysis'] = "table-card-log/APL_Momentum_Leaders_Top_30_Company_Business_Analysis_${ScanDate}.md"
   $expectedPackageRequired['editorial-completion-audit'] = "APL_Editorial_Completion_Audit_${ScanDate}.json"
 
@@ -180,6 +180,10 @@ try {
     [string]$headingMap.Risk,
     [string]$headingMap.DeepScanConclusion
   )
+  $scanDateValue=[datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+  $editorialQualityFrom=[datetime]::ParseExact('2026-08-10','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+  $ctaDisclaimerRemovalFrom=[datetime]::ParseExact('2026-08-28','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+  if($scanDateValue-ge$editorialQualityFrom-and$scanDateValue-lt$ctaDisclaimerRemovalFrom){$mandatorySections+=@([string]$headingMap.CallToAction,[string]$headingMap.Disclaimer)}
   if(@($editorialAudit.MandatorySections).Count-ne$mandatorySections.Count){throw 'Editorial Completion Audit mandatory section count mismatch.'}
   for($i=0;$i-lt$mandatorySections.Count;$i++){if([string]$editorialAudit.MandatorySections[$i]-cne$mandatorySections[$i]){throw 'Editorial Completion Audit mandatory section order mismatch.'}}
   foreach($name in @($readinessContract.RequiredChecks)){if($null-eq$editorialAudit.Checks.PSObject.Properties[[string]$name]-or$editorialAudit.Checks.([string]$name)-ne$true){throw "Editorial Completion Audit check is not PASS: $name"}}
@@ -196,7 +200,7 @@ try {
   }
   if($null-eq$editorialAudit.TableCardSourceIntegrity-or[int]$editorialAudit.TableCardSourceIntegrity.RankingRows-lt30-or[int]$editorialAudit.TableCardSourceIntegrity.TopLeaderRows-lt1-or[int]$editorialAudit.TableCardSourceIntegrity.TopGainerRows-lt1-or[int]$editorialAudit.TableCardSourceIntegrity.SectorRepresentatives-lt1){throw 'Editorial Completion Audit Table Card source integrity summary is invalid.'}
   if($null-eq$editorialAudit.NativeCompositionIntegrity-or[string]::IsNullOrWhiteSpace([string]$editorialAudit.NativeCompositionIntegrity.SceneConceptId)-or$editorialAudit.NativeCompositionIntegrity.DistinctSourcePaths-ne$true-or$editorialAudit.NativeCompositionIntegrity.DistinctSourceSHA256-ne$true-or$editorialAudit.NativeCompositionIntegrity.NativeAspectRatios-ne$true-or$editorialAudit.NativeCompositionIntegrity.DistinctViewpoints-ne$true-or[string]$editorialAudit.NativeCompositionIntegrity.CoverSourceSHA256-ceq[string]$editorialAudit.NativeCompositionIntegrity.SeoSourceSHA256){throw 'Editorial Completion Audit Native Composition integrity summary is invalid.'}
-  $editorialRolePaths=[ordered]@{'blog-markdown'="APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.md";'blog-html'="APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.html";'whatsapp'="WhatsApp_${ScanDate}.md";'company-business-analysis'="table-card-log/APL_Momentum_Leaders_Top_30_Company_Business_Analysis_${ScanDate}.md"}
+  $editorialRolePaths=[ordered]@{'blog-markdown'="APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.md";'blog-html-source'="APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.html.txt";'whatsapp'="WhatsApp_${ScanDate}.md";'company-business-analysis'="table-card-log/APL_Momentum_Leaders_Top_30_Company_Business_Analysis_${ScanDate}.md"}
   foreach($role in $editorialRolePaths.Keys){$record=@($editorialAudit.Artifacts|Where-Object{[string]$_.Role-ceq$role});if($record.Count-ne1){throw "Editorial Completion Audit missing artifact role: $role"};$actualPath=Assert-AplNoReparsePath -Path (Join-Path $packageRoot ([string]$editorialRolePaths[$role]).Replace('/','\')) -AllowedRoot $packageRoot -RequireFile;$actual=Get-Item -LiteralPath $actualPath;$sha=(Get-FileHash -LiteralPath $actualPath -Algorithm SHA256).Hash;if([long]$record[0].Size-ne[long]$actual.Length-or[string]$record[0].SHA256-cne$sha){throw "Editorial Completion Audit artifact size/SHA mismatch: $role"}}
   $editorialCompletionAudit=[pscustomobject]@{Status='PASS';Audit="production-package/APL_Editorial_Completion_Audit_${ScanDate}.json";MandatorySections=$mandatorySections.Count;SourceEvidence=$sourceRoles.Count;ProductionReadiness=$true;DailyProductionPublishable=$true}
 

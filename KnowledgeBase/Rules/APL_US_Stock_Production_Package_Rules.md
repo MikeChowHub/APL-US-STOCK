@@ -25,7 +25,7 @@ production-package/
 |-- APL_Momentum_Leaders_Blog_SEO_<ScanDate>_1280x720.png
 |-- WhatsApp_<ScanDate>.md
 |-- APL_Momentum_Leaders_Market_Analysis_Blog_<ScanDate>.md
-|-- APL_Momentum_Leaders_Market_Analysis_Blog_<ScanDate>.html
+|-- APL_Momentum_Leaders_Market_Analysis_Blog_<ScanDate>.html.txt
 |-- table-card-log/APL_Momentum_Leaders_Top_30_Company_Business_Analysis_<ScanDate>.md
 `-- APL_Production_Package_Manifest_<ScanDate>.json
 ```
@@ -46,6 +46,19 @@ The package manifest is generated only after renderers and publishing import fin
 ## Table Card semantic gate
 
 All four required cards use `APL Table Card Input v1.1`. Rows are keyed objects rather than positional arrays. The shared validator/renderer mapping is authoritative and Final Production Audit revalidates each input path and SHA before Archive.
+
+## Production completion response
+
+Every successful Daily Production completion response must list the four Table Card PNG artifacts individually under a visible `Table Cards` label. A directory-only link is not an acceptable substitute.
+
+The fixed display labels and file mappings are:
+
+- `Executive Summary` → `production-package/Table Cards/APL_Blog_ExecutiveSummary_<ScanDate>.png`
+- `Top Leaders` → `production-package/Table Cards/APL_Blog_TopLeaders_<ScanDate>.png`
+- `Top Gainers` → `production-package/Table Cards/APL_Blog_TopGainers_<ScanDate>.png`
+- `Sector Structure` → `production-package/Table Cards/APL_Blog_SectorStructure_<ScanDate>.png`
+
+Each item must be a directly clickable link to its published PNG for the completed ScanDate. The order above is fixed. Renderer logs and the Table Card manifest remain package artifacts but are not part of this reader-facing four-link list.
 
 ## Migration policy
 

@@ -18,6 +18,10 @@ Assert-AplScanDate $ScanDate | Out-Null
 $artifactContract = Read-AplStrictJson (Join-Path $ProjectRoot 'KnowledgeBase\Rules\APL_US_Stock_Production_Artifact_Contract.json') $ProjectRoot
 $expectedEditorialSourceCount = @($artifactContract.EditorialReadiness.RequiredSourceRoles).Count
 if ($expectedEditorialSourceCount -lt 1) { throw 'Production Artifact Contract EditorialReadiness source roles are invalid.' }
+$scanDateValue=[datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+$editorialQualityFrom=[datetime]::ParseExact('2026-08-10','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+$ctaDisclaimerRemovalFrom=[datetime]::ParseExact('2026-08-28','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+$expectedEditorialSectionCount=if($scanDateValue-ge$editorialQualityFrom-and$scanDateValue-lt$ctaDisclaimerRemovalFrom){11}else{9}
 $allowedRoot = if ($RegressionTest) { Join-Path $ProjectRoot 'tmp' } else { $ProjectRoot }
 $FinalAuditPath = Assert-AplNoReparsePath -Path $FinalAuditPath -AllowedRoot $allowedRoot -RequireFile
 $ArchiveManifestPath = Assert-AplNoReparsePath -Path $ArchiveManifestPath -AllowedRoot $allowedRoot -RequireFile
@@ -38,7 +42,7 @@ if (Test-Path -LiteralPath $StatePath -PathType Leaf) {
 $audit = Read-AplStrictJson $FinalAuditPath (Split-Path $FinalAuditPath -Parent)
 if ([string]$audit.SchemaVersion -cne $script:AplFinalAuditSchemaVersion -or [string]$audit.ScanDate -cne $ScanDate -or [string]$audit.Status -cne 'PASS') { throw 'Final Production Audit is not PASS.' }
 if ([string]$audit.ProductionPackage.Status -cne 'PASS' -or [int]$audit.ProductionPackage.RequiredCount -lt 13) { throw 'Production package audit is not PASS.' }
-if ([string]$audit.EditorialCompletion.Status -cne 'PASS' -or $audit.EditorialCompletion.ProductionReadiness -ne $true -or $audit.EditorialCompletion.DailyProductionPublishable -ne $true -or [int]$audit.EditorialCompletion.MandatorySections -ne 9 -or [int]$audit.EditorialCompletion.SourceEvidence -ne $expectedEditorialSourceCount) { throw 'Editorial Completion Audit is not production-ready publishable PASS.' }
+if ([string]$audit.EditorialCompletion.Status -cne 'PASS' -or $audit.EditorialCompletion.ProductionReadiness -ne $true -or $audit.EditorialCompletion.DailyProductionPublishable -ne $true -or [int]$audit.EditorialCompletion.MandatorySections -ne $expectedEditorialSectionCount -or [int]$audit.EditorialCompletion.SourceEvidence -ne $expectedEditorialSourceCount) { throw 'Editorial Completion Audit is not production-ready publishable PASS.' }
 if (@($audit.TableCardSemantic).Count -ne 4 -or @($audit.TableCardSemantic | Where-Object { [string]$_.Status -cne 'PASS' }).Count -gt 0) { throw 'Table Card semantic audit is not PASS.' }
 $manifest = Read-AplStrictJson $ArchiveManifestPath $archiveDatePath
 $actual = @(Get-AplArchiveInventory $archiveDatePath -ExcludeManifest)

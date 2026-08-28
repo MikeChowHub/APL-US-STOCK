@@ -86,6 +86,14 @@ The renderer, not an issue brief, owns the identity kicker. It must generate exa
 
 `overlay.series` is retired and must not be supplied or rendered. In particular, the renderer must never generate a second `APL 美股深海雷達 | YYYY-MM-DD` line, because it duplicates the fixed kicker. The issue brief supplies only the editorial title lines, subtitle and optional footer.
 
+`overlay.subtitle` is the issue-specific description immediately below the main title. It must explain, qualify or extend the headline's market meaning in natural reader-facing language. It must not repeat the renderer-owned kicker, scan date, product identity or series identity, including `APL`, `APL DEEP-SCAN`, `APL Momentum Leaders` or `APL 美股深海雷達`. It must also not duplicate a main title line. A value such as `APL Momentum Leaders｜YYYY-MM-DD` is invalid and Managed Input Preflight must fail closed before rendering. The intended semantic hierarchy is:
+
+```text
+APL DEEP-SCAN | YYYY-MM-DD        <- renderer-owned fixed kicker
+issue-specific main title        <- overlay.titleLines
+headline description             <- overlay.subtitle
+```
+
 ChatGPT / ImageGen is responsible for the cinematic background.
 
 Codex / local post-production is responsible only for accurate text, logo, spacing, date, and final export.

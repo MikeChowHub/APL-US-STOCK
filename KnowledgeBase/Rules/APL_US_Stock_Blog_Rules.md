@@ -1,4 +1,4 @@
-﻿# APL US Stock Blog Rules
+# APL US Stock Blog Rules
 
 This document defines stable writing rules for formal APL Momentum Leaders 領導股 Blog production.
 
@@ -96,6 +96,10 @@ Risk｜風險
 ↓
 Deep-Scan Conclusion｜深度掃描結論
 ↓
+Call to Action｜延伸閱讀
+↓
+Disclaimer｜免責聲明
+↓
 SEO and Sharing
 ```
 
@@ -115,21 +119,25 @@ Momentum Leaders Analysis｜動能領導股分析
 Sector Analysis｜板塊結構分析
 Risk｜風險
 Deep-Scan Conclusion｜深度掃描結論
+Call to Action｜延伸閱讀
+Disclaimer｜免責聲明
 ```
 
-The gloss is presentation text only; semantic roles, audit keys and renderer contracts remain unchanged. The `Top Gainers — Past 7 Days` Table Card title remains exact English with no suffix. Blog packages before 2026-08-05 retain the legacy English-only headings and are not rewritten.
+The gloss is presentation text only; semantic roles, audit keys and renderer contracts remain unchanged. The `Top Gainers — Past 7 Days` Table Card title remains exact English with no suffix. Blog packages before 2026-08-05 retain the legacy English-only headings and are not rewritten. From 2026-08-10 through 2026-08-27, `Call to Action｜延伸閱讀` and `Disclaimer｜免責聲明` are mandatory in both Markdown and HTML. From 2026-08-28 onward, both sections are prohibited in the formal Blog; `Deep-Scan Conclusion｜深度掃描結論` is the final article section. The exact conclusion heading is `Deep-Scan Conclusion｜深度掃描結論`; shortened or misspelled forms such as `深度掃結論` must fail.
 
 ### SEO and Sharing metadata
 
-`## SEO and Sharing` is a required final Markdown-only section. It must follow `## Deep-Scan Conclusion` and include the current issue's `詳細文章：https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD`, `Page title：` matching the article title, `Page description：` summarising APL Momentum Leaders and the issue theme, and one concise sharing summary. This metadata must never be copied into the independent publish-ready HTML article source.
+`## SEO and Sharing` is a required final Markdown-only section. From 2026-08-10 through 2026-08-27 it must follow `Call to Action｜延伸閱讀` and `Disclaimer｜免責聲明`; from 2026-08-28 onward it must immediately follow `Deep-Scan Conclusion｜深度掃描結論`, and include the current issue's `詳細文章：https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD`, `Page title：` matching the article title, `Page description：` summarising APL Momentum Leaders and the issue theme, and one concise sharing summary. This metadata must never be copied into the independent publish-ready HTML article source.
 
-### HTML source viewing rule
+### HTML source delivery rule
 
-The independent `.html` artifact is publish-ready HTML. Opening it in a browser is expected to render the tags, so the browser view will not display the literal `<h1>`, `<h3>`, `<p>` or `<span>` characters.
+Production delivers one HTML-source artifact only:
 
-When an operator needs to inspect or copy the raw HTML source, Production must provide a separate UTF-8 text artifact with a `.txt` extension (for example `APL_Momentum_Leaders_Market_Analysis_Blog_<ScanDate>.html.txt`). That file must contain the exact HTML source, including the literal angle brackets, without escaping, browser rendering, crop, or reformatting. The `.txt` source is a viewing／copying artifact and does not replace the publish-ready `.html` file unless the Production Artifact Contract is explicitly migrated and its validators／manifest／tests are updated together.
+```text
+APL_Momentum_Leaders_Market_Analysis_Blog_<ScanDate>.html.txt
+```
 
-Never instruct an operator to use the browser-rendered `.html` file as a raw-source viewer, and never silently rename `.html` to `.txt` after publish.
+The UTF-8 `.html.txt` file contains the publish-ready HTML source verbatim, including visible literal `<h1>`, `<h3>`, `<p>` and `<span>` tags. Production must not also create a same-date `.html` copy. The publishing operator copies the source from `.html.txt` into the target publishing system; a local browser-renderable duplicate is unnecessary and is treated as a duplicate artifact.
 
 This structure reflects the research logic:
 
@@ -259,7 +267,26 @@ A managed input is not editorially complete merely because it contains the requi
 - appending the full approved Market Context to Executive Summary, Top Gainers, Momentum Leaders, Sector, Relative Volume, Risk or Conclusion without a new section-specific inference;
 - using a mechanically repeated paragraph to satisfy minimum length, Chinese-character or source-coverage checks;
 - putting ranking, Top Gainers or sector evidence into Market Context as if it were original market-context evidence;
-- allowing a section to be removed or reordered without changing the reasoning chain.
+- allowing a section to be removed or reordered without changing the reasoning chain;
+- exposing internal field or workflow labels in client-facing prose, including `universe`, `qualified`, `leaderLock`, `removedBelowSma200Count`, `finalWatchlistCount`, `averageMomentum`, `averageBuyability`, `Trigger B`, `managed input`, `renderer`, `validator` or `pipeline`;
+- writing Market Context as one compressed headline dump instead of at least two causal analytical paragraphs;
+- pasting Top Gainers rows as a punctuation-heavy CSV-like sentence, using unbalanced brackets, or omitting the separate canonical scope paragraph `Scope: SPX／NDX／DJI constituents. The ranking, prices and changes are point-in-time market data and may change with the market.`;
+- writing Momentum Leaders or Sector Analysis as a single semicolon-delimited row list instead of at least two prose paragraphs that interpret company／business-model evidence and then advance the argument;
+- omitting `Call to Action｜延伸閱讀` or `Disclaimer｜免責聲明` from either Markdown or HTML for packages dated 2026-08-10 through 2026-08-27, or including either removed section for packages dated 2026-08-28 or later;
+- using any conclusion heading other than the exact `Deep-Scan Conclusion｜深度掃描結論` for packages governed by the bilingual heading contract.
+
+### Natural editorial quality gate (effective 2026-08-10)
+
+Machine-readable evidence must be translated into reader-facing analysis before publication. Numeric provenance remains mandatory, but raw field labels belong only to manifests, logs and audits.
+
+- `Deep-Scan Overview` may state the current counts and averages in natural Chinese, but it must explain what they mean for leadership concentration. It must never print internal property names.
+- `Market Context` must contain at least two analytical prose paragraphs and at least two explicit causal links such as `因此`, `反映`, `意味`, `導致` or `這代表`. Source headlines are evidence, not the article structure.
+- `Top Gainers` must use a small number of selected examples in balanced sentences, followed by the canonical scope／point-in-time note as its own paragraph. It must not serialize the input rows into one sentence.
+- `Momentum Leaders Analysis` and `Sector Analysis` must each contain at least two natural prose paragraphs. No paragraph may use more than three semicolons to simulate a table or CSV row list.
+- For ScanDate 2026-08-10 through 2026-08-27, Markdown and HTML must contain content-equivalent CTA and disclaimer sections. From 2026-08-28 onward, neither section may appear; the Conclusion must close the article.
+- `SEO and Sharing` remains Markdown-only and must be the final section. It must not appear in HTML.
+
+`tools/validate_managed_inputs.ps1` must fail closed on every condition above before Atomic Production starts. Character count, presence of headings and source-number matches are insufficient to override this gate.
 
 Final Audit must compare normalized paragraph blocks across the nine mandatory sections, record any repeated long block, and fail closed when repeated material is not accompanied by a distinct section conclusion. A PASS requires each section to add new evidence, interpretation or a falsifiable next question. This guard applies to Markdown, HTML, WhatsApp, Company Business Analysis and Table Card semantic inputs; structured fields must remain concise and role-specific rather than carrying Blog prose.
 
@@ -395,6 +422,14 @@ Risk section is mandatory.
 
 It must directly test conditions that could disprove the core proposition; unrelated generic risks are not sufficient. Its closing should lead to the final market judgment.
 
+For newly created managed Blog packages from **2026-08-28** onward, Risk must use a fuller explanatory treatment rather than a short checklist. It must contain at least three natural prose paragraphs and normally cover:
+
+1. the issue-specific falsification conditions;
+2. how those conditions would transmit through earnings, valuation, liquidity or sector leadership;
+3. the observable market evidence that would show the core proposition is weakening or failing.
+
+The section must be substantive enough to explain causality. Do not lengthen it by repeating the same warning, copying a generic risk list or restating the Market Context without a new risk inference.
+
 It should discuss:
 
 - macro risk;
@@ -417,6 +452,14 @@ Do not imply certainty.
 The conclusion should summarize the market state and identify what deserves continued observation.
 
 It must answer the Market Context question that opened the article, integrate only prior evidence and identify the next confirmation signal. Do not introduce a new argument.
+
+For newly created managed Blog packages from **2026-08-28** onward, Deep-Scan Conclusion must contain at least three natural prose paragraphs. It must:
+
+1. answer the opening market question directly;
+2. explain what the leadership evidence confirms and what remains selective or unresolved;
+3. state the next confirmation or invalidation signal and finish with a research-style market observation.
+
+The longer format is an explanatory requirement, not a fixed passage. Every issue must be rewritten from its own approved Market Context, ranking evidence and sector structure; copying a previous conclusion or adding repetitive filler is prohibited.
 
 It should not repeat the whole article.
 
@@ -519,10 +562,10 @@ The four required cards must not collapse into four presentations of the same da
 The publish-ready HTML source must be delivered as a separate same-date file:
 
 ```text
-APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.html
+APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.html.txt
 ```
 
-The `.md` manuscript and `.html` source are two independent editorial artifacts. Do not place HTML source inside the `.md` file.
+The `.md` manuscript and `.html.txt` source are two independent editorial artifacts. Do not place HTML source inside the `.md` file and do not generate an additional `.html` duplicate.
 
 Required element mapping:
 
@@ -603,4 +646,5 @@ Do not:
 - overload the article with data before explaining meaning.
 - embed or reference any production image artifact inside the Blog Markdown manuscript;
 - store the publish-ready HTML source inside the `.md` manuscript;
+- generate a same-date `.html` duplicate beside the required `.html.txt` source;
 - append URL, Page title or Page description metadata paragraphs to the independent HTML source.

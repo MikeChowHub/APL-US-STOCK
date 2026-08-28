@@ -132,7 +132,7 @@ PublishArtifacts 完成後，runner 必須執行 `LockPublishedArtifacts`：對�
 - `Table Cards/` 內四張required Table Card PNG、`.table-card-log.txt`及publication manifest；
 - `WhatsApp_<ScanDate>.md`；
 - `APL_Momentum_Leaders_Market_Analysis_Blog_<ScanDate>.md`；
-- `APL_Momentum_Leaders_Market_Analysis_Blog_<ScanDate>.html`；
+- `APL_Momentum_Leaders_Market_Analysis_Blog_<ScanDate>.html.txt`（直接顯示及複製 `<h1>`、`<h3>`、`<p>` source；不得同時生成 `.html`）；
 - `table-card-log/`內的Company Business Analysis；
 - `APL_Production_Package_Manifest_<ScanDate>.json`，記錄required mapping及全部package files的path／size／SHA。
 

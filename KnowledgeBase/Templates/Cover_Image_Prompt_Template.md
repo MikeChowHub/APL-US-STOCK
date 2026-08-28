@@ -218,6 +218,8 @@ Local post-production may add only:
 - APL / Deep-Scan logo;
 - necessary minimal sector labels.
 
+The fixed kicker is renderer-owned and is generated as `APL DEEP-SCAN | YYYY-MM-DD`. The Cover Brief must not repeat that identity in `overlay.subtitle`. The subtitle is a substantive, issue-specific description of the main title: it extends the market meaning of `overlay.titleLines` without repeating the title, `APL`, `Deep-Scan`, `APL Momentum Leaders`, `APL 美股深海雷達`, or any date. `APL Momentum Leaders｜YYYY-MM-DD` is an invalid subtitle and must fail Managed Input Preflight.
+
 Local post-production must not add:
 
 - large information boxes;

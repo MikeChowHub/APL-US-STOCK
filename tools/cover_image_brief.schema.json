@@ -114,7 +114,11 @@
           "minItems": 1,
           "maxItems": 4
         },
-        "subtitle": { "type": "string" },
+        "subtitle": {
+          "type": "string",
+          "minLength": 8,
+          "description": "Issue-specific description of the main title. Must not repeat the renderer-owned APL DEEP-SCAN kicker, brand or series identity, scan date, or a title line; semantic enforcement is performed by validate_managed_inputs.ps1."
+        },
         "footer": { "type": "string" },
         "accentWords": {
           "type": "array",

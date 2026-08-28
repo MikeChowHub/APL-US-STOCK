@@ -1,4 +1,5 @@
-﻿# APL Momentum Leaders Blog Template
+# APL Momentum Leaders Blog Template
+> **Effective-date editorial boundary:** For ScanDate 2026-08-28 onward, omit `Call to Action｜延伸閱讀` and `Disclaimer｜免責聲明` from both Markdown and HTML. `Deep-Scan Conclusion｜深度掃描結論` is the final article section, followed only by the Markdown-only `SEO and Sharing` metadata block. CTA／Disclaimer examples below apply only to 2026-08-10 through 2026-08-27 legacy-compatible packages.
 
 This template provides the production skeleton for formal APL Momentum Leaders 領導股 Blog articles.
 
@@ -68,10 +69,16 @@ Sector Analysis｜板塊結構分析
 → Has individual strength formed an industry group?
 
 Risk｜風險
-→ What could disprove the interpretation?
+→ What could disprove the interpretation, how would the risk transmit, and which observable signal would confirm failure?
 
 Deep-Scan Conclusion｜深度掃描結論
-→ What answers the opening question, and what is the next confirmation signal?
+→ What answers the opening question, what remains unresolved, and what is the next confirmation or invalidation signal?
+
+Call to Action｜延伸閱讀
+→ What should the reader continue tracking through APL Deep-Scan?
+
+Disclaimer｜免責聲明
+→ State clearly that the article is research and not investment advice.
 ```
 
 Use the following private editorial guidance for every major section; do not display these labels in the formal Blog:
@@ -123,7 +130,7 @@ Trigger C editorial production creates two separate text artifacts:
 
 ```text
 APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.md
-APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.html
+APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.html.txt
 ```
 
 The `.md` file is the editorial manuscript and must end with the Markdown-only `## SEO and Sharing` metadata block. The `.html` file is the publish-ready article source and contains article content only. Neither file may embed or reference images. A raw-code `.txt` presentation for operator viewing requires an explicit Production Artifact Contract migration; it must not silently rename or replace the required `.html` artifact.
@@ -206,20 +213,24 @@ The managed source is authoritative for facts, dates, numbers, company names, ev
 <p>[Transition from individual leaders: determine whether the strength forms an industry group, then ask whether participation confirms it.]</p>
 
 <h3>Risk｜風險</h3>
-<p>[Transition from sector structure: identify conditions that could disprove the core proposition, then lead to the final judgment without investment advice.]</p>
+<p>[Issue-specific falsification conditions: identify what could disprove the core proposition.]</p>
+<p>[Transmission mechanism: explain how those conditions would affect earnings, valuation, liquidity or sector leadership.]</p>
+<p>[Observable failure signals: state what evidence would show the interpretation is weakening, then lead to the final judgment without investment advice.]</p>
 
 <h3>Deep-Scan Conclusion｜深度掃描結論</h3>
-<p>[Return to the Market Context opening question; integrate only prior evidence and state the next confirmation signal without adding a new argument.]</p>
+<p>[Return to and answer the Market Context opening question directly.]</p>
+<p>[Integrate only prior leadership and sector evidence; explain what is confirmed and what remains selective or unresolved.]</p>
+<p>[State the next confirmation or invalidation signal and end with a research-style market observation. Do not add a new argument.]</p>
 
-<h3>Call to Action</h3>
+<h3>Call to Action｜延伸閱讀</h3>
 <p>[Text-only CTA.]</p>
 
-<h3>Disclaimer</h3>
+<h3>Disclaimer｜免責聲明</h3>
 <p>[Research disclaimer; no investment advice.]</p>
 
 ```
 
-The fenced block above demonstrates the required source structure only. Write that source to `APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.html` without a surrounding Markdown code fence. Do not write it into the `.md` manuscript.
+The fenced block above demonstrates the required source structure only. Write that source to `APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.html.txt` without a surrounding Markdown code fence. Do not write it into the `.md` manuscript and do not create a duplicate `.html` file.
 
 The HTML file must not end with `詳細文章`, `Page title` or `Page description` paragraphs. Keep those fields outside the HTML source.
 
@@ -259,7 +270,22 @@ Replace the following per issue:
 - conclusion;
 - SEO metadata.
 
-Do not insert internal production terminology into client-facing Blog text.
+Do not insert internal production terminology into client-facing Blog text. In particular, translate `universe`, `qualified`, `leaderLock`, `removedBelowSma200Count`, `finalWatchlistCount`, `averageMomentum`, `averageBuyability` and `Trigger B` into natural reader-facing Chinese sentences. The underlying values remain source-bound, but the property names must never be printed.
+
+For managed packages dated 2026-08-10 or later:
+
+- Market Context contains at least two causal analytical paragraphs rather than one headline dump;
+- Top Gainers uses selected examples with balanced punctuation and ends with the canonical scope／point-in-time note as a separate paragraph;
+- Momentum Leaders and Sector Analysis each contain at least two prose paragraphs and no semicolon-delimited pseudo-table;
+- the exact conclusion heading is `Deep-Scan Conclusion｜深度掃描結論`;
+- Markdown and HTML both include `Call to Action｜延伸閱讀` and `Disclaimer｜免責聲明`;
+- `SEO and Sharing` follows the disclaimer and remains the final Markdown-only section.
+
+For managed packages dated 2026-08-28 or later:
+
+- Risk contains at least three natural prose paragraphs covering falsification conditions, transmission mechanisms and observable failure signals;
+- Deep-Scan Conclusion contains at least three natural prose paragraphs answering the opening question, integrating prior evidence and identifying the next confirmation or invalidation signal;
+- neither section may copy a fixed prior-issue passage, repeat the same conclusion to increase length or introduce claims unsupported by the current managed evidence.
 
 ---
 
@@ -272,7 +298,7 @@ Do not:
 - use Dashboard as Blog Cover;
 - use Social Card as article analysis;
 - embed or reference Hero Cover, Dashboard, Table Cards, SEO image, Social Card or any other image inside the Blog manuscript;
-- put HTML source inside the `.md` manuscript instead of the independent `.html` file;
+- put HTML source inside the `.md` manuscript instead of the independent `.html.txt` file;
 - use `<h4>` outside Market Context subsections; main HTML sections remain `<h3>`;
 - leave HTML article prose outside `<p>`;
 - append URL, Page title or Page description metadata paragraphs to the HTML source;
@@ -283,7 +309,7 @@ Do not:
 
 ## 9. Markdown-only SEO and Sharing block
 
-Append this final block after `## Deep-Scan Conclusion` in the Markdown manuscript. Replace every field with issue-specific values.
+For ScanDate 2026-08-28 onward, append this final block directly after `## Deep-Scan Conclusion｜深度掃描結論`. For 2026-08-10 through 2026-08-27 legacy-compatible packages, append it after CTA／Disclaimer. Replace every field with issue-specific values.
 
 ```markdown
 ## SEO and Sharing

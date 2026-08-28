@@ -180,7 +180,7 @@ The v1.1 readiness evidence must bind the current cumulative screener, Trigger B
 
 ```text
 Formal Blog editorial manuscript (.md, text-only, no image references)
-Publish-ready Blog HTML source (.html, article content only, no publishing metadata footer)
+Publish-ready Blog HTML source (`.html.txt`, visible literal tags, article content only, no publishing metadata footer)
 Cover (independent artifact)
 SEO Image (independent artifact)
 Table Cards (independent artifacts)
@@ -193,9 +193,9 @@ Archive Package
 
 Both Social artifacts are required in every Trigger C Production Package. They are separate renderer outputs: `APL_DeepScan_Social_Card_<ScanDate>_1080x1350.png` carries the concise mobile-first message, while `APL_DeepScan_Social_Radar_Top30_<ScanDate>_1080x1350.png` carries the complete Top 30 radar view. The Radar must be rendered from its own SVG and validated as a fresh 1080x1350 PNG; it must never replace, crop, or be derived from the Social Card.
 
-The `.md` manuscript, independent `.html` source and visual artifacts share the same-date Production Package but remain separate outputs. Visual artifacts must never be embedded or referenced inside either text file. HTML article subheadings use `<h3>` and HTML article paragraphs use `<p>`. URL, Page title and Page description metadata must not be appended to the HTML source.
+The `.md` manuscript, independent `.html.txt` source and visual artifacts share the same-date Production Package but remain separate outputs. Production must not create an additional `.html` duplicate. Visual artifacts must never be embedded or referenced inside either text file. HTML article subheadings use `<h3>` and HTML article paragraphs use `<p>`. URL, Page title and Page description metadata must not be appended to the HTML source.
 
-The Markdown manuscript must conclude with `## SEO and Sharing`, including the issue URL, Page title, Page description and a sharing summary. WhatsApp must include the same issue URL after its analysis and before its disclaimer. A raw-code `.txt` presentation of HTML source is an operator-delivery convention and requires an explicit Production Artifact Contract migration before it can replace or supplement the required `.html` artifact.
+The Markdown manuscript must conclude with `## SEO and Sharing`, including the issue URL, Page title, Page description and a sharing summary. WhatsApp must include the same issue URL after its analysis and before its disclaimer. The required operator-delivery artifact is the raw-code `.html.txt` source; it replaces the former `.html` artifact and must display literal angle-bracket tags directly.
 
 ## Input Alone Rules
 

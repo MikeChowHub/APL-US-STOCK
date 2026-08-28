@@ -142,7 +142,7 @@ if($Mode-ceq'Initialize'-or$Mode-ceq'Supersede'){
       }
       PublishingArtifacts=[ordered]@{
         BlogMarkdown="publishing/production-package/APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md"
-        BlogHtml="publishing/production-package/APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.html"
+        BlogHtmlSource="publishing/production-package/APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.html.txt"
         WhatsApp="publishing/production-package/WhatsApp_$ScanDate.md"
         CompanyBusinessAnalysis="publishing/production-package/table-card-log/APL_Momentum_Leaders_Top_30_Company_Business_Analysis_$ScanDate.md"
       }

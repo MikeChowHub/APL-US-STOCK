@@ -4,6 +4,9 @@
 
 - [ ] For ScanDate 2026-08-05 and later, all nine major Blog headings use `English｜short Chinese gloss` in both Markdown and HTML, in the fixed order: `Executive Summary｜執行摘要`, `Market Context｜市場背景`, `Why APL Momentum Leaders Matter｜為什麼要看領導股？`, `Deep-Scan Overview｜深度掃描概覽`, `Top Gainers — Past 7 Days｜最近七日升幅榜`, `Momentum Leaders Analysis｜動能領導股分析`, `Sector Analysis｜板塊結構分析`, `Risk｜風險`, `Deep-Scan Conclusion｜深度掃描結論`.
 - [ ] The bilingual `Top Gainers — Past 7 Days｜最近七日升幅榜` form is a Blog heading only; the TopGainers Table Card title remains exact English `Top Gainers — Past 7 Days`.
+- [ ] For ScanDate 2026-08-10 and later, the exact conclusion heading is `Deep-Scan Conclusion｜深度掃描結論`; `深度掃結論` and other shortened forms FAIL.
+- [ ] For ScanDate 2026-08-10 through 2026-08-27, Markdown and HTML contain CTA／Disclaimer; from 2026-08-28 onward, both are absent, Conclusion closes the article, and `SEO and Sharing` follows as the final Markdown-only section.
+- [ ] Cover／SEO use exactly one renderer-owned identity kicker, `APL DEEP-SCAN | YYYY-MM-DD`; Cover Brief `overlay.subtitle` is an issue-specific description of the main title and contains no APL／Deep-Scan／Momentum Leaders／美股深海雷達 identity, scan date, or duplicated title line.
 - [ ] Packages before 2026-08-05 retain their legacy English-only headings and are not rewritten.
 - [ ] `SectorStructure.direction` contains a concise Chinese market-direction／capital-structure summary; English-only text fails the Table Card semantic gate. `representativeSymbols` remains the only symbol-list field.
 
@@ -19,6 +22,9 @@
 - [ ] 自 2026-08-03 起，Blog Markdown `#` 與 HTML `<h1>` 均以固定身份前綴 `APL Deep-Scan 美股深海雷達` 開始，且其後接當期核心市場結論。
 - [ ] Market Context提出清楚核心命題，以受管事實形成因果推理，並自然帶入APL Momentum Leaders；沒有被Executive Summary取代。
 - [ ] Deep-Scan Overview數字與當次Trigger B metadata一致；Top Gainers section使用當次Top Gainers CSV證據。
+- [ ] Deep-Scan Overview只使用自然讀者語言；不得顯示`universe`、`qualified`、`leaderLock`、`removedBelowSma200Count`、`finalWatchlistCount`、`averageMomentum`、`averageBuyability`、`Trigger B`或其他Production內部欄位名稱。
+- [ ] Market Context至少包含兩段因果分析；Top Gainers括號平衡、使用少量例子並以獨立canonical scope paragraph結尾；Momentum Leaders及Sector Analysis各至少兩段，沒有分號串接的CSV／pseudo-table內容。
+- [ ] CTA／Disclaimer policy matches ScanDate: required for 2026-08-10 through 2026-08-27 and prohibited from 2026-08-28 onward.
 - [ ] WhatsApp第一屏交代最大市場改變，並只保留移動閱讀所需證據；新日期按「標題／文章 URL → 市場事件 → APL 觀點 → 投資者關注與風險 → CTA／disclaimer」的自然敘事順序，包含與ScanDate完全相符的文章 URL及研究 disclaimer；Company Business Analysis涵蓋當次完整Top 30 symbols且不是空殼。2026-08-04 legacy Archive不回寫。
 - [ ] Final authoritative state同時為`DailyProductionComplete=true`及`DailyProductionPublishable=true`；任一為false即FAIL。
 
@@ -80,6 +86,8 @@
 - [ ] Sector Analysis 由個股強勢推進至產業群組判斷。
 - [ ] 如 Blog 選擇保留 Relative Volume／Market Activity，該段只能作補充證據，不得重新成為必需 section 或獨立市場評論。
 - [ ] Risk 直接提出可能推翻核心命題的條件；Deep-Scan Conclusion 回答文章開頭的市場問題，且沒有新增前文未出現的論點。
+- [ ] 自 2026-08-28 起，Risk 至少有三個自然段落，分別解釋當期反證條件、風險傳導機制及可觀察失效訊號；不是簡短清單、通用風險或重複 Market Context。
+- [ ] 自 2026-08-28 起，Deep-Scan Conclusion 至少有三個自然段落，直接回答開頭問題、整合既有領導／板塊證據，並交代下一個確認或反證訊號；不是固定範文或為湊字數重複結論。
 - [ ] 移除任一主要分析 section 會令推理鏈中斷，證明各 section 不可任意交換。
 - [ ] Final audit 證據已寫入 `Final_Production_Audit_YYYY-MM-DD.json`，`Status=PASS`。
 

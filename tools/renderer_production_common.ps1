@@ -1,4 +1,4 @@
-$script:AplProjectRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+﻿$script:AplProjectRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
 function Read-AplUtf8Json([string]$Path) {
   if ([string]::IsNullOrWhiteSpace($Path)) { throw 'JSON path is required.' }
@@ -222,7 +222,9 @@ function Get-AplBlogHeadingMap {
       MomentumLeaders = 'Momentum Leaders Analysis' + [char]0xFF5C + [char]0x52D5 + [char]0x80FD + [char]0x9818 + [char]0x5C0E + [char]0x80A1 + [char]0x5206 + [char]0x6790
       SectorAnalysis = 'Sector Analysis' + [char]0xFF5C + [char]0x677F + [char]0x584A + [char]0x7D50 + [char]0x69CB + [char]0x5206 + [char]0x6790
       Risk = 'Risk' + [char]0xFF5C + [char]0x98A8 + [char]0x96AA
-      DeepScanConclusion = 'Deep-Scan Conclusion' + [char]0xFF5C + [char]0x6DF1 + [char]0x5EA6 + [char]0x6383 + [char]0x7D50 + [char]0x8AD6
+      DeepScanConclusion = 'Deep-Scan Conclusion' + [char]0xFF5C + [char]0x6DF1 + [char]0x5EA6 + [char]0x6383 + [char]0x63CF + [char]0x7D50 + [char]0x8AD6
+      CallToAction = 'Call to Action' + [char]0xFF5C + [char]0x5EF6 + [char]0x4F38 + [char]0x95B1 + [char]0x8B80
+      Disclaimer = 'Disclaimer' + [char]0xFF5C + [char]0x514D + [char]0x8CAC + [char]0x8072 + [char]0x660E
     }
   }
   return [ordered]@{
@@ -235,7 +237,88 @@ function Get-AplBlogHeadingMap {
     SectorAnalysis = 'Sector Analysis'
     Risk = 'Risk'
     DeepScanConclusion = 'Deep-Scan Conclusion'
+    CallToAction = 'Call to Action'
+    Disclaimer = 'Disclaimer'
   }
+}
+
+function Get-AplEditorialProseParagraphs {
+  param([Parameter(Mandatory = $true)][string]$Section)
+  $paragraphs = New-Object System.Collections.Generic.List[string]
+  foreach ($block in @($Section -split '(?:\r?\n){2,}')) {
+    $value = $block.Trim()
+    if ([string]::IsNullOrWhiteSpace($value) -or $value -match '^(?:#{1,6}|[-*+]\s|\d+[.)]\s)') { continue }
+    $plain = (($value -replace '<[^>]+>', ' ') -replace '[`*_\[\]]', ' ' -replace '\s+', ' ').Trim()
+    if (-not [string]::IsNullOrWhiteSpace($plain)) { [void]$paragraphs.Add($plain) }
+  }
+  return [string[]]$paragraphs.ToArray()
+}
+
+function Assert-AplEditorialBalancedPunctuation {
+  param([Parameter(Mandatory = $true)][string]$Text, [Parameter(Mandatory = $true)][string]$Label)
+  foreach ($pair in @(@([char]0xFF08, [char]0xFF09), @('(', ')'))) {
+    $openCount = @($Text.ToCharArray() | Where-Object { $_ -eq $pair[0] }).Count
+    $closeCount = @($Text.ToCharArray() | Where-Object { $_ -eq $pair[1] }).Count
+    if ($openCount -ne $closeCount) { throw "$Label contains unbalanced parentheses." }
+  }
+  return $true
+}
+
+function Assert-AplClientFacingEditorialLanguage {
+  param([Parameter(Mandatory = $true)][string]$Text, [Parameter(Mandatory = $true)][string]$Label)
+  $forbidden = '(?i)\b(?:Trigger\s*B|managed\s+inputs?|universe|qualified|leaderLock|removedBelowSma200Count|finalWatchlistCount|averageMomentum|averageBuyability|fullRankingCsv|runtime\s+contract|renderer|validator|pipeline)\b|受管(?:輸入|來源|排名|\s*Trigger)|正式\s*Production'
+  $match = [regex]::Match($Text, $forbidden)
+  if ($match.Success) { throw "$Label exposes internal Production terminology: $($match.Value)" }
+  return $true
+}
+
+function Assert-AplEditorialParagraphQuality {
+  param(
+    [Parameter(Mandatory = $true)][string]$Section,
+    [Parameter(Mandatory = $true)][string]$Label,
+    [int]$MinimumParagraphs = 1,
+    [int]$MaximumSemicolonsPerParagraph = 3
+  )
+  $paragraphs = @(Get-AplEditorialProseParagraphs -Section $Section)
+  if ($paragraphs.Count -lt $MinimumParagraphs) { throw "$Label must contain at least $MinimumParagraphs natural prose paragraphs." }
+  foreach ($paragraph in $paragraphs) {
+    $semicolonCount = @($paragraph.ToCharArray() | Where-Object { $_ -eq ';' -or $_ -eq [char]0xFF1B }).Count
+    if ($semicolonCount -gt $MaximumSemicolonsPerParagraph) { throw "$Label contains a machine-shaped semicolon list instead of natural prose." }
+  }
+  Assert-AplEditorialBalancedPunctuation -Text $Section -Label $Label | Out-Null
+  return [string[]]$paragraphs
+}
+
+function Assert-AplEditorialCausalLanguage {
+  param([Parameter(Mandatory = $true)][string]$Text, [Parameter(Mandatory = $true)][string]$Label, [int]$MinimumSignals = 2)
+  $signals = @([regex]::Matches($Text, '因此|所以|意味|反映|顯示|說明|導致|令|這代表|換言之|然而|但'))
+  if ($signals.Count -lt $MinimumSignals) { throw "$Label does not form a causal analytical chain." }
+  return $true
+}
+
+function Assert-AplCoverSubtitleSemantic {
+  param(
+    [Parameter(Mandatory = $true)][string]$Subtitle,
+    [Parameter(Mandatory = $true)][string]$ScanDate,
+    [Parameter(Mandatory = $true)][string[]]$TitleLines
+  )
+  $value = (($Subtitle -replace '\s+', ' ').Trim())
+  if ([string]::IsNullOrWhiteSpace($value)) { throw 'Cover brief overlay subtitle must be non-empty.' }
+  if (($value -replace '\s+', '').Length -lt 8) { throw 'Cover brief overlay subtitle must be a substantive description of the headline.' }
+
+  $identityPattern = '(?i)\bAPL\b|DEEP[\s-]*SCAN|MOMENTUM\s+LEADERS|美股深海雷達'
+  $identityMatch = [regex]::Match($value, $identityPattern)
+  if ($identityMatch.Success) { throw "Cover brief overlay subtitle must describe the headline and must not repeat brand or series identity: $($identityMatch.Value)" }
+  if ($value -match '\b\d{4}[-./]\d{2}[-./]\d{2}\b' -or $value.Contains($ScanDate)) {
+    throw 'Cover brief overlay subtitle must not repeat the scan date; the renderer-owned kicker already supplies it.'
+  }
+
+  $normalizedSubtitle = ($value -replace '[\s｜|:：,，。.!！?？—–-]', '').ToUpperInvariant()
+  $normalizedTitle = ((@($TitleLines) -join ' ') -replace '[\s｜|:：,，。.!！?？—–-]', '').ToUpperInvariant()
+  if ($normalizedSubtitle -ceq $normalizedTitle -or @($TitleLines | ForEach-Object { (($_ -replace '[\s｜|:：,，。.!！?？—–-]', '').ToUpperInvariant()) }) -contains $normalizedSubtitle) {
+    throw 'Cover brief overlay subtitle must add a description and must not duplicate the main title.'
+  }
+  return $true
 }
 
 function Get-AplCanonicalBlogTopGainersTitle {
