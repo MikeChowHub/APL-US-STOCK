@@ -176,13 +176,14 @@ try {
     [string]$headingMap.DeepScanOverview,
     [string]$headingMap.TopGainers,
     [string]$headingMap.MomentumLeaders,
-    [string]$headingMap.SectorAnalysis,
-    [string]$headingMap.Risk,
-    [string]$headingMap.DeepScanConclusion
+    [string]$headingMap.SectorAnalysis
   )
   $scanDateValue=[datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   $editorialQualityFrom=[datetime]::ParseExact('2026-08-10','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   $ctaDisclaimerRemovalFrom=[datetime]::ParseExact('2026-08-28','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+  $investmentImplicationFrom=[datetime]::ParseExact('2026-08-30','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+  if($scanDateValue-ge$investmentImplicationFrom){$mandatorySections+=@([string]$headingMap.InvestmentImplication)}
+  $mandatorySections+=@([string]$headingMap.Risk,[string]$headingMap.DeepScanConclusion)
   if($scanDateValue-ge$editorialQualityFrom-and$scanDateValue-lt$ctaDisclaimerRemovalFrom){$mandatorySections+=@([string]$headingMap.CallToAction,[string]$headingMap.Disclaimer)}
   if(@($editorialAudit.MandatorySections).Count-ne$mandatorySections.Count){throw 'Editorial Completion Audit mandatory section count mismatch.'}
   for($i=0;$i-lt$mandatorySections.Count;$i++){if([string]$editorialAudit.MandatorySections[$i]-cne$mandatorySections[$i]){throw 'Editorial Completion Audit mandatory section order mismatch.'}}

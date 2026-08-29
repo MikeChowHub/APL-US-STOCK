@@ -35,6 +35,17 @@ The standard daily Blog package requires these four cards:
 | `Comparison` | Optional comparison when supported by the article | No |
 
 Do not generate all six merely because the renderer supports six types. Optional cards are selected only when the approved article narrative needs them.
+### Fixed user-facing presentation sequence
+
+The completed package must be presented to the user as five individual links in this fixed order:
+
+1. `Executive Summary`
+2. `Deep-Scan Dashboard`
+3. `Top Gainers`
+4. `Top Leaders`
+5. `Sector Structure`
+
+Dashboard remains an independent package-root artifact and is included only to give the reader complete scan context at the correct point in the presentation. This sequence does not change the four required `CardType` values, renderer inputs, manifest evidence or physical package structure. A folder-only `Table Cards` link is not a substitute for the five ordered links.
 
 The four required cards are companion publishing assets, not four alternate summaries of the same dataset:
 

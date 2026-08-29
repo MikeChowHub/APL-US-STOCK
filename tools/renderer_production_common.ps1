@@ -221,6 +221,7 @@ function Get-AplBlogHeadingMap {
       TopGainers = $englishTopGainers + [char]0xFF5C + [char]0x6700 + [char]0x8FD1 + [char]0x4E03 + [char]0x65E5 + [char]0x5347 + [char]0x5E45 + [char]0x699C
       MomentumLeaders = 'Momentum Leaders Analysis' + [char]0xFF5C + [char]0x52D5 + [char]0x80FD + [char]0x9818 + [char]0x5C0E + [char]0x80A1 + [char]0x5206 + [char]0x6790
       SectorAnalysis = 'Sector Analysis' + [char]0xFF5C + [char]0x677F + [char]0x584A + [char]0x7D50 + [char]0x69CB + [char]0x5206 + [char]0x6790
+      InvestmentImplication = 'Investment Implication' + [char]0xFF5C + [char]0x6295 + [char]0x8CC7 + [char]0x555F + [char]0x793A
       Risk = 'Risk' + [char]0xFF5C + [char]0x98A8 + [char]0x96AA
       DeepScanConclusion = 'Deep-Scan Conclusion' + [char]0xFF5C + [char]0x6DF1 + [char]0x5EA6 + [char]0x6383 + [char]0x63CF + [char]0x7D50 + [char]0x8AD6
       CallToAction = 'Call to Action' + [char]0xFF5C + [char]0x5EF6 + [char]0x4F38 + [char]0x95B1 + [char]0x8B80
@@ -235,6 +236,7 @@ function Get-AplBlogHeadingMap {
     TopGainers = $englishTopGainers
     MomentumLeaders = 'Momentum Leaders Analysis'
     SectorAnalysis = 'Sector Analysis'
+    InvestmentImplication = 'Investment Implication'
     Risk = 'Risk'
     DeepScanConclusion = 'Deep-Scan Conclusion'
     CallToAction = 'Call to Action'
@@ -295,7 +297,38 @@ function Assert-AplEditorialCausalLanguage {
   if ($signals.Count -lt $MinimumSignals) { throw "$Label does not form a causal analytical chain." }
   return $true
 }
+function Assert-AplWeeklyOpeningLayers {
+  param([Parameter(Mandatory = $true)][string]$Text, [Parameter(Mandatory = $true)][string]$Label)
+  $plain = (($Text -replace '(?m)^#{1,6}\s+', '' -replace '<[^>]+>', ' ' -replace '\s+', ' ').Trim())
+  $layers = [ordered]@{
+    'why-it-matters' = '為何|重要|意味|代表|關鍵|影響'
+    'capital-flow' = '資金|資本|配置|流向|輪動|承接|領導'
+    'next-watchpoint' = '後續|下一步|觀察|確認|留意|檢驗|訊號'
+  }
+  foreach ($layer in $layers.Keys) {
+    if ($plain -notmatch [string]$layers[$layer]) { throw "$Label missing required weekly-opening layer: $layer" }
+  }
+  return $true
+}
 
+function Assert-AplInvestmentImplicationLayers {
+  param([Parameter(Mandatory = $true)][string]$Text, [Parameter(Mandatory = $true)][string]$Label)
+  $plain = (($Text -replace '(?m)^#{1,6}\s+', '' -replace '<[^>]+>', ' ' -replace '\s+', ' ').Trim())
+  $layers = [ordered]@{
+    'investor-interpretation' = '投資者|投資啟示|配置|取態|選股標準|選擇性'
+    'capital-flow-and-leadership' = '資金|資本|流向|輪動|領導|擴散|市場廣度'
+    'apl-momentum-leaders-link' = 'APL\s+Momentum\s+Leaders'
+    'fundamental-translation' = '收入|盈利|現金流|經濟利益|商業|需求'
+    'forward-risk-signal' = '後續|下一步|觀察|確認|訊號|風險|若|警惕'
+  }
+  foreach ($layer in $layers.Keys) {
+    if ($plain -notmatch [string]$layers[$layer]) { throw "$Label missing required investment-implication layer: $layer" }
+  }
+  $forbidden = '(?i)\b(?:buy|sell|target\s+price|stop\s+loss)\b|買入|賣出|目標價|止蝕'
+  $match = [regex]::Match($plain, $forbidden)
+  if ($match.Success) { throw "$Label contains a direct trading instruction: $($match.Value)" }
+  return $true
+}
 function Assert-AplCoverSubtitleSemantic {
   param(
     [Parameter(Mandatory = $true)][string]$Subtitle,

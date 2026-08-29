@@ -16,7 +16,7 @@ Visual styling belongs to Visual Rules and Templates.
 
 Trigger C editorial preparation is a required stage between verified Trigger B outputs and Managed Input Preflight. The runner does not write, expand or correct editorial content; it only copies validated publishing artifacts.
 
-Editorial completion requires both Blog formats to contain the nine mandatory analysis sections with substantive issue-specific content, detailed Market Context derived from the approved market-topic input, current Trigger B numbers, current Top Gainers evidence, a continuous reasoning chain, a responsive conclusion, a substantive WhatsApp summary and non-empty Company Business Analysis. Relative Volume / Market Activity is no longer a mandatory Blog section; its metrics may remain in structured cards, Dashboard or internal audit evidence. Template placeholders, test sentences, summary shells and headings without analysis are not publishing artifacts.
+Editorial completion requires both Blog formats to contain all date-governed mandatory analysis sections with substantive issue-specific content (nine through 2026-08-29; ten from 2026-08-30 after adding Investment Implication), detailed Market Context derived from the approved market-topic input, current Trigger B numbers, current Top Gainers evidence, a continuous reasoning chain, a responsive conclusion, a substantive WhatsApp summary and non-empty Company Business Analysis. Relative Volume / Market Activity is no longer a mandatory Blog section; its metrics may remain in structured cards, Dashboard or internal audit evidence. Template placeholders, test sentences, summary shells and headings without analysis are not publishing artifacts.
 
 `tools/validate_managed_inputs.ps1` is the fail-closed executable gate. It creates `APL_Editorial_Completion_Audit_<ScanDate>.json` v1.1 only after content, source evidence, Markdown／HTML equivalence, Table Card source integrity and distinct native-composition integrity pass. `tools/run_daily_production.ps1` must invoke this gate before scoring and must then prove that its newly generated Trigger B ranking is byte-identical to the ranking used during editorial preparation. Mechanical Production completion without this PASS evidence is not publishable completion.
 
@@ -92,6 +92,8 @@ Momentum Leaders Analysis｜動能領導股分析
 ↓
 Sector Analysis｜板塊結構分析
 ↓
+Investment Implication｜投資啟示
+↓
 Risk｜風險
 ↓
 Deep-Scan Conclusion｜深度掃描結論
@@ -117,6 +119,7 @@ Deep-Scan Overview｜深度掃描概覽
 Top Gainers — Past 7 Days｜最近七日升幅榜
 Momentum Leaders Analysis｜動能領導股分析
 Sector Analysis｜板塊結構分析
+Investment Implication｜投資啟示
 Risk｜風險
 Deep-Scan Conclusion｜深度掃描結論
 Call to Action｜延伸閱讀
@@ -178,6 +181,9 @@ Momentum Leaders Analysis｜動能領導股分析
 Sector Analysis｜板塊結構分析
 → Has individual strength formed an industry group?
 
+Investment Implication｜投資啟示
+→ How should investors interpret this environment, and how does it connect to APL Momentum Leaders?
+
 Risk｜風險
 → What could disprove the interpretation?
 
@@ -191,16 +197,15 @@ If the section order can be exchanged without changing the reasoning, or if remo
 
 ## 2. Executive Summary
 
-The Executive Summary should state the most important market observation directly.
+The Executive Summary should state the most important market observation directly and must not begin with methodology.
 
-It should not begin with methodology.
+For ScanDate 2026-08-30 onward, it is the analytical opening of an investment weekly rather than a short abstract. It must contain at least three natural prose paragraphs and cover, in order:
 
-It should answer:
+1. the issue-specific market change and the opening conclusion;
+2. why that change matters and how it is affecting capital allocation, rotation or leadership; and
+3. the next observable confirmation or invalidation signal the reader should watch.
 
-- what changed;
-- where capital is moving;
-- which themes dominate;
-- what the reader should watch.
+It must contain at least 300 substantive characters, at least two causal links, and explicit language for importance, capital flow and the next watchpoint. Repetition, generic filler and copying Market Context do not satisfy this requirement.
 
 ---
 
@@ -208,7 +213,7 @@ It should answer:
 
 Market Context must explain the market environment before introducing the APL framework.
 
-Market Context is the Blog's market-reasoning section. It may be concise and may use one paragraph when that is the clearest complete argument, but it must not collapse into an unsupported summary shell.
+Market Context is the Blog's market-reasoning section. For ScanDate 2026-08-30 onward, it must contain at least three natural prose paragraphs and 420 substantive characters: first establish the causal market event, then explain the transmission into valuation, risk appetite and capital flow, and finally identify the next observation point while leading naturally into APL Momentum Leaders. Earlier packages retain their historical two-paragraph policy.
 
 It must state the issue's largest structural market change and establish the core market proposition that the following sections test.
 
@@ -219,7 +224,7 @@ Market Context does not reproduce every source item. It selects the managed fact
 3. support the proposition with the most representative managed facts; and
 4. lead naturally to why APL Momentum Leaders 領導股 must be examined.
 
-Editorial completeness is determined by whether this reasoning is complete, not by source-item coverage, subsection count, paragraph count, source order or a fixed character target.
+Editorial completeness is determined by whether this reasoning is complete, not by source-item coverage or source order. From 2026-08-30 onward, the three-paragraph and minimum-character gates are additional safeguards against summary shells; they never authorize repetition or unmanaged facts.
 
 The approved Market Context input is authoritative for facts, dates, numbers, company names, event topics and their original meaning. It is not authoritative for final length, paragraph count, paragraph order, subsection count, inclusion of every news item or final wording.
 
@@ -251,7 +256,7 @@ Editorial preparation must not:
 - repeat the same conclusion merely to increase length;
 - turn Market Context into a list of unrelated news items.
 
-Executive Summary is a separate short-form observation and must not replace Market Context.
+Executive Summary remains distinct from Market Context and must not replace it. From 2026-08-30 onward it is a fuller investment-weekly opening, but it states the conclusion and reader significance while Market Context supplies the causal market evidence and transmission mechanism.
 
 Trigger B data, ranking results, sector counts and Top Gainers — Past 7 Days results must not be presented as if they were source Market Context. Those inputs belong in their own Blog sections and may only be related back to the market background through editorial analysis.
 
@@ -281,6 +286,7 @@ Machine-readable evidence must be translated into reader-facing analysis before 
 
 - `Deep-Scan Overview` may state the current counts and averages in natural Chinese, but it must explain what they mean for leadership concentration. It must never print internal property names.
 - `Market Context` must contain at least two analytical prose paragraphs and at least two explicit causal links such as `因此`, `反映`, `意味`, `導致` or `這代表`. Source headlines are evidence, not the article structure.
+- From ScanDate 2026-08-30 onward, Executive Summary must contain at least three natural paragraphs, 300 substantive characters, two causal links and all three layers: why the change matters, how capital is moving, and what to watch next. Market Context must contain at least three natural paragraphs, 420 substantive characters, three causal links and the same three layers grounded only in approved market-context evidence.
 - `Top Gainers` must use a small number of selected examples in balanced sentences, followed by the canonical scope／point-in-time note as its own paragraph. It must not serialize the input rows into one sentence.
 - `Momentum Leaders Analysis` and `Sector Analysis` must each contain at least two natural prose paragraphs. No paragraph may use more than three semicolons to simulate a table or CSV row list.
 - For ScanDate 2026-08-10 through 2026-08-27, Markdown and HTML must contain content-equivalent CTA and disclaimer sections. From 2026-08-28 onward, neither section may appear; the Conclusion must close the article.
@@ -288,7 +294,7 @@ Machine-readable evidence must be translated into reader-facing analysis before 
 
 `tools/validate_managed_inputs.ps1` must fail closed on every condition above before Atomic Production starts. Character count, presence of headings and source-number matches are insufficient to override this gate.
 
-Final Audit must compare normalized paragraph blocks across the nine mandatory sections, record any repeated long block, and fail closed when repeated material is not accompanied by a distinct section conclusion. A PASS requires each section to add new evidence, interpretation or a falsifiable next question. This guard applies to Markdown, HTML, WhatsApp, Company Business Analysis and Table Card semantic inputs; structured fields must remain concise and role-specific rather than carrying Blog prose.
+Final Audit must compare normalized paragraph blocks across all date-governed mandatory sections (nine through 2026-08-29; ten from 2026-08-30), record any repeated long block, and fail closed when repeated material is not accompanied by a distinct section conclusion. A PASS requires each section to add new evidence, interpretation or a falsifiable next question. This guard applies to Markdown, HTML, WhatsApp, Company Business Analysis and Table Card semantic inputs; structured fields must remain concise and role-specific rather than carrying Blog prose.
 
 ### Market Context hierarchy
 
@@ -401,7 +407,7 @@ Do not simply list stocks one by one.
 
 Sector Analysis should explain why certain sectors dominate the current scan.
 
-It must move from individual-stock strength to an industry-group judgment, then lead into whether volume and participation confirm that group.
+It must move from individual-stock strength to an industry-group judgment, then lead into what that structure means for investor interpretation and capital allocation.
 
 It should connect:
 
@@ -416,7 +422,29 @@ If structured data needs a visual treatment, generate a separate Blog Table Card
 
 ---
 
-## 9. Risk
+## 9. Investment Implication
+
+From **2026-08-30** onward, `Investment Implication｜投資啟示` is a mandatory client-facing analysis layer immediately after `Sector Analysis｜板塊結構分析` and before `Risk｜風險`. It must answer: **所以投資者而家應該點理解呢個環境？** It is an interpretation of the preceding evidence, not a repetition of Market Context and not personalized investment advice.
+
+The section must contain at least five natural prose paragraphs and at least 650 substantive characters. It must form a continuous argument that covers:
+
+1. how investors should interpret the current market regime and what selection standard has changed;
+2. which primary capital-expenditure, demand or leadership direction has the strongest economic support;
+3. whether a secondary beneficiary curve or broader sector expansion is emerging;
+4. how current `APL Momentum Leaders` cross-sector evidence and market breadth support or challenge that interpretation;
+5. how macro costs, valuation, cash flow and balance-sheet quality affect resilience, followed by the next confirmation or invalidation signal.
+
+The section should translate theme exposure into sustainable economic benefit. It should distinguish being associated with a popular narrative from converting demand into revenue, earnings and free cash flow. It should also explain whether leadership is broadening beyond a small group, because the breadth and quality of that expansion determine whether the market is still trading one core story or building a healthier growth structure.
+
+`APL Momentum Leaders` must be connected explicitly and naturally: the framework is used to observe where relative strength, demand, earnings expectations and catalysts are improving together across sectors. Do not assume in advance that the next leader must come from a particular industry, and do not turn the section into a stock list.
+
+The final paragraph must state the current research posture in plain language, such as selective participation rather than indiscriminate chasing, and then lead into the Risk section's falsification tests. Direct buy／sell instructions, target prices, stop losses, personalized allocation commands and certainty claims are prohibited.
+
+Fail closed when the section is missing, too short, fewer than five paragraphs, lacks the explicit `APL Momentum Leaders` link, lacks investor／capital-flow／fundamental／forward-risk layers, copies a Market Context paragraph, or contains direct trading instructions.
+
+---
+
+## 10. Risk
 
 Risk section is mandatory.
 
@@ -447,7 +475,7 @@ Do not imply certainty.
 
 ---
 
-## 10. Deep-Scan Conclusion
+## 11. Deep-Scan Conclusion
 
 The conclusion should summarize the market state and identify what deserves continued observation.
 
@@ -467,7 +495,7 @@ It should end with a research-style market observation.
 
 ---
 
-## 11. Client-facing Naming
+## 12. Client-facing Naming
 
 Always use:
 
@@ -488,7 +516,7 @@ Do not use these internal terms in client-facing Blog text:
 
 ---
 
-## 12. Blog Manuscript and Visual Artifact Separation
+## 13. Blog Manuscript and Visual Artifact Separation
 
 The formal article manuscript filename is:
 
@@ -539,6 +567,21 @@ The standard Trigger C Production Package must publish the successful required e
 - `SectorStructure` — sector／leadership structure.
 
 `MarketObservation` and `Comparison` are optional and must not be generated without an article-specific reason. No Table Card, whether required or optional, may be referenced inside the Blog manuscript. A publishing operation outside the manuscript may use only cards recorded as `PASS` in the publication manifest.
+### Formal output presentation order
+
+When Codex or an operator lists the completed visual research package for the user, the `Table Cards` delivery group must use this fixed, individually linked order:
+
+```text
+Executive Summary
+→ Deep-Scan Dashboard
+→ Top Gainers
+→ Top Leaders
+→ Sector Structure
+```
+
+`Deep-Scan Dashboard` is deliberately included in the presentation sequence between Executive Summary and Top Gainers because it supplies the complete scan context before the short-term and medium-term evidence. It remains a standalone Dashboard artifact at `production-package/`; it is not reclassified as a Table Card and is not moved into `production-package/Table Cards/`.
+
+The four Table Card schemas, filenames, source bindings and physical package paths remain unchanged. This rule governs the human-facing output list／handoff order, not scoring, ranking, renderer sequencing, manifest evidence order or Archive layout. Do not replace the five individual artifact links with a single folder link, and do not list Top Leaders before Top Gainers in this presentation group.
 
 Required Table Cards are source-bound publishing evidence, not free-form illustrations. `TopLeaders` must reproduce the selected current Trigger B ranking rows in rank order with matching symbols, company identities and Composite Scores; `TopGainers` must reproduce the selected current Top Gainers CSV rows in source order with matching symbols, company identities and percentage changes; and `SectorStructure` representative symbols must belong to the current Trigger B Top 30. Any displayed source fact that does not match the current managed evidence is a preflight failure and Production must not start.
 
@@ -557,7 +600,7 @@ The four required cards must not collapse into four presentations of the same da
 
 ---
 
-## 13. HTML Source Contract
+## 14. HTML Source Contract
 
 The publish-ready HTML source must be delivered as a separate same-date file:
 
@@ -603,7 +646,7 @@ These publishing metadata values may remain in the separate `.md` manuscript or 
 
 ---
 
-## 14. URL and Publishing
+## 15. URL and Publishing
 
 Formal Blog URL format:
 
@@ -617,7 +660,7 @@ Page description should summarize APL Momentum Leaders 領導股, market leaders
 
 ---
 
-## 15. Prohibited Blog Patterns
+## 16. Prohibited Blog Patterns
 
 ### Published artifact immutability
 

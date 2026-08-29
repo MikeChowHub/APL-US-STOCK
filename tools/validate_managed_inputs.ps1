@@ -173,14 +173,19 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
   $scanDateValue=[datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   $editorialQualityFrom=[datetime]::ParseExact('2026-08-10','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   $strictEditorialQuality=$scanDateValue-ge$editorialQualityFrom
+  $weeklyOpeningFrom=[datetime]::ParseExact('2026-08-30','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+  $requiresExpandedWeeklyOpening=$scanDateValue-ge$weeklyOpeningFrom
+  $investmentImplicationFrom=[datetime]::ParseExact('2026-08-30','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+  $requiresInvestmentImplication=$scanDateValue-ge$investmentImplicationFrom
   $mandatory=[ordered]@{}
-  $mandatory[[string]$headingMap.ExecutiveSummary]=80
-  $mandatory[[string]$headingMap.MarketContext]=160
+  $mandatory[[string]$headingMap.ExecutiveSummary]=if($requiresExpandedWeeklyOpening){300}else{80}
+  $mandatory[[string]$headingMap.MarketContext]=if($requiresExpandedWeeklyOpening){420}else{160}
   $mandatory[[string]$headingMap.WhyAPL]=120
   $mandatory[[string]$headingMap.DeepScanOverview]=120
   $mandatory[[string]$headingMap.TopGainers]=150
   $mandatory[[string]$headingMap.MomentumLeaders]=180
   $mandatory[[string]$headingMap.SectorAnalysis]=120
+  if($requiresInvestmentImplication){$mandatory[[string]$headingMap.InvestmentImplication]=650}
   $longRiskConclusionFrom=[datetime]::ParseExact('2026-08-28','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   $requiresLongRiskConclusion=$scanDateValue-ge$longRiskConclusionFrom
   $ctaDisclaimerRemovalFrom=[datetime]::ParseExact('2026-08-28','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
@@ -234,8 +239,18 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
     foreach($heading in $mandatory.Keys){[void]$clientSections.Add((Get-AplMarkdownSection $markdown ([string]$heading)))}
     Assert-AplClientFacingEditorialLanguage -Text ($clientSections.ToArray()-join"`n") -Label 'Formal Blog'|Out-Null
 
-    $marketParagraphs=@(Assert-AplEditorialParagraphQuality -Section $marketSection -Label 'Blog Market Context' -MinimumParagraphs 2 -MaximumSemicolonsPerParagraph 3)
-    Assert-AplEditorialCausalLanguage -Text ($marketParagraphs-join' ') -Label 'Blog Market Context' -MinimumSignals 2|Out-Null
+    if($requiresExpandedWeeklyOpening){
+      $executiveSection=Get-AplMarkdownSection $markdown ([string]$headingMap.ExecutiveSummary)
+      $executiveParagraphs=@(Assert-AplEditorialParagraphQuality -Section $executiveSection -Label 'Blog Executive Summary' -MinimumParagraphs 3 -MaximumSemicolonsPerParagraph 3)
+      Assert-AplEditorialCausalLanguage -Text ($executiveParagraphs-join' ') -Label 'Blog Executive Summary' -MinimumSignals 2|Out-Null
+      Assert-AplWeeklyOpeningLayers -Text $executiveSection -Label 'Blog Executive Summary'|Out-Null
+      $marketParagraphs=@(Assert-AplEditorialParagraphQuality -Section $marketSection -Label 'Blog Market Context' -MinimumParagraphs 3 -MaximumSemicolonsPerParagraph 3)
+      Assert-AplEditorialCausalLanguage -Text ($marketParagraphs-join' ') -Label 'Blog Market Context' -MinimumSignals 3|Out-Null
+      Assert-AplWeeklyOpeningLayers -Text $marketSection -Label 'Blog Market Context'|Out-Null
+    }else{
+      $marketParagraphs=@(Assert-AplEditorialParagraphQuality -Section $marketSection -Label 'Blog Market Context' -MinimumParagraphs 2 -MaximumSemicolonsPerParagraph 3)
+      Assert-AplEditorialCausalLanguage -Text ($marketParagraphs-join' ') -Label 'Blog Market Context' -MinimumSignals 2|Out-Null
+    }
 
     $topGainersSection=Get-AplMarkdownSection $markdown ([string]$headingMap.TopGainers)
     $topGainersParagraphs=@(Assert-AplEditorialParagraphQuality -Section $topGainersSection -Label 'Blog Top Gainers' -MinimumParagraphs 2 -MaximumSemicolonsPerParagraph 3)
@@ -248,6 +263,18 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
     $sectorSection=Get-AplMarkdownSection $markdown ([string]$headingMap.SectorAnalysis)
     $sectorParagraphs=@(Assert-AplEditorialParagraphQuality -Section $sectorSection -Label 'Blog Sector Analysis' -MinimumParagraphs 2 -MaximumSemicolonsPerParagraph 3)
     Assert-AplEditorialCausalLanguage -Text ($sectorParagraphs-join' ') -Label 'Blog Sector Analysis' -MinimumSignals 1|Out-Null
+
+    if($requiresInvestmentImplication){
+      $investmentSection=Get-AplMarkdownSection $markdown ([string]$headingMap.InvestmentImplication)
+      $investmentParagraphs=@(Assert-AplEditorialParagraphQuality -Section $investmentSection -Label 'Blog Investment Implication' -MinimumParagraphs 5 -MaximumSemicolonsPerParagraph 3)
+      Assert-AplEditorialCausalLanguage -Text ($investmentParagraphs-join' ') -Label 'Blog Investment Implication' -MinimumSignals 4|Out-Null
+      Assert-AplInvestmentImplicationLayers -Text $investmentSection -Label 'Blog Investment Implication'|Out-Null
+      $normalizedMarketParagraphs=@($marketParagraphs|ForEach-Object{(($_-replace '\s+',' ').Trim()).ToUpperInvariant()})
+      foreach($investmentParagraph in $investmentParagraphs){
+        $normalizedInvestment=(($investmentParagraph-replace'\s+',' ').Trim()).ToUpperInvariant()
+        if($normalizedInvestment.Length-ge80-and$normalizedMarketParagraphs-contains$normalizedInvestment){throw 'Blog Investment Implication repeats a Market Context paragraph instead of interpreting the environment for investors.'}
+      }
+    }
 
     if($requiresLongRiskConclusion){
       $riskSection=Get-AplMarkdownSection $markdown ([string]$headingMap.Risk)

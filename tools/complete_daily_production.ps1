@@ -21,7 +21,8 @@ if ($expectedEditorialSourceCount -lt 1) { throw 'Production Artifact Contract E
 $scanDateValue=[datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
 $editorialQualityFrom=[datetime]::ParseExact('2026-08-10','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
 $ctaDisclaimerRemovalFrom=[datetime]::ParseExact('2026-08-28','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
-$expectedEditorialSectionCount=if($scanDateValue-ge$editorialQualityFrom-and$scanDateValue-lt$ctaDisclaimerRemovalFrom){11}else{9}
+$investmentImplicationFrom=[datetime]::ParseExact('2026-08-30','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+$expectedEditorialSectionCount=if($scanDateValue-ge$investmentImplicationFrom){10}elseif($scanDateValue-ge$editorialQualityFrom-and$scanDateValue-lt$ctaDisclaimerRemovalFrom){11}else{9}
 $allowedRoot = if ($RegressionTest) { Join-Path $ProjectRoot 'tmp' } else { $ProjectRoot }
 $FinalAuditPath = Assert-AplNoReparsePath -Path $FinalAuditPath -AllowedRoot $allowedRoot -RequireFile
 $ArchiveManifestPath = Assert-AplNoReparsePath -Path $ArchiveManifestPath -AllowedRoot $allowedRoot -RequireFile

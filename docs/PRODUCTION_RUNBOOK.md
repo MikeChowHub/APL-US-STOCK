@@ -135,6 +135,7 @@ PublishArtifacts 完成後，runner 必須執行 `LockPublishedArtifacts`：對�
 - `APL_Momentum_Leaders_Market_Analysis_Blog_<ScanDate>.html.txt`（直接顯示及複製 `<h1>`、`<h3>`、`<p>` source；不得同時生成 `.html`）；
 - `table-card-log/`內的Company Business Analysis；
 - `APL_Production_Package_Manifest_<ScanDate>.json`，記錄required mapping及全部package files的path／size／SHA。
+正式完成後向使用者列出視覺研究成果時，`Table Cards`交付組必須逐項提供連結，固定為：`Executive Summary → Deep-Scan Dashboard → Top Gainers → Top Leaders → Sector Structure`。不可只提供`Table Cards/`資料夾連結。Dashboard仍位於package根目錄；此要求只控制交付顯示次序，不改變renderer、manifest或Archive路徑。
 
 Dashboard／Social Card／Social Radar SVG、Dashboard input、source／ranking CSV、cumulative watchlist、SMA200 audit、其餘 contracts、renderer logs及其他machine records留在日期根目錄。Package publishing artifacts不得在日期根目錄保留副本。舊完成日期不作post-publish搬移；新結構只由下一次Step 1完整run或下一個ScanDate產生。
 

@@ -1,5 +1,5 @@
 # APL Momentum Leaders Blog Template
-> **Effective-date editorial boundary:** For ScanDate 2026-08-28 onward, omit `Call to Action｜延伸閱讀` and `Disclaimer｜免責聲明` from both Markdown and HTML. `Deep-Scan Conclusion｜深度掃描結論` is the final article section, followed only by the Markdown-only `SEO and Sharing` metadata block. CTA／Disclaimer examples below apply only to 2026-08-10 through 2026-08-27 legacy-compatible packages.
+> **Effective-date editorial boundary:** For ScanDate 2026-08-28 onward, omit `Call to Action｜延伸閱讀` and `Disclaimer｜免責聲明` from both Markdown and HTML. `Deep-Scan Conclusion｜深度掃描結論` is the final article section, followed only by the Markdown-only `SEO and Sharing` metadata block. From 2026-08-30 onward, `Investment Implication｜投資啟示` is mandatory immediately after Sector Analysis and before Risk. CTA／Disclaimer examples below apply only to 2026-08-10 through 2026-08-27 legacy-compatible packages.
 
 This template provides the production skeleton for formal APL Momentum Leaders 領導股 Blog articles.
 
@@ -68,6 +68,9 @@ Momentum Leaders Analysis｜動能領導股分析
 Sector Analysis｜板塊結構分析
 → Has individual strength formed an industry group?
 
+Investment Implication｜投資啟示
+→ How should investors interpret this environment, and how does the evidence connect to APL Momentum Leaders?
+
 Risk｜風險
 → What could disprove the interpretation, how would the risk transmit, and which observable signal would confirm failure?
 
@@ -90,6 +93,26 @@ Use the following private editorial guidance for every major section; do not dis
 - 本節得到什麼結論；
 - 下一節需要驗證什麼。
 
+For ScanDate 2026-08-30 onward, draft the opening as an investment-weekly lead:
+
+- Executive Summary paragraph 1: what changed and the issue conclusion;
+- Executive Summary paragraph 2: why it matters and where capital is moving;
+- Executive Summary paragraph 3: what observable signal should be watched next;
+- Market Context paragraph 1: the managed event evidence and causal change;
+- Market Context paragraph 2: transmission into valuation, risk appetite and capital allocation;
+- Market Context paragraph 3: the next confirmation／invalidation point and the transition to why APL leadership evidence is needed.
+
+Do not display these paragraph labels in the final article. The required layers are semantic, so natural paragraph transitions are preferred over formulaic labels.
+
+For ScanDate 2026-08-30 onward, draft `Investment Implication｜投資啟示` as a minimum five-paragraph bridge between sector evidence and risk:
+
+1. interpret what the present regime means for investor selection standards;
+2. identify the primary economically supported capital-expenditure／demand direction;
+3. test whether a secondary beneficiary curve or broader sector expansion is forming;
+4. connect the evidence explicitly to `APL Momentum Leaders`, cross-sector leadership and market breadth;
+5. balance growth against valuation, cash flow, balance-sheet and macro constraints, then state the next confirmation／invalidation signal.
+
+Use at least 650 substantive characters. Do not repeat Market Context, paste a stock list, or give direct buy／sell, target-price, stop-loss or personalized allocation instructions. The closing must lead naturally to `Risk｜風險`.
 For Market Context, also answer privately before drafting:
 
 - 哪些來源事實真正支持核心命題？
@@ -162,7 +185,7 @@ https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD
 
 ## 4. Market Context detailed structure
 
-Executive Summary remains one concise market observation. Market Context is the shortest complete market argument that supports the issue's core proposition; it has no fixed length, paragraph count or subsection count.
+For ScanDate 2026-08-30 onward, Executive Summary is a three-paragraph investment-weekly opening and Market Context is a three-paragraph causal expansion. Executive Summary explains the conclusion, importance, capital direction and next watchpoint; Market Context provides the managed evidence, transmission mechanism and bridge into APL analysis. Earlier packages retain their historical concise format.
 
 Use one or more optional subsections when they improve the causal structure:
 
@@ -210,7 +233,14 @@ The managed source is authoritative for facts, dates, numbers, company names, ev
 <p>[Transition from short-term comparison: explain which companies and business models receive medium-term capital, then ask whether they form an industry group.]</p>
 
 <h3>Sector Analysis｜板塊結構分析</h3>
-<p>[Transition from individual leaders: determine whether the strength forms an industry group, then ask whether participation confirms it.]</p>
+<p>[Transition from individual leaders: determine whether the strength forms an industry group, then ask what that structure means for investor interpretation and capital allocation.]</p>
+
+<h3>Investment Implication｜投資啟示</h3>
+<p>[Investor interpretation: explain how the current regime changes selection standards without repeating Market Context.]</p>
+<p>[Primary economic direction: identify where demand or capital expenditure has the clearest path to revenue, earnings or cash flow.]</p>
+<p>[Secondary curve and breadth: test whether leadership is expanding beyond a narrow core theme.]</p>
+<p>[APL link: explain what current APL Momentum Leaders cross-sector evidence confirms or challenges.]</p>
+<p>[Research posture and next signal: balance macro／valuation constraints, then lead into the falsification tests in Risk. No direct trading instruction.]</p>
 
 <h3>Risk｜風險</h3>
 <p>[Issue-specific falsification conditions: identify what could disprove the core proposition.]</p>
@@ -266,6 +296,7 @@ Replace the following per issue:
 - Top Gainers interpretation;
 - Momentum Leaders structure;
 - sector rotation;
+- investment implication and APL Momentum Leaders interpretation;
 - risk background;
 - conclusion;
 - SEO metadata.
@@ -287,6 +318,12 @@ For managed packages dated 2026-08-28 or later:
 - Deep-Scan Conclusion contains at least three natural prose paragraphs answering the opening question, integrating prior evidence and identifying the next confirmation or invalidation signal;
 - neither section may copy a fixed prior-issue passage, repeat the same conclusion to increase length or introduce claims unsupported by the current managed evidence.
 
+For managed packages dated 2026-08-30 or later:
+
+- `Investment Implication｜投資啟示` appears after Sector Analysis and before Risk in both Markdown and HTML;
+- it contains at least five natural prose paragraphs and 650 substantive characters;
+- it answers how investors should interpret the environment, connects explicitly to `APL Momentum Leaders`, and covers capital flow, economic translation, breadth and the next risk signal;
+- it does not copy a Market Context paragraph or contain direct trading instructions.
 ---
 
 ## 8. Prohibited Template Usage
