@@ -1,4 +1,4 @@
-# Final Production Audit Checklist
+﻿# Final Production Audit Checklist
 
 ## Blog heading language gate
 
@@ -19,7 +19,7 @@
 - [ ] `APL_Editorial_Completion_Audit_<ScanDate>.json`為required publishing artifact，schema/date/status及四份editorial artifact SHA均PASS。
 - [ ] Blog Markdown及HTML均包含ScanDate規定的mandatory sections（至2026-08-29為九個；自2026-08-30起為十個），順序一致且每節有實質內容；Relative Volume / Market Activity 不再是必需 Blog section。
 - [ ] Blog沒有placeholder、template instruction、英文test sentence、單段摘要殼或只有標題的section。
-- [ ] 自 2026-08-03 起，Blog Markdown `#` 與 HTML `<h1>` 均以固定身份前綴 `APL Deep-Scan 美股深海雷達` 開始，且其後接當期核心市場結論。
+- [ ] 自 2026-09-02 起，Blog Markdown `#` 與 HTML `<h1>` 均以固定身份前綴 `APL Deep-Scan｜美股深海雷達` 開始，且其後接當期核心市場結論；已發布日期不回寫。
 - [ ] Market Context提出清楚核心命題，以受管事實形成因果推理，並自然帶入APL Momentum Leaders；沒有被Executive Summary取代。
 - [ ] Deep-Scan Overview數字與當次Trigger B metadata一致；Top Gainers section使用當次Top Gainers CSV證據。
 - [ ] Deep-Scan Overview只使用自然讀者語言；不得顯示`universe`、`qualified`、`leaderLock`、`removedBelowSma200Count`、`finalWatchlistCount`、`averageMomentum`、`averageBuyability`、`Trigger B`或其他Production內部欄位名稱。
@@ -55,6 +55,7 @@
 - [ ] `TopLeaders`逐列rank／symbol／company identity／Composite Score與當次Trigger B full ranking一致；不得以其他日期或人工選股替代。
 - [ ] `TopGainers`逐列symbol／company identity／change percentage與當次SPX／NDX／DJI成分股 Top Gainers CSV一致；重複的非Symbol header不影響核對。
 - [ ] `SectorStructure`每個representative symbol均存在於當次Trigger B Top 30，沒有跨群組重複或虛構代表股。
+- [ ] `SectorStructure.theme`為`tools/sector_map.json`正式sector；每個代表股映射至同一sector，且`count`等於當次Top 30中該sector的完整實際數量。泛稱或混合板塊必須FAIL。
 - [ ] `ExecutiveSummary`包含3至5個當期最高優先觀察及其意義；沒有被固定Universe／Qualified／Leaders funnel佔據，亦沒有複製其他Table Card rows。
 - [ ] 新日期 `ExecutiveSummary` 的 `observation`／`meaning` 均為中文讀者向文字；數字必須連接至市場含義，且 Leader Lock、Buyability 等術語已在 meaning 解釋。只有 raw metric dump、英文-only 或未解釋術語必須令 semantic gate FAIL；2026-08-04 legacy Archive 維持 immutable。
 - [ ] Editorial Completion Audit為v1.1、`ProductionReadiness=true`，14個source roles的relative path／bytes／SHA-256完整且唯一，Table Card及native composition integrity checks全部PASS。

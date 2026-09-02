@@ -116,7 +116,7 @@ try{
     [ordered]@{symbol='T003';companyName='Alpha Research 3';sectorTheme='市場服務';changePct='+8%'}
   )}
   $sectorCard=[ordered]@{SchemaVersion='APL Table Card Input v1.1';CardType='SectorStructure';Title='產業結構';Rows=@(
-    [ordered]@{theme='選擇性領導';count=3;direction='盈利能見度支持群組形成';representativeSymbols=(@($ranking|Select-Object -First 3|ForEach-Object{$_.Symbol})-join', ')}
+    [ordered]@{theme='Others';count=30;direction='盈利能見度支持群組形成';representativeSymbols=(@($ranking|Select-Object -First 3|ForEach-Object{$_.Symbol})-join', ')}
   )}
   $cardFiles=[ordered]@{ExecutiveSummary='ExecutiveSummary.json';TopLeaders='TopLeaders.json';TopGainers='TopGainers.json';SectorStructure='SectorStructure.json'}
   Write-Json (Join-Path $tableRoot $cardFiles.ExecutiveSummary) $executive
@@ -154,7 +154,7 @@ try{
   $sectionMinimum[[string]$headingMap.DeepScanConclusion]=300
   $supportingSentence='這項證據必須與上一節的判斷連接，才能辨認資金選擇是否具有持續性，並為下一個分析問題建立可驗證的方向。'
   foreach($heading in $sectionMinimum.Keys){while(([string]$sections[$heading]).Length-lt([int]$sectionMinimum[$heading]+20)){$sections[$heading]=([string]$sections[$heading]+' '+$supportingSentence)}}
-  $title="APL Deep-Scan 美股深海雷達: 市場領導分析 | $ScanDate"
+  $title="APL Deep-Scan｜美股深海雷達: 市場領導分析 | $ScanDate"
   $markdown=New-Object Collections.Generic.List[string]
   $html=New-Object Collections.Generic.List[string]
   $markdown.Add("# $title");$markdown.Add('')

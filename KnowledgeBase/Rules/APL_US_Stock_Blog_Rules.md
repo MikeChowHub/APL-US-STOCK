@@ -1,4 +1,4 @@
-# APL US Stock Blog Rules
+﻿# APL US Stock Blog Rules
 
 This document defines stable writing rules for formal APL Momentum Leaders 領導股 Blog production.
 
@@ -68,10 +68,10 @@ Do not use source-integrity requirements to force low-priority metrics into clie
 For every newly created managed editorial package from **2026-08-03** onward, the formal article title and Page title must use this exact structure:
 
 ```text
-APL Deep-Scan 美股深海雷達: [issue-specific market conclusion] | YYYY-MM-DD
+APL Deep-Scan｜美股深海雷達: [issue-specific market conclusion] | YYYY-MM-DD
 ```
 
-The issue-specific market conclusion is mandatory; it is not a placeholder and must be written for the current market evidence. Use the ASCII colon, one space after the colon, and one space on each side of the date separator (` | `). Example: `APL Deep-Scan 美股深海雷達: 能源風險回歸，AI 回報受驗證 | 2026-08-04`.
+The issue-specific market conclusion is mandatory; it is not a placeholder and must be written for the current market evidence. Use the ASCII colon, one space after the colon, and one space on each side of the date separator (` | `). Example: `APL Deep-Scan｜美股深海雷達: 能源風險回歸，AI 回報受驗證 | 2026-08-04`.
 
 The full string is the article title, the Markdown `#` value, the HTML `<h1>` value and the SEO／Sharing `Page title` value. They must be byte-equivalent after UTF-8 decoding. The title is not a subtitle, image-overlay line, or optional branding treatment; a prefix-only title or a prefix followed only by a date is invalid. This applies prospectively and does not alter already published outputs or Archive artifacts.
 
@@ -586,6 +586,8 @@ The four Table Card schemas, filenames, source bindings and physical package pat
 Required Table Cards are source-bound publishing evidence, not free-form illustrations. `TopLeaders` must reproduce the selected current Trigger B ranking rows in rank order with matching symbols, company identities and Composite Scores; `TopGainers` must reproduce the selected current Top Gainers CSV rows in source order with matching symbols, company identities and percentage changes; and `SectorStructure` representative symbols must belong to the current Trigger B Top 30. Any displayed source fact that does not match the current managed evidence is a preflight failure and Production must not start.
 
 `SectorStructure.direction` is a concise Chinese market-direction／capital-structure summary and must contain Chinese text. English-only direction values are invalid; symbols belong only in `representativeSymbols`. This rule applies to new managed packages from 2026-08-05 onward. Existing 2026-08-04 Archive artifacts remain immutable legacy output and are not silently rewritten.
+
+For new managed packages from 2026-09-03 onward, every `SectorStructure.theme` must be a canonical sector in `tools/sector_map.json`; generic labels such as `領導結構`, `選擇性領導` or `市場主線` are not sectors and must fail. Every representative symbol must map to that same sector, and `count` must equal the number of current Trigger B Top 30 symbols mapped to that sector. The card may select the most decision-relevant sector groups for readability, but it must never manufacture a mixed-symbol group or use the number of displayed representatives as the sector count.
 
 `ExecutiveSummary` must contain three to five issue-specific priority observations with a short implication for each. Universe, qualified, leaders, Leader Lock or other scan metrics may appear only when they materially support one of those priority observations. They are not mandatory content because Deep-Scan Overview and Dashboard already own the complete scan context.
 

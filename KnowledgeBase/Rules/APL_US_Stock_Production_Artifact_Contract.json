@@ -1,4 +1,4 @@
-{
+﻿{
   "SchemaVersion": "APL Production Artifact Contract v1.0",
   "EditorialReadiness": {
     "SchemaVersion": "APL Editorial Completion Audit v1.1",
@@ -40,7 +40,7 @@
                            "CoverSubtitleSemantic"
                        ],
     "TitlePolicy": {
-      "RequiredPrefix": "APL Deep-Scan 美股深海雷達",
+      "RequiredPrefix": "APL Deep-Scan｜美股深海雷達",
       "EffectiveFrom": "2026-08-03"
     }
   },

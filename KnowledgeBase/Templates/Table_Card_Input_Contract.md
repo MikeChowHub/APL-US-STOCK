@@ -1,4 +1,4 @@
-# APL US Stock Table Card Input Contract
+﻿# APL US Stock Table Card Input Contract
 
 Version: APL Table Card Input v1.1
 
@@ -123,6 +123,8 @@ Rules:
 - `changePct` must be a signed percentage and cannot occupy `sectorTheme`.
 - `representativeSymbols` must be a symbol list and cannot occupy `direction`.
 - `direction` is a concise Chinese market-structure／capital-flow summary and must contain at least one Chinese character. English-only direction text is invalid; symbols must remain in `representativeSymbols`.
+- `theme` must exactly match a canonical sector in `tools/sector_map.json`; it cannot be a generic label such as `領導結構` or `選擇性領導`.
+- Every `representativeSymbols` member must belong to the row's mapped sector, and `count` must equal that sector's complete count within the current Trigger B Top 30 rather than the number of representatives displayed.
 - Cell content should be concise.
 - Avoid paragraph-length cells.
 - Do not include raw CSV columns that do not support the article conclusion.

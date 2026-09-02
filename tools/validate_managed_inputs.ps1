@@ -395,13 +395,32 @@ function Assert-AplTableCardSourceIntegrity($Cards,$Meta,[string]$MetaPath,[stri
   }
 
   $top30=@($ranking|Select-Object -First 30|ForEach-Object{([string]$_.Symbol).Trim().ToUpperInvariant()})
+  $sectorMapPath=Join-Path $ProjectRoot 'tools\sector_map.json'
+  $sectorMap=Read-AplUtf8Json $sectorMapPath
+  $allowedSectors=@($sectorMap.Sectors|ForEach-Object{[string]$_})
+  $defaultSector=[string]$sectorMap.DefaultSector
+  if($allowedSectors.Count-lt1-or[string]::IsNullOrWhiteSpace($defaultSector)){throw 'Sector map is incomplete for SectorStructure validation.'}
+  $top30SectorCounts=@{}
+  foreach($symbol in $top30){
+    $property=$sectorMap.Symbols.PSObject.Properties[$symbol]
+    $sector=if($null-ne$property){[string]$property.Value}else{$defaultSector}
+    if($allowedSectors-cnotcontains$sector){throw "Sector map contains unsupported sector '$sector' for '$symbol'."}
+    if(-not$top30SectorCounts.ContainsKey($sector)){$top30SectorCounts[$sector]=0}
+    $top30SectorCounts[$sector]=[int]$top30SectorCounts[$sector]+1
+  }
   $seenRepresentatives=@{}
   foreach($row in @($Cards['SectorStructure'].Json.Rows)){
+    $theme=([string]$row.theme).Trim()
+    if($allowedSectors-cnotcontains$theme){throw "SectorStructure theme '$theme' is not a canonical sector from tools/sector_map.json."}
     $symbols=@(([string]$row.representativeSymbols)-split'[,;\s]+'|ForEach-Object{$_.Trim().ToUpperInvariant()}|Where-Object{$_})
     if($symbols.Count-lt1){throw 'SectorStructure row has no representative symbols.'}
-    if([int]$row.count-lt$symbols.Count-or[int]$row.count-gt30){throw "SectorStructure count is inconsistent for theme '$($row.theme)'."}
+    $expectedCount=if($top30SectorCounts.ContainsKey($theme)){[int]$top30SectorCounts[$theme]}else{0}
+    if([int]$row.count-ne$expectedCount){throw "SectorStructure count for '$theme' is $($row.count); expected $expectedCount from the current Trigger B Top 30."}
     foreach($symbol in $symbols){
       if($top30-cnotcontains$symbol){throw "SectorStructure representative '$symbol' is not in the Trigger B Top 30."}
+      $property=$sectorMap.Symbols.PSObject.Properties[$symbol]
+      $mappedSector=if($null-ne$property){[string]$property.Value}else{$defaultSector}
+      if($mappedSector-cne$theme){throw "SectorStructure representative '$symbol' maps to '$mappedSector', not '$theme'."}
       if($seenRepresentatives.ContainsKey($symbol)){throw "SectorStructure representative '$symbol' is duplicated across groups."}
       $seenRepresentatives[$symbol]=$true
     }

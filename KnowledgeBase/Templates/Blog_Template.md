@@ -1,4 +1,4 @@
-# APL Momentum Leaders Blog Template
+﻿# APL Momentum Leaders Blog Template
 > **Effective-date editorial boundary:** For ScanDate 2026-08-28 onward, omit `Call to Action｜延伸閱讀` and `Disclaimer｜免責聲明` from both Markdown and HTML. `Deep-Scan Conclusion｜深度掃描結論` is the final article section, followed only by the Markdown-only `SEO and Sharing` metadata block. From 2026-08-30 onward, `Investment Implication｜投資啟示` is mandatory immediately after Sector Analysis and before Risk. CTA／Disclaimer examples below apply only to 2026-08-10 through 2026-08-27 legacy-compatible packages.
 
 This template provides the production skeleton for formal APL Momentum Leaders 領導股 Blog articles.
@@ -20,7 +20,7 @@ This template is private editorial guidance, never a publishable artifact. Every
 For newly created packages from 2026-08-03 onward, use this exact full title structure in Markdown, HTML and the Page title metadata:
 
 ```text
-APL Deep-Scan 美股深海雷達: [當期核心市場結論] | YYYY-MM-DD
+APL Deep-Scan｜美股深海雷達: [當期核心市場結論] | YYYY-MM-DD
 ```
 
 The market conclusion is mandatory. Use an ASCII colon and the exact separator ` | ` before the ISO date. A prefix-only title or a prefix followed only by a date is invalid; `#`, `<h1>` and `Page title：` must use the same full string.
@@ -206,7 +206,7 @@ The managed source is authoritative for facts, dates, numbers, company names, ev
 ## 5. Publish-ready HTML Skeleton
 
 ```html
-<h1>APL Deep-Scan 美股深海雷達：[當期核心市場結論]</h1>
+<h1>APL Deep-Scan｜美股深海雷達: [當期核心市場結論] | YYYY-MM-DD</h1>
 
 <h3>Executive Summary｜執行摘要</h3>
 <p>[One concise market observation.]</p>
