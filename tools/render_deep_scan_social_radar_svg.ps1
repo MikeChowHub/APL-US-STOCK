@@ -166,7 +166,8 @@ for ($i=0; $i -lt 90; $i++) {
 }
 Add '<rect width="1080" height="1350" fill="url(#vignette)"/>'
 
-if ($logoData) { Add "<image href='$logoData' x='32' y='22' width='490' height='147' preserveAspectRatio='xMinYMin meet'/>" }
+if (!$logoData) { throw 'Social logo source is missing.' }
+Add "<image id='apl-final-logo' href='$logoData' x='32' y='22' width='490' height='147' preserveAspectRatio='xMinYMin meet'/>"
 $displayDate = [datetime]::ParseExact($scanDate, 'yyyy-MM-dd', $null).ToString('dd/MM')
 Add "<text x='1002' y='96' class='mono white' font-size='42' text-anchor='end' font-weight='900'>$displayDate</text>"
 Add "<line x1='878' y1='112' x2='1002' y2='112' stroke='#00D8FF' stroke-opacity='.72' stroke-width='3'/>"

@@ -12,6 +12,8 @@ function Pass([string]$Message){Write-Host "PASS $Message"}
 function Invoke-Test([string]$Name,[string]$Path){$output=@(& powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $Path 2>&1);if($LASTEXITCODE-ne 0){Fail "$Name :: $($output -join ' ')"}else{Pass $Name}}
 
 $required=@(
+  'tools/social_logo_compositor.ps1','tools/tests/test_social_logo_compositor.ps1',
+  'tools/tests/test_builder_parent_guard.ps1',
   '.gitattributes','.gitignore','AGENTS.md','README.md','APL_US_Stock_Production_Workflow_Specification_v1.0.md',
   'Assets/Brand/APL_Deep_Scan_Brand_Logo_Renderer_Clean.png','Assets/Brand/brand-manifest.json',
   'Assets/Fonts/AlibabaSansHK/AlibabaSansHK-45.ttf','Assets/Fonts/AlibabaSansHK/AlibabaSansHK-55.ttf','Assets/Fonts/AlibabaSansHK/AlibabaSansHK-75.ttf','Assets/Fonts/AlibabaSansHK/AlibabaSansHK-95.ttf',
@@ -28,6 +30,17 @@ try{$gitRoot=(& git -C $ProjectRoot rev-parse --show-toplevel 2>$null);if($LASTE
 $branch=(& git -C $ProjectRoot branch --show-current);if($branch-cne'main'){Fail "Branch must be main; actual=$branch"}else{Pass 'Branch main'}
 $remote=(& git -C $ProjectRoot remote get-url origin 2>$null);if($LASTEXITCODE-ne 0-or[string]$remote-cne$ExpectedRemoteUrl){Fail "origin URL mismatch; actual=$remote"}else{Pass 'origin URL'}
 $version=$PSVersionTable.PSVersion;if($version.Major-ne 5-or$version.Minor-ne 1){Fail "Windows PowerShell 5.1 required; actual=$version"}else{Pass 'Windows PowerShell 5.1'}
+
+# Validate the released checkout before loading any runtime code or running fixtures.
+$releaseScope=@('tools','Assets','KnowledgeBase','docs','README.md','AGENTS.md','.gitattributes','.gitignore','APL_US_Stock_Production_Workflow_Specification_v1.0.md')
+$releaseChanges=@(& git -C $ProjectRoot status --porcelain --untracked-files=all -- $releaseScope)
+if($LASTEXITCODE-ne0){Fail 'Cannot inspect release working tree.'}
+foreach($change in $releaseChanges){Fail "uncommitted release file: $change"}
+foreach($relative in $required){
+  $headFiles=@(& git -C $ProjectRoot ls-tree --name-only HEAD -- $relative)
+  if($LASTEXITCODE-ne0-or$headFiles.Count-ne1){Fail "required file absent from HEAD: $relative"}
+}
+if($failures.Count-gt0){Write-Host 'NOT READY';[pscustomobject]@{Status='NOT READY';EnvironmentReady=$false;ProductionStarted=$false;Failures=[object[]]$failures.ToArray()};exit 1}
 
 foreach($relative in $required){$full=Join-Path $ProjectRoot $relative.Replace('/','\');if(!(Test-Path -LiteralPath $full -PathType Leaf)){Fail "required file missing: $relative";continue};$tracked=@(& git -C $ProjectRoot ls-files --error-unmatch -- $relative 2>$null);if($LASTEXITCODE-ne 0-or$tracked.Count-ne 1){Fail "required file not tracked: $relative";continue};& git -C $ProjectRoot cat-file -e ("HEAD:$relative") 2>$null;if($LASTEXITCODE-ne 0){Fail "required file absent from HEAD: $relative"}}
 if(@($failures|Where-Object{$_ -like 'required file*'}).Count-eq 0){Pass "required HEAD files ($($required.Count))"}
@@ -78,7 +91,12 @@ if((Get-Content -Raw -Encoding UTF8 (Join-Path $ProjectRoot 'tools\run_daily_pro
 
 Invoke-Test 'renderer smoke' (Join-Path $ProjectRoot 'tools\tests\test_cross_pc_renderer_smoke.ps1')
 Invoke-Test 'Table Card semantic fixture' (Join-Path $ProjectRoot 'tools\tests\test_table_card_semantic_contract.ps1')
-if($FullRegression){Invoke-Test 'Final Audit and Archive V2 fixture' (Join-Path $ProjectRoot 'tools\tests\test_archive_workflow_v2.ps1')}
+if($FullRegression){
+  Invoke-Test 'Final Audit and Archive V2 fixture' (Join-Path $ProjectRoot 'tools\tests\test_archive_workflow_v2.ps1')
+  Invoke-Test 'Social logo compositor fixture' (Join-Path $ProjectRoot 'tools\tests\test_social_logo_compositor.ps1')
+  Invoke-Test 'Trigger C builder and Production fixture' (Join-Path $ProjectRoot 'tools\tests\test_trigger_c_managed_input_builder.ps1')
+  Invoke-Test 'Builder parent guard fixture' (Join-Path $ProjectRoot 'tools\tests\test_builder_parent_guard.ps1')
+}
 
 if($failures.Count-gt 0){Write-Host 'NOT READY' -ForegroundColor Red;[pscustomobject]@{Status='NOT READY';EnvironmentReady=$false;ProductionStarted=$false;Failures=@($failures|ForEach-Object{$_})};exit 1}
 Write-Host 'CROSS-PC ENVIRONMENT READY' -ForegroundColor Green

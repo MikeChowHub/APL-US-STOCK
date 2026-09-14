@@ -268,7 +268,7 @@ for ($i=0; $i -lt 150; $i++) {
 Add '<path d="M 920 540 L 1195 205 L 1265 255 L 960 575 Z" fill="#00D8FF" opacity=".028" filter="url(#fogBlur)"/>'
 Add '<rect x="1440" y="0" width="480" height="1080" fill="#08131F" opacity=".82"/>'
 Add '<rect width="1920" height="1080" fill="url(#cinematicVignette)"/>'
-if ($logoData) { Add "<image href='$logoData' x='24' y='22' width='500' height='190' preserveAspectRatio='xMinYMin meet'/>" }
+if ($logoData) { Add "<image id='apl-final-logo' href='$logoData' x='24' y='22' width='500' height='190' preserveAspectRatio='xMinYMin meet'/>" }
 
 function Panel([int]$x,[int]$y,[int]$w,[int]$h,[string]$title) {
   Add "<rect x='$x' y='$y' width='$w' height='$h' rx='8' fill='#08131F' fill-opacity='.78' stroke='#00D8FF' stroke-opacity='.55'/>"

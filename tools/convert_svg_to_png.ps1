@@ -10,6 +10,7 @@ param(
 
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'renderer_production_common.ps1')
+. (Join-Path $PSScriptRoot 'social_logo_compositor.ps1')
 
 function Remove-PartialOutput([string]$Path) {
   if (Test-Path -LiteralPath $Path) { Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue }
@@ -43,15 +44,24 @@ $dir=[IO.Path]::GetFullPath((Split-Path $OutputPng -Parent))
 if(!(Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
 
 $started=[datetime]::UtcNow
+$logoPlan=Get-AplSocialLogoPlan -InputSvg $InputSvg -Root $script:AplProjectRoot -Width $Width -Height $Height
+$renderInput=$InputSvg
+$temporarySvg=$null
+if($null -ne $logoPlan){
+  $temporarySvg=Join-Path (Split-Path $InputSvg -Parent) ('.logo-pass-'+[guid]::NewGuid().ToString('N')+'.svg')
+  $logoPlan.Document.Save($temporarySvg)
+  $renderInput=$temporarySvg
+}
 $output=@()
 $exit=$null
 $previousErrorAction=$ErrorActionPreference
 try {
   $ErrorActionPreference='Continue'
-  $output=@(& $resvg $InputSvg $OutputPng -w $Width -h $Height --use-fonts-dir $fontDirectory --skip-system-fonts 2>&1)
+  $output=@(& $resvg $renderInput $OutputPng -w $Width -h $Height --use-fonts-dir $fontDirectory --skip-system-fonts 2>&1)
   $exit=$LASTEXITCODE
 } finally {
   $ErrorActionPreference=$previousErrorAction
+  if($temporarySvg -and (Test-Path -LiteralPath $temporarySvg)){Remove-Item -LiteralPath $temporarySvg -Force}
 }
 
 $rendererLog = @($output | ForEach-Object { [string]$_ })
@@ -72,6 +82,10 @@ if(!(Test-Path -LiteralPath $OutputPng) -or (Get-Item -LiteralPath $OutputPng).L
 if((Get-Item -LiteralPath $OutputPng).LastWriteTimeUtc -lt $started) {
   Remove-PartialOutput $OutputPng
   throw 'PNG is stale: output timestamp predates this export.'
+}
+if($null -ne $logoPlan){
+  try { Add-AplSocialLogo -Png $OutputPng -Plan $logoPlan }
+  catch { Remove-PartialOutput $OutputPng; throw }
 }
 $bytes=[IO.File]::ReadAllBytes($OutputPng)
 if($bytes.Length -lt 8 -or (($bytes[0..7] | ForEach-Object {$_.ToString('X2')}) -join '') -cne '89504E470D0A1A0A') {
@@ -94,6 +108,7 @@ try {
   Status='PASS'; Renderer='resvg'; RendererPath=$resvg; RendererVersion=((& $resvg --version 2>$null)-join ' ')
   InputSvg=$InputSvg; OutputPng=$OutputPng; Width=$Width; Height=$Height; Bytes=(Get-Item -LiteralPath $OutputPng).Length
   Sha256=(Get-FileHash -LiteralPath $OutputPng -Algorithm SHA256).Hash; ExitCode=$exit; StdErrStdOut=($rendererLog -join [Environment]::NewLine)
+  LogoOverlay=if($logoPlan){[pscustomobject]@{Status='PASS';Source=$logoPlan.Source;SHA256=$logoPlan.SHA256;Policy=$logoPlan.Policy}}else{$null}
   RequestedFontFamilies=@('Alibaba Sans HK (400/600)','Montserrat (400/500/600/700)'); RepositoryFontAssets=$fontAudit
   ResolvedFontPolicy='resvg --use-fonts-dir Assets/Fonts --skip-system-fonts; zero fallback warnings required'
   FontFallbackWarningCount=$fontFallbackCount; InvalidGeometryWarningCount=$invalidGeometryCount

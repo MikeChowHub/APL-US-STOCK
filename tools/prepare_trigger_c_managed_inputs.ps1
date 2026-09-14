@@ -60,10 +60,16 @@ $regressionRoot=Get-AplFullPath (Join-Path $ProjectRoot 'tmp\trigger-c-managed-i
 $formalWorkRoot=Get-AplFullPath (Join-Path $ProjectRoot 'work')
 $stagingParent=if($RegressionTest){Join-Path $regressionRoot 'staging'}else{Join-Path $formalWorkRoot '.staging\trigger-c'}
 $managedParent=if($RegressionTest){Join-Path $regressionRoot 'managed-inputs'}else{Join-Path $formalWorkRoot 'managed-inputs'}
-foreach($root in @($stagingParent,$managedParent)){if(!(Test-Path -LiteralPath $root)){New-Item -ItemType Directory -Path $root -Force|Out-Null}}
 $allowedContainer=if($RegressionTest){$regressionRoot}else{$formalWorkRoot}
-$stagingParent=Assert-AplNoReparsePath -Path $stagingParent -AllowedRoot $allowedContainer -RequireDirectory
-$managedParent=Assert-AplNoReparsePath -Path $managedParent -AllowedRoot $allowedContainer -RequireDirectory
+# Check both complete parent chains before the first filesystem mutation.
+$stagingParent=Assert-AplNoReparsePath -Path $stagingParent -AllowedRoot $allowedContainer
+$managedParent=Assert-AplNoReparsePath -Path $managedParent -AllowedRoot $allowedContainer
+if($Mode-cne'Status'){
+  foreach($root in @($stagingParent,$managedParent)){
+    if(!(Test-Path -LiteralPath $root)){New-Item -ItemType Directory -Path $root -Force|Out-Null}
+    Assert-AplNoReparsePath -Path $root -AllowedRoot $allowedContainer -RequireDirectory|Out-Null
+  }
+}
 $stagingDate=Join-Path $stagingParent $ScanDate
 $managedDate=Join-Path $managedParent $ScanDate
 $statePath=Join-Path $stagingDate 'trigger-c-preparation.json'

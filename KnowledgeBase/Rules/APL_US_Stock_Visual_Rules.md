@@ -393,6 +393,17 @@ Do not use green or red as random decoration.
 
 ## 9. Visual Source of Truth
 
+### Dashboard / Social logo final-pass policy (2026-09-14)
+
+正式次序：**圖表完成 → 按最終尺寸疊加原始 Logo → 清晰度檢查 → SHA／Final Audit → Archive**。
+清晰度檢查必須以最終 PNG 的 100% 顯示尺寸核對品牌文字、企鵝輪廓、雷達細線及透明邊緣；尺寸及 PNG 格式 PASS 不等於視覺清晰度 PASS。未完成視覺檢查不可宣告本項通過。已核准 Logo 的來源 SHA 必須記錄；新透明版或向量比較稿須另行核准，不能靜默替換。
+
+- Dashboard, Social Card and full Radar must share the repository logo compositor. Use the approved original from `Assets/Brand/brand-manifest.json`; source SHA must match. Do not redraw the logo or disguise a raster file as a vector asset. Dashboard must carry the `apl-final-logo` marker: export removes it before resvg and composites the original afterwards onto the final 1920x1080 canvas at x=24, y=22, fitting 500x190 without distortion. Missing markers must fail, not silently revert to SVG-embedded logo rendering.
+- No repository-managed vector master is currently available. Keep the approved PNG unchanged until a genuine vector master is supplied and visually approved.
+- Order: render chart without logo -> composite original logo once at final pixel dimensions -> PNG/dimension/quality validation -> final SHA/trace -> Final Audit -> Archive. Never add the logo after publication or Archive verification.
+- Keep aspect ratio and approved placement; no stretching, repeated scaling or silent fallback. A missing logo, source mismatch or failed overlay must fail export and remove partial PNG.
+- An isolated before/after visual check is required. Changing render order alone is not proof of better quality; a small raster logo may still lose fine detail. Existing outputs and Archive are not retroactively modified.
+
 Visual Rules define purpose and boundaries.
 
 Visual Templates define execution structure.

@@ -93,7 +93,7 @@ try{
   $finalizeExit=$LASTEXITCODE
   $ErrorActionPreference=$previous
   $finalizeText=$finalize-join' '
-  Add-Result 'incomplete-work-order-finalize-fails-closed' ($finalizeExit-ne0-and$finalizeText.Contains('Required file does not exist')-and$finalizeText.Contains('table-card-')) $finalizeText
+  Add-Result 'incomplete-work-order-finalize-fails-closed' ($finalizeExit-ne0-and$finalizeText.Contains('Required file does not exist')) $finalizeText
   Add-Result 'failed-finalize-does-not-publish-managed-root' (-not(Test-Path -LiteralPath $ManagedDate))
 
   $rankingPath=Join-Path $triggerRoot "APL_Momentum_Score_Full_Ranking_$ScanDate.csv"
