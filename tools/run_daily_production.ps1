@@ -239,6 +239,8 @@ $seoLog = [System.IO.Path]::ChangeExtension($seoOutput, '.overlay-log.txt')
 $whatsAppPackage = Join-Path $productionPackage "WhatsApp_${ScanDate}.md"
 $blogMarkdownPackage = Join-Path $productionPackage "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.md"
 $blogHtmlSourcePackage = Join-Path $productionPackage "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.html.txt"
+$blogPublicPreviewPackage = Join-Path $productionPackage "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.public-preview.html.txt"
+$blogMemberSqlPackage = Join-Path $productionPackage "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.article.sql"
 $companyAnalysisPackage = Join-Path $productionPackage "table-card-log\APL_Momentum_Leaders_Top_30_Company_Business_Analysis_${ScanDate}.md"
 $editorialAuditPackage = Join-Path $productionPackage "APL_Editorial_Completion_Audit_${ScanDate}.json"
 $productionPackageManifest = Join-Path $productionPackage "APL_Production_Package_Manifest_${ScanDate}.json"
@@ -248,7 +250,7 @@ $stagingAuditPath = Join-Path $dateOut "Final_Production_Audit_${ScanDate}.json"
 
 $rootCopies = @()
 $tableCardExpectedArtifacts = @($tableCards | ForEach-Object { @($_.OutputPath,$_.LogPath) })
-$expectedArtifacts = @($rankingCsv,$topTxt,$topMd,$watchlistTxt,$removedAudit,$retainedAudit,$overviewMd,$metaJson,$sourceCopy,$dashboardContract,$socialContract,$dashboardSvg,$dashboardPng,$dashboardLog,$socialSvg,$socialPng,$socialLog,$socialRadarSvg,$socialRadarPng,$socialRadarLog,$coverOutput,$coverLog,$seoOutput,$seoLog,$productionPackageManifest) + $tableCardExpectedArtifacts + @($tableCardResultManifest | Where-Object { $_ }) + $rootCopies
+$expectedArtifacts = @($rankingCsv,$topTxt,$topMd,$watchlistTxt,$removedAudit,$retainedAudit,$overviewMd,$metaJson,$sourceCopy,$dashboardContract,$socialContract,$dashboardSvg,$dashboardPng,$dashboardLog,$socialSvg,$socialPng,$socialLog,$socialRadarSvg,$socialRadarPng,$socialRadarLog,$coverOutput,$coverLog,$seoOutput,$seoLog,$blogPublicPreviewPackage,$blogMemberSqlPackage,$productionPackageManifest) + $tableCardExpectedArtifacts + @($tableCardResultManifest | Where-Object { $_ }) + $rootCopies
 function Get-PublishedPath([string]$StagePath) {
   $full = Get-AplFullPath $StagePath
   if ($full.StartsWith($dateOut.TrimEnd('\') + '\', [System.StringComparison]::OrdinalIgnoreCase)) { return Join-Path $finalDateOut $full.Substring($dateOut.TrimEnd('\').Length + 1) }
@@ -308,6 +310,8 @@ function Write-ProductionPackageManifest {
     [pscustomobject]@{Id='whatsapp';Path=$whatsAppPackage},
     [pscustomobject]@{Id='formal-blog-markdown';Path=$blogMarkdownPackage},
     [pscustomobject]@{Id='formal-blog-html-source';Path=$blogHtmlSourcePackage},
+    [pscustomobject]@{Id='public-preview-html-source';Path=$blogPublicPreviewPackage},
+    [pscustomobject]@{Id='member-article-sql';Path=$blogMemberSqlPackage},
     [pscustomobject]@{Id='company-business-analysis';Path=$companyAnalysisPackage},
     [pscustomobject]@{Id='editorial-completion-audit';Path=$editorialAuditPackage}
   )) { [void]$requiredDefinitions.Add($definition) }
@@ -414,6 +418,7 @@ $archiveScript = Join-Path $PSScriptRoot 'archive_daily_production.ps1'
 $artifactAuditScript = Join-Path $PSScriptRoot 'test_production_artifact_contract.ps1'
 $completionScript = Join-Path $PSScriptRoot 'complete_daily_production.ps1'
 $managedInputValidatorScript = Join-Path $PSScriptRoot 'validate_managed_inputs.ps1'
+$deliverySupplementScript = Join-Path $PSScriptRoot 'create_blog_delivery_supplements.ps1'
 
 $status = 'FAILED'
 try {
@@ -556,6 +561,12 @@ try {
       Copy-Item -LiteralPath $item.FullName -Destination $target
     }
   } @()
+  Invoke-PipelineStep 'CreateBlogDeliverySupplements' $deliverySupplementScript @(
+    '-HtmlSourcePath',$blogHtmlSourcePackage,
+    '-ScanDate',$ScanDate,
+    '-PublicPreviewPath',$blogPublicPreviewPackage,
+    '-MemberSqlPath',$blogMemberSqlPackage
+  ) @($blogPublicPreviewPackage,$blogMemberSqlPackage)
   Complete-InternalStep 'NormalizeStagedArtifacts' {
     foreach ($contractPath in @($dashboardContract,$socialContract)) {
       $contract = Read-AplUtf8Json $contractPath
@@ -619,7 +630,7 @@ try {
   $archiveArgs = @('-SourceDatePath',$finalDateOut,'-ScanDate',$ScanDate,'-FinalAuditPath',$finalAuditPath,'-ArchiveRoot',$archiveRoot)
   if ($RegressionTest) { $archiveArgs += '-RegressionTest' }
   Invoke-PipelineStep 'ArchiveDailyProduction' $archiveScript $archiveArgs
-  $archiveDestination = Join-Path $archiveRoot (Join-Path $ScanDate.Substring(0,4) $ScanDate)
+  $archiveDestination = Join-Path $archiveRoot (Get-AplArchiveRelativeDatePath $ScanDate)
   $archiveManifestPath = Join-Path $archiveDestination 'archive-manifest.json'
   $archiveIndexPath = Join-Path $archiveRoot 'index.md'
   Complete-InternalStep 'VerifyArchivePass' {

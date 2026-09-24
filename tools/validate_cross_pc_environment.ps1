@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
   [string]$ExpectedRemoteUrl = 'https://github.com/MikeChowHub/APL-US-STOCK.git',
   [switch]$FullRegression
@@ -20,11 +20,11 @@ $required=@(
   'Assets/Fonts/Montserrat/Montserrat-Regular.ttf','Assets/Fonts/Montserrat/Montserrat-Medium.ttf','Assets/Fonts/Montserrat/Montserrat-SemiBold.ttf','Assets/Fonts/Montserrat/Montserrat-Bold.ttf',
   'KnowledgeBase/Rules/APL_US_Stock_Production_Artifact_Contract.json','KnowledgeBase/Rules/APL_US_Stock_Archive_Rules.md','KnowledgeBase/Rules/APL_US_Stock_Production_Package_Rules.md','KnowledgeBase/Templates/Table_Card_Input_Contract.md',
   'docs/ARCHIVE_INDEX_POLICY.md','docs/FINAL_PRODUCTION_AUDIT_CHECKLIST.md','docs/PRODUCTION_RUNBOOK.md',
-  'tools/process_apl_momentum_leaders.ps1','tools/prepare_trigger_c_managed_inputs.ps1','tools/run_daily_production.ps1','tools/validate_managed_inputs.ps1','tools/test_production_artifact_contract.ps1','tools/archive_daily_production.ps1','tools/complete_daily_production.ps1','tools/production_archive_common.ps1',
+  'tools/process_apl_momentum_leaders.ps1','tools/prepare_trigger_c_managed_inputs.ps1','tools/run_daily_production.ps1','tools/create_blog_delivery_supplements.ps1','tools/validate_managed_inputs.ps1','tools/test_production_artifact_contract.ps1','tools/archive_daily_production.ps1','tools/complete_daily_production.ps1','tools/production_archive_common.ps1',
   'tools/render_blog_table_cards.ps1','tools/validate_renderer_inputs.ps1','tools/render_deep_scan_dashboard_svg.ps1','tools/render_deep_scan_social_card_svg.ps1','tools/render_deep_scan_social_radar_svg.ps1','tools/render_blog_cover_overlay.ps1','tools/convert_svg_to_png.ps1',
   'tools/repository_font_loader.ps1','tools/font-manifest.json','tools/table_card_input.schema.json','tools/table_card_manifest.schema.json','tools/production_package_manifest.schema.json','tools/archive_manifest.schema.json','tools/archive-v2-policy.json','tools/archive-v2-policy.schema.json',
   'tools/renderers/resvg/resvg.exe','tools/renderers/resvg/renderer-manifest.json','tools/renderers/resvg/README.md','tools/renderers/resvg/THIRD_PARTY_NOTICES.md',
-  'tools/validate_cross_pc_environment.ps1','tools/tests/test_table_card_semantic_contract.ps1','tools/tests/test_archive_workflow_v2.ps1','tools/tests/test_cross_pc_renderer_smoke.ps1','tools/tests/test_trigger_c_managed_input_builder.ps1'
+  'tools/validate_cross_pc_environment.ps1','tools/tests/test_table_card_semantic_contract.ps1','tools/tests/test_archive_workflow_v2.ps1','tools/tests/test_cross_pc_renderer_smoke.ps1','tools/tests/test_trigger_c_managed_input_builder.ps1','tools/tests/test_blog_delivery_supplements.ps1'
 )
 try{$gitRoot=(& git -C $ProjectRoot rev-parse --show-toplevel 2>$null);if($LASTEXITCODE-ne 0-or[IO.Path]::GetFullPath([string]$gitRoot)-ne$ProjectRoot){throw 'Git root mismatch.'};Pass 'Git root'}catch{Fail $_.Exception.Message}
 $branch=(& git -C $ProjectRoot branch --show-current);if($branch-cne'main'){Fail "Branch must be main; actual=$branch"}else{Pass 'Branch main'}
@@ -52,7 +52,8 @@ if(@($failures|Where-Object{$_ -like 'PowerShell AST*'}).Count-eq 0){Pass 'Power
 
 try{
   $fontManifest=Get-Content -Raw -Encoding UTF8 (Join-Path $ProjectRoot 'tools\font-manifest.json')|ConvertFrom-Json
-  $fontFiles=@(Get-ChildItem (Join-Path $ProjectRoot 'Assets\Fonts') -Recurse -File|ForEach-Object{$_.FullName.Substring($ProjectRoot.Length+1).Replace('\','/')})
+  $fontExtensions=@('.ttf','.otf','.ttc','.otc','.woff','.woff2')
+  $fontFiles=@(Get-ChildItem (Join-Path $ProjectRoot 'Assets\Fonts') -Recurse -File|Where-Object{$fontExtensions-contains$_.Extension}|ForEach-Object{$_.FullName.Substring($ProjectRoot.Length+1).Replace('\','/')})
   $declared=@($fontManifest.Fonts|ForEach-Object{[string]$_.file})
   if(Compare-Object ($fontFiles|Sort-Object) ($declared|Sort-Object)){throw 'Font manifest does not cover every repository font exactly once.'}
   foreach($font in @($fontManifest.Fonts)){$path=Join-Path $ProjectRoot ([string]$font.file).Replace('/','\');if((Get-FileHash $path -Algorithm SHA256).Hash-cne[string]$font.sha256){throw "Font SHA mismatch: $($font.file)"}}
@@ -84,7 +85,7 @@ try{
 }catch{Fail $_.Exception.Message}
 try{$brand=Get-Content -Raw -Encoding UTF8 (Join-Path $ProjectRoot 'Assets\Brand\brand-manifest.json')|ConvertFrom-Json;foreach($asset in @($brand.Assets)){$path=Join-Path $ProjectRoot ([string]$asset.File).Replace('/','\');if((Get-FileHash $path -Algorithm SHA256).Hash-cne[string]$asset.SHA256){throw "Brand asset SHA mismatch: $($asset.File)"}};Pass 'brand assets'}catch{Fail $_.Exception.Message}
 
-$runtimeFiles=@('tools/run_daily_production.ps1','tools/renderer_production_common.ps1','tools/render_blog_table_cards.ps1','tools/render_deep_scan_dashboard_svg.ps1','tools/render_deep_scan_social_card_svg.ps1','tools/render_deep_scan_social_radar_svg.ps1','tools/render_blog_cover_overlay.ps1','tools/convert_svg_to_png.ps1','tools/archive_daily_production.ps1','tools/test_production_artifact_contract.ps1')
+$runtimeFiles=@('tools/run_daily_production.ps1','tools/create_blog_delivery_supplements.ps1','tools/renderer_production_common.ps1','tools/render_blog_table_cards.ps1','tools/render_deep_scan_dashboard_svg.ps1','tools/render_deep_scan_social_card_svg.ps1','tools/render_deep_scan_social_radar_svg.ps1','tools/render_blog_cover_overlay.ps1','tools/convert_svg_to_png.ps1','tools/archive_daily_production.ps1','tools/test_production_artifact_contract.ps1')
 foreach($relative in $runtimeFiles){$lineNo=0;foreach($line in [IO.File]::ReadAllLines((Join-Path $ProjectRoot $relative),[Text.Encoding]::UTF8)){$lineNo++;if($line-match'(?i)[A-Z]:\\' -and -not ($relative-eq'tools/renderer_production_common.ps1'-and$line-match'legacyPrefix')){Fail "local absolute path dependency: ${relative}:$lineNo"}}}
 if(@($failures|Where-Object{$_ -like 'local absolute path*'}).Count-eq 0){Pass 'no local absolute runtime paths'}
 if((Get-Content -Raw -Encoding UTF8 (Join-Path $ProjectRoot 'tools\run_daily_production.ps1'))-match"outputs\\APL_Deep_Scan_Brand"){Fail 'runner still depends on outputs logo'}else{Pass 'no work/outputs/Archive historical dependency'}
@@ -95,6 +96,7 @@ if($FullRegression){
   Invoke-Test 'Final Audit and Archive V2 fixture' (Join-Path $ProjectRoot 'tools\tests\test_archive_workflow_v2.ps1')
   Invoke-Test 'Social logo compositor fixture' (Join-Path $ProjectRoot 'tools\tests\test_social_logo_compositor.ps1')
   Invoke-Test 'Trigger C builder and Production fixture' (Join-Path $ProjectRoot 'tools\tests\test_trigger_c_managed_input_builder.ps1')
+  Invoke-Test 'Blog delivery supplements' (Join-Path $ProjectRoot 'tools\tests\test_blog_delivery_supplements.ps1')
   Invoke-Test 'Builder parent guard fixture' (Join-Path $ProjectRoot 'tools\tests\test_builder_parent_guard.ps1')
 }
 

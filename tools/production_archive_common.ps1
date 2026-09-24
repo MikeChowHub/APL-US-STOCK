@@ -267,9 +267,29 @@ function Get-AplArchiveIndexRow([string]$IndexPath, [string]$ScanDate, [string]$
   return [pscustomobject]@{ ScanDate=$cells[0]; Status=$cells[1]; FileCount=$fileCount; TotalBytes=$totalBytes; ManifestPath=$cells[4]; Notes=$cells[5] }
 }
 
+function Get-AplArchiveRelativeDatePath([string]$ScanDate) {
+  Assert-AplScanDate $ScanDate | Out-Null
+  return '{0}/{1}/{2}' -f $ScanDate.Substring(0,4),$ScanDate.Substring(5,2),$ScanDate
+}
+
+function Get-AplMonthlyArchiveDates([string]$YearPath, [string]$ArchiveRoot) {
+  Assert-AplNoReparsePath -Path $YearPath -AllowedRoot $ArchiveRoot -RequireDirectory | Out-Null
+  foreach($child in @(Get-ChildItem -LiteralPath $YearPath -Directory)) {
+    if($child.Name -match '^\d{4}-\d{2}-\d{2}$'){throw "Archive requires monthly migration: $($child.FullName)"}
+    if($child.Name -notmatch '^(0[1-9]|1[0-2])$'){throw "Invalid Archive month directory: $($child.FullName)"}
+    Assert-AplNoReparsePath -Path $child.FullName -AllowedRoot $ArchiveRoot -RequireDirectory | Out-Null
+    foreach($date in @(Get-ChildItem -LiteralPath $child.FullName -Directory)) {
+      Assert-AplScanDate $date.Name | Out-Null
+      Assert-AplNoReparsePath -Path $date.FullName -AllowedRoot $ArchiveRoot -RequireDirectory | Out-Null
+      if($date.Name.Substring(0,4) -cne (Split-Path $YearPath -Leaf) -or $date.Name.Substring(5,2) -cne $child.Name){throw 'Archive date in incorrect year/month.'}
+      $date
+    }
+  }
+}
+
 function Assert-AplArchiveIndexRow([string]$IndexPath, [object]$Manifest, [string]$ArchiveRoot) {
   $row = Get-AplArchiveIndexRow $IndexPath ([string]$Manifest.ScanDate) $ArchiveRoot
-  $expectedManifestPath = '{0}/{1}/archive-manifest.json' -f ([string]$Manifest.ScanDate).Substring(0,4), [string]$Manifest.ScanDate
+  $expectedManifestPath = (Get-AplArchiveRelativeDatePath ([string]$Manifest.ScanDate)) + '/archive-manifest.json'
   if ($row.Status -cne 'PASS' -or $row.FileCount -ne [int]$Manifest.ArchiveFileCount -or $row.TotalBytes -ne [long]$Manifest.TotalBytes -or $row.ManifestPath -cne $expectedManifestPath -or $row.Notes -cne 'V2 manifest verified') {
     throw "Archive index values mismatch for $($Manifest.ScanDate)."
   }

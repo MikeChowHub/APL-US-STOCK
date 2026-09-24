@@ -33,7 +33,7 @@ function Get-IndexContent([string]$Root, [object]$CurrentManifest, [object]$Poli
   $datesSeen = @{}
   foreach ($yearDirectory in @(Get-ChildItem -LiteralPath $Root -Directory | Where-Object { $_.Name -match '^\d{4}$' } | Sort-Object Name -Descending)) {
     Assert-AplNoReparsePath -Path $yearDirectory.FullName -AllowedRoot $Root -RequireDirectory | Out-Null
-    foreach ($dateDirectory in @(Get-ChildItem -LiteralPath $yearDirectory.FullName -Directory | Where-Object { $_.Name -match '^\d{4}-\d{2}-\d{2}$' } | Sort-Object Name -Descending)) {
+    foreach ($dateDirectory in @(Get-AplMonthlyArchiveDates $yearDirectory.FullName $Root | Sort-Object Name -Descending)) {
       Assert-AplNoReparsePath -Path $dateDirectory.FullName -AllowedRoot $Root -RequireDirectory | Out-Null
       $date = $dateDirectory.Name
       $key = $date.ToLowerInvariant()
@@ -63,7 +63,7 @@ function Get-IndexContent([string]$Root, [object]$CurrentManifest, [object]$Poli
           } else {
             throw "Archive date has unsupported manifest Status '$($existingManifest.Status)': $date"
           }
-          $manifestRelative = '{0}/{1}/archive-manifest.json' -f $yearDirectory.Name, $date
+          $manifestRelative = (Get-AplArchiveRelativeDatePath $date) + '/archive-manifest.json'
         } else {
           if (-not $isLegacy) { throw "Archive date without v2 manifest is not allowlisted as legacy: $date" }
           $status = 'LEGACY_UNVERIFIED'
@@ -72,7 +72,7 @@ function Get-IndexContent([string]$Root, [object]$CurrentManifest, [object]$Poli
         }
       }
       if ($date -eq [string]$CurrentManifest.ScanDate) {
-        $manifestRelative = '{0}/{1}/archive-manifest.json' -f $yearDirectory.Name, $date
+        $manifestRelative = (Get-AplArchiveRelativeDatePath $date) + '/archive-manifest.json'
         $notes = 'V2 manifest verified'
       }
       $rows.Add("| $date | $status | $count | $bytes | $manifestRelative | $notes |")
@@ -98,7 +98,7 @@ function Update-And-VerifyIndex([string]$Root, [object]$Manifest, [object]$Polic
   Assert-AplArchiveIndexRow $indexPath $indexProjection $Root | Out-Null
   foreach ($legacyDateValue in @($Policy.LegacyUnverifiedDates)) {
     $legacyDate = [string]$legacyDateValue
-    $legacyDirectory = Join-Path $Root (Join-Path $legacyDate.Substring(0,4) $legacyDate)
+    $legacyDirectory = Join-Path $Root (Get-AplArchiveRelativeDatePath $legacyDate)
     if (!(Test-Path -LiteralPath $legacyDirectory -PathType Container)) { continue }
     $legacyInventory = @(Get-AplArchiveInventory $legacyDirectory -ExcludeManifest)
     Assert-AplLegacyArchiveIndexRow $indexPath $legacyDate $legacyInventory.Count ([long](($legacyInventory | Measure-Object Size -Sum).Sum)) $Root | Out-Null
@@ -154,7 +154,10 @@ $year = $ScanDate.Substring(0,4)
 $yearRoot = Join-Path $ArchiveRoot $year
 if (!(Test-Path -LiteralPath $yearRoot)) { New-Item -ItemType Directory -Path $yearRoot | Out-Null }
 $yearRoot = Assert-AplNoReparsePath -Path $yearRoot -AllowedRoot $ArchiveRoot -RequireDirectory
-$destination = Join-Path $yearRoot $ScanDate
+$monthRoot = Join-Path $yearRoot $ScanDate.Substring(5,2)
+$monthRoot = Assert-AplNoReparsePath -Path $monthRoot -AllowedRoot $ArchiveRoot
+if (!(Test-Path -LiteralPath $monthRoot)) { New-Item -ItemType Directory -Path $monthRoot | Out-Null }
+$destination = Join-Path $monthRoot $ScanDate
 $sourceInventory = @(Get-AplArchiveInventory $SourceDatePath)
 if ($sourceInventory.Count -eq 0) { throw 'Archive source inventory is empty.' }
 
@@ -163,7 +166,7 @@ if ($sourceInventory.Count -eq 0) { throw 'Archive source inventory is empty.' }
 # reused completion until it is finalized, so no run can bypass the index gate.
 $pendingDates = New-Object System.Collections.Generic.List[string]
 foreach ($yearDirectory in @(Get-ChildItem -LiteralPath $ArchiveRoot -Directory | Where-Object { $_.Name -match '^\d{4}$' })) {
-  foreach ($dateDirectory in @(Get-ChildItem -LiteralPath $yearDirectory.FullName -Directory | Where-Object { $_.Name -match '^\d{4}-\d{2}-\d{2}$' })) {
+  foreach ($dateDirectory in @(Get-AplMonthlyArchiveDates $yearDirectory.FullName $ArchiveRoot)) {
     $pendingManifestPath = Join-Path $dateDirectory.FullName 'archive-manifest.json'
     if (!(Test-Path -LiteralPath $pendingManifestPath -PathType Leaf)) { continue }
     $pendingManifest = Read-AplStrictJson $pendingManifestPath $dateDirectory.FullName

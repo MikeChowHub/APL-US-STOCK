@@ -2,6 +2,29 @@
 
 This document defines stable writing rules for formal APL Momentum Leaders 領導股 Blog production.
 
+## Public preview and member SQL delivery — effective 2026-09-10
+
+For future unpublished deliveries, retain the complete .html.txt article and add .public-preview.html.txt plus .article.sql using the same article filename stem. This supersedes the earlier single-HTML delivery wording.
+
+Public preview: copy h1, the full Executive Summary, Market Context heading and its first paragraph verbatim. In its second paragraph, keep only the text before the first clause/sentence punctuation, replace the punctuation and remaining text with ASCII ..., close </p>, and finish with exactly <div id="apl-member-content"></div>. Decimal points inside numbers are not cutoffs. Never split HTML tags/entities. Missing sections, paragraphs or punctuation require a specific failure, not a guessed excerpt.
+
+SQL delivery template (user revision effective 2026-09-11): INSERT INTO articles (slug, required_product, content) SELECT '<slug>', 'deepscan', '<p>PASTE' WHERE NOT EXISTS (SELECT 1 FROM articles WHERE slug = '<slug>');. Derive both slug values from the final path segment of the same-date 詳細文章 URL. Keep content exactly '<p>PASTE'; the user inserts the article manually. Do not embed full HTML, preview HTML or an empty string in this SQL template. This explicitly supersedes the earlier full-HTML SQL delivery requirement. Validate both slug values, required_product='deepscan' and literal content='<p>PASTE'. This intentional manual-insertion marker applies only to the SQL delivery template, never to the actual article or Production content. Preserve UTF-8. Before any separate database import, the user must replace PASTE and correctly escape SQL single quotes; never execute the delivered template automatically.
+
+Display three links: 公開預覽 HTML TXT, 完整文章 HTML TXT, 會員文章 SQL. Creating SQL does not authorize database execution. WHERE NOT EXISTS avoids replacing an existing row during serial import; concurrent safety depends on database constraints.
+
+Published outputs/Archive remain immutable. Historical same-date supplements already stored under `work/publishing-revisions/<ScanDate>/` remain non-archived legacy evidence and are not backfilled. For every new full Trigger C run after this integration, the runner must derive `.public-preview.html.txt` and `.article.sql` from the validated complete `.html.txt` before Final Audit and place all three in `production-package/`. They are required package artifacts, recorded by size and SHA-256, copied unchanged by Archive V2, and missing or malformed files fail Production closed.
+
+### Fixed completion delivery list
+
+Every successful Daily Production response must use three visible groups in this exact order and provide individual clickable absolute-path links rather than folder-only links:
+
+1. `Table Cards`: `Executive Summary → Deep-Scan Dashboard → Top Gainers → Top Leaders → Sector Structure`.
+2. `正式圖像`: `Social Card → Social 完整 Radar → Cover → SEO`.
+3. `文章及發布文件`: `今日文章 Markdown → HTML 原始碼 TXT → 公開預覽 HTML 原始碼 → 會員文章 SQL → WhatsApp → Top 30 公司分析`.
+
+The complete HTML source, public preview and SQL are three distinct required deliveries. Listing one does not satisfy either of the other two. A correct package with an incomplete response is still an incomplete human delivery and must be corrected before handoff is reported complete.
+
+
 Blog Rules answer:
 
 - how the article should be structured;
@@ -13,6 +36,29 @@ Blog Rules answer:
 Visual styling belongs to Visual Rules and Templates.
 
 ## Editorial completion authority
+
+### Reader-facing revision — effective ScanDate 2026-09-08
+
+This section supersedes older Overview/section-count instructions below for new dates only. Published outputs and Archive remain immutable. The daily article has **nine** analysis sections: Executive Summary → Market Context → Why APL Momentum Leaders Matter → Top Gainers → Momentum Leaders Analysis → Sector Analysis → Investment Implication → Risk → Deep-Scan Conclusion. Markdown alone then appends SEO and Sharing. Why APL must bridge the current question, not repeat a product introduction.
+
+- **開場與標題：**用當日具體事件、反差或新證據交代與前期的不同；沒有新轉折便如實說明延續。標題第二句提供有證據的研究發現或具體讀者問題，摘要必須回答；不以「待確認」等空泛語作賣點，不暗示知道未來必升必跌。
+- **取消獨立 Deep-Scan Overview：**正文不再設此章節，也不改名重建公式化數字段落。不要求逐項報讀 universe、qualified、Leader Lock、平均分等。少量真正有解釋力的數字可融入領導股／板塊分析，交代期間、分母、意義及限制；沒有新增資訊就省略。Dashboard、四張 Table Cards、Company Business Analysis 和機械資料核對保留原有責任。
+- **新入榜公司：**公開文章優先挑選少量值得解釋的新入榜公司，說明業務、來源支持的需求及與本期命題的關係；不要求每期一定有新公司，不羅列全部名單，不設退出名單或逐一討論退出股票。新入榜必須對照最近一期可比的正式 Top 30，列明比較日期於私有審稿記錄；資料缺失或評分版本不同時不得冒稱新入榜。現有內部 Top 10 回報研究不改變正式 Top 30 名單定義。
+- **每節分工：**摘要給判斷及意義；背景只保留有關事件的因果鏈；短期升幅與中期領導作清楚對照；公司分析推進到板塊群組；投資啟示回答如何理解環境；Risk 解釋反證及機制；Conclusion 回答開頭並給下一個觀察點。較完整段落要增加解釋，不靠同義句或分號清單湊長度。
+- **跨期審稿：**可取得時唯讀比較最近三期標題、開頭、命題及結論，記錄日期及差异／延續；缺少歷史便記錄未完成比較，不虛報。刪除無新資訊段落；分開事實與推論；相對強度不等於資金淨流入，排名高不等於買點理想。確認每期有一個有證據的獨特發現，Markdown與HTML source的順序、數據及論點一致。
+
+### Internal research queue — never a client-facing list
+
+累計上榜名單、排序、觸發門檻、內部優先級及5／10交易日回報追蹤，只限內部人員。不得出現在 Blog、WhatsApp、Cover／SEO、公開 Table Cards、客戶 publishing package 或公開公司文章的宣傳文案。公開公司研究講業務及證據，不宣傳「累計入榜幾次」或內部勝率。
+
+1. 正式 Top 30 在 **4個不同 ScanDate** 出現（超過3次）可列入候選；同日重跑及Archive／outputs副本只計一次。記錄首次／最近日期、累計／連續期數及來源；累計不等於連續，不把間隔天數稱為連續持有期。
+2. 保留完整歷史、退出記錄及失敗個案於內部，不因不公開退出名單便刪除研究證據。
+3. 達門檻只進內部候選池，**不自動生成、發布或承諾公司文章**。同時十間達標也不安排十篇。
+4. 每次編輯排期最多優先處理一間，亦可零間；由編輯明確選定，按研究價值、當期相關性、來源完整性及可用產能排序，不能只按出現次數。未選者保留待研究，沒有自動到期或補稿義務。
+5. 先查已有已發布／製作中獨立公司文章及日期。沒有才考慮首篇；已有則只在新證據足以更新判斷時安排更新，避免重複出文。
+6. 候選池與績效追蹤不是每日Production必需依賴；未研究候選不阻擋每日文章。此為內部編輯規則，不新增watcher、排程或自動公司研究流程。
+
+Overview章節的日期要求由機械gate執行；敘事品質、跨期語義比較、內部資料不外洩及公司排期，由人工／agent審稿記錄判定，不得只憑machine PASS宣稱全部完成。
 
 Trigger C editorial preparation is a required stage between verified Trigger B outputs and Managed Input Preflight. The runner does not write, expand or correct editorial content; it only copies validated publishing artifacts.
 
@@ -36,7 +82,7 @@ Mechanical Completion PASS
 The Production Package must share one issue-specific core market proposition without turning every artifact into a duplicate of the Blog or Dashboard.
 
 - The Blog owns the complete market reasoning chain.
-- WhatsApp owns the concise text distribution message: the first screen states the largest market change, followed by only the evidence and call to action needed for that channel. It must include the issue-matched `詳細文章：https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD` link after its concise analysis and before the final disclaimer.
+- WhatsApp owns the concise text distribution message: the first screen states the largest market change and a reader-relevant question. The issue-matched article URL belongs in the closing fixed footer, after the issue-specific analysis and research disclaimer.
 - The `ExecutiveSummary` Table Card owns three to five client-priority observations and their implications.
 - Dashboard owns the complete systematic scan context, including the scan funnel, ranked structure, Buyability and sector distribution.
 - Social has two independent roles: `Social Card` owns one mobile-first visual message supported by minimal current data; `Social Radar` owns a complete Top 30 radar view with the scan funnel, Buyability and sector distribution. Neither may re-score, re-rank or determine eligibility.
@@ -44,7 +90,20 @@ The Production Package must share one issue-specific core market proposition wit
 - `TopLeaders`, `TopGainers` and `SectorStructure` own company-level medium-term evidence, short-term price evidence and group-level structure respectively.
 - Company Business Analysis owns the company and business-model reference for the current Top 30; it is not a second market commentary.
 
-For new managed packages from 2026-08-05 onward, WhatsApp must follow one natural mobile-reading chain: issue-specific title and article URL → market event and core change → APL Deep-Scan／APL Momentum Leaders interpretation → investor watchpoints and falsification risk → reading CTA and disclaimer. Visible labels such as `市場事件：` or `APL 觀點：` are optional; the order is semantic and may be expressed as short paragraphs and bullet points. The message must contain the exact-date article URL, an explicit APL viewpoint, observable next signals, and a research disclaimer. The 2026-08-04 Archive message remains immutable legacy output.
+For new managed packages from 2026-08-05 onward, WhatsApp must follow one natural mobile-reading chain: market event and core change → APL Deep-Scan／APL Momentum Leaders interpretation → investor watchpoints and falsification risk → issue-specific reading invitation. Visible labels such as `市場事件：` or `APL 觀點：` are optional; paragraphing and sentence shape must vary with the day's evidence. The message must contain an explicit APL viewpoint, observable next signals, and a research disclaimer. The 2026-08-04 Archive message remains immutable legacy output.
+
+For new Production from **2026-09-25 onward**, only the final two-link footer is fixed. Put the research disclaimer immediately before it; put no content after it. The preceding reading-invitation sentence must be rewritten for that issue and should explain what the full article resolves, not repeat generic membership copy. The footer is exactly:
+
+```markdown
+📖 今日完整研究：
+[https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD](https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD)
+🐧 APL 三日免費體驗｜工具・分析・課程
+[https://www.goinvestingnow.com/ExploreCourses](https://www.goinvestingnow.com/ExploreCourses)
+```
+
+Both occurrences of the article URL use the current ScanDate. No other product's `黃金分析` wording is copied into APL US STOCK. Completed 2026-09-24 outputs and Archive remain immutable; a separately prepared correction does not silently replace the published artifact or its SHA.
+
+For ScanDate **2026-09-04 onward**, the canonical article URL is `https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD`. The same exact-date URL must be used in WhatsApp and the Markdown-only `SEO and Sharing` section. Packages through 2026-09-03 retain the historical `apl-momentum-leaders-YYYY-MM-DD` slug and must not be rewritten.
 
 Cross-platform consistency means that any repeated date, number, company identity, ranking fact or directional judgment remains accurate and non-contradictory. It does not mean every artifact must display the same facts, wording, rows or conclusion.
 
@@ -130,7 +189,7 @@ The gloss is presentation text only; semantic roles, audit keys and renderer con
 
 ### SEO and Sharing metadata
 
-`## SEO and Sharing` is a required final Markdown-only section. From 2026-08-10 through 2026-08-27 it must follow `Call to Action｜延伸閱讀` and `Disclaimer｜免責聲明`; from 2026-08-28 onward it must immediately follow `Deep-Scan Conclusion｜深度掃描結論`, and include the current issue's `詳細文章：https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD`, `Page title：` matching the article title, `Page description：` summarising APL Momentum Leaders and the issue theme, and one concise sharing summary. This metadata must never be copied into the independent publish-ready HTML article source.
+`## SEO and Sharing` is a required final Markdown-only section. From 2026-08-10 through 2026-08-27 it must follow `Call to Action｜延伸閱讀` and `Disclaimer｜免責聲明`; from 2026-08-28 onward it must immediately follow `Deep-Scan Conclusion｜深度掃描結論`, and include the current issue's `詳細文章：https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD`, `Page title：` matching the article title, `Page description：` summarising APL Momentum Leaders and the issue theme, and one concise sharing summary. This metadata must never be copied into the independent publish-ready HTML article source.
 
 ### HTML source delivery rule
 
@@ -194,6 +253,48 @@ Deep-Scan Conclusion｜深度掃描結論
 If the section order can be exchanged without changing the reasoning, or if removing a major section leaves the reasoning intact, the narrative chain has failed.
 
 ---
+
+
+## Reader-first editorial standard (effective 2026-09-05)
+
+This standard governs new editorial preparation and human／agent review. Existing source, date, section, minimum-length and Markdown／HTML equivalence gates remain in force. It does not claim that the current validator can certify narrative quality. Published articles remain unchanged.
+
+### 當期切入點與跨期差異
+
+起稿前先確定：讀者今期最需要釐清什麼、哪項當期證據最重要、證據之間存在什麼矛盾。從具體事件、價格與盈利的分歧、供應瓶頸或短中期領導差異切入；只能選來源支持的切入點。
+
+不得連續以「本期最大的市場變化」「本期最大的結構變化」或「市場正由……轉向……」換詞起稿。這些句式並非一律禁用，但同義改寫不構成新觀點。市場沒有重大改變時，明確說明原判斷仍成立，以及當期哪些新證據正在確認或挑戰它，不得為求新鮮虛構轉折。
+
+可取得時，唯讀比較最近三期的開場、核心命題、Investment Implication 與 Conclusion，記錄比較日期，以及本期屬新證據、判斷改變或明確延續。品牌、固定標題、URL 與必需 scope note 不納入創新度判斷。取不到歷史文章時，記錄限制並審核當期內容；不得聲稱已比較，亦不得把歷史 outputs 變成 Cross-PC runtime dependency。字串不同不能證明語義不同。
+
+### 自然文章與證據界線
+
+- 使用清楚繁體中文、自然而有判斷力的研究語氣。專有名詞首次出現便解釋；少用沒有具體主體的「結構驗證／敘事兌現／領導擴散」串句。
+- 每段推進一個主要論點，以相關證據解釋其意義。長短句交替；承接可以含蓄，不必每節以問題作結或寫「下一節將驗證」。既有因果關鍵字檢查只是機械條件，加入「因此」並不等於完成推理。
+- 清楚分開已知事實、分析推論與條件情境。價格／排名強勢可支持相對強度判斷，但不能單憑它聲稱機構買入、資金淨流入、現金流改善或特定業務催化。直接資金流及基本面聲稱需要相應來源。
+- 選少量有代表性的公司，解釋它供應什麼、需求從何而來、如何支持或挑戰核心命題。不能由 ticker、公司名或板塊自行補出合約、盈利趨勢或催化劑；完整 Top 30 參考仍由 Company Business Analysis 負責。
+- 每個數字都要有閱讀用途；需要時交代期間、分母及比較基準。Top 30 是篩選樣本，入選比例不等於市場資金集中度，樣本板塊分布亦不能直接證明全市場廣度。保留來源數值準確，避免無助理解的小數堆疊。
+- 比喻只用來解釋經濟機制，隨後交代實際含義。不可虛構個人經歷、煽動急迫感、保證回報，或反覆使用口號代替分析。
+
+### 每節給讀者不同收穫
+
+Executive Summary 給出判斷與讀者意義；Market Context 解釋來源證據及傳導機制，不能重播摘要。Why APL Momentum Leaders Matter 要把本期疑問連接至相對強度研究能看見與不能證明的事情，不是每期照抄產品介紹。Overview 解釋樣本及限制。Top Gainers 與 Momentum Leaders 對照短期價格領先與中期持續性，不能把不同來源股票池當成同一母體。Sector Analysis 檢查個股是否形成來源支持的板塊群組。
+
+Investment Implication 回答如何理解環境：哪個經濟環節值得觀察、什麼證據可以確認、什麼仍未知。不能每期硬套 AI／資安／能源故事。Risk 優先解釋最能推翻本期命題的風險及傳導方式，不必列齊所有通用風險。Conclusion 更新開場答案、說清已確認與未確認之處，留下少量可觀察訊號，不再逐節摘要全文。
+
+既有較長段落與字數要求仍適用，但每段必須增加證據、解釋、限制或判斷。不可用固定連接詞、相同結論或無來源細節湊足字數。
+
+### 公開引流與會員內容
+
+另行要求公開引流稿時，以一個有吸引力的問題、少量有用見解、清楚研究價值及自然閱讀邀請組成。可以保留完整 watchlist，但公開內容仍要讓讀者得到實質理解。免費閱讀、會員權益及期限必須符合使用者已確認的當前安排。AI Electricity 只是當期主題例子，不能成為未來文章的預設主線。
+
+WhatsApp 以「市場事件 → APL 觀點 → 應觀察什麼 → 閱讀引導」形成自然手機文章；不照抄固定宣傳段落，不強制每步顯示標籤。此規則不恢復正式 Blog 已移除的 CTA／Disclaimer，Blog 仍以 Conclusion 結束，Markdown 再附 SEO and Sharing。
+
+### 兩次審稿、兩個明確判定
+
+先做事實審稿：來源、日期、公司身份、分母、推論界線、Markdown／HTML 對等。再做讀者審稿：開場是否具體、因果是否連貫、解釋是否有用、是否重複、結尾是否回答開場。把文章連續讀一次，暫時忽略標題，檢查是否仍像一篇文章。
+
+在現有 editorial review evidence 記錄具體段落、發現及修正，分別寫明事實與讀者品質判定。機械 preflight PASS、字數或關鍵字不能替代讀者審稿。無來源聲稱、把舊論點偽裝成新變化、資料堆砌等實質問題必須先修訂才可 editorial approval。這是人工／agent 審稿要求，不新增自動 validator，亦不可虛報為 machine-enforced PASS。
 
 ## 2. Executive Summary
 
@@ -604,6 +705,10 @@ The four required cards must not collapse into four presentations of the same da
 
 ## 14. HTML Source Contract
 
+### Source and table-note typography — effective 2026-09-17
+
+資料來源及表註屬輔助文字。Blog 的獨立範圍註記使用 `<sup><small>Scope: SPX／NDX／DJI constituents.</small></sup>`；HTML source 將它包於獨立 `<p>` 內，保留上標小字，不轉義成可見標籤。Markdown 可保留此局部行內排版標記，主要文章仍為 Markdown。其他來源／表註採同等輔助字級，不能與正文等大。Table Card 的 SourceNote／FooterNote 保留現有獨立小字區；不得縮小主欄位來代替註記排版。既有已發布文件不改寫。
+
 The publish-ready HTML source must be delivered as a separate same-date file:
 
 ```text
@@ -639,7 +744,7 @@ Rules:
 The following lines are specifically prohibited at the bottom of the HTML source:
 
 ```html
-<p>詳細文章：https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD</p>
+<p>詳細文章：https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD</p>
 <p>Page title：...</p>
 <p>Page description：...</p>
 ```
@@ -650,10 +755,10 @@ These publishing metadata values may remain in the separate `.md` manuscript or 
 
 ## 15. URL and Publishing
 
-Formal Blog URL format:
+Formal Blog URL format for ScanDate 2026-09-04 onward:
 
 ```text
-https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD
+https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD
 ```
 
 Page title should match the article title.
@@ -693,3 +798,15 @@ Do not:
 - store the publish-ready HTML source inside the `.md` manuscript;
 - generate a same-date `.html` duplicate beside the required `.html.txt` source;
 - append URL, Page title or Page description metadata paragraphs to the independent HTML source.
+
+## Answer-led headline rule (effective 2026-09-06)
+
+- 前半句交代市場變化；後半句交付研究價值：具體領導方向、受惠機制、分化結果，或正文能回答的具體問題。
+- 禁止「領導結構待確認」「有待觀察」「方向未明」「等待市場驗證」等空泛結尾。突出目前已知的發現，把反證條件留在 Risk，而不是以等待代替答案。
+- 優先「事件 → 具體研究發現」，其次「事件 → 具體讀者問題」。問題須指向哪些公司、哪類業務或何種機制，Executive Summary 必須交代答案，不可只吊胃口。
+- 私有編輯卡記錄讀者問題、證據支持的答案、來源及正文兌現位置；不得輸出內部編輯欄位。
+- 肯定不等於保證升跌：禁止必升、穩賺、一定受惠。排名只支持相對強勢觀察，不能冒充資金淨流入；業務受惠須有来源與因果機制，不可因油價上升就推定所有能源公司受惠。
+- 每期由當期證據產生標題，不套用固定板塊或句型；觀察到相對強勢不等於盈利已兌現。
+- 適用 Blog、Page title、Cover／SEO；既有品牌、日期及跨格式一致性不變，視覺標題可精簡但不可改變結論。
+- 必須進行人工／agent 語意審核；不代表現有 validator 已自動辨識弱標題。未核對承諾與證據不得宣稱 editorial review PASS。
+- 僅適用後續製作，不改寫既有 outputs 或 Archive。

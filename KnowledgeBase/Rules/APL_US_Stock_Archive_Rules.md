@@ -21,7 +21,8 @@ Final Production Audit PASS 之前禁止執行 Archive。Archive PASS 之前，�
 ## 2. Source and destination
 
 - 正式來源：`outputs/YYYY-MM-DD/`
-- 正式目標：`Archive/YYYY/YYYY-MM-DD/`
+- 正式目標：`Archive/YYYY/MM/YYYY-MM-DD/`，月份使用兩位數 `01` 至 `12`，例如 `Archive/2026/09/2026-09-14/`。
+- 2026-09-14 授權月份遷移：歷史日期目錄內所有 bytes 保持不變；原 manifest／trace 的舊路徑保留為當時證據，現在位置以 `Archive/monthly-layout-migration-2026.json` 及更新後 index 為準。現行 completion record 的 ArchiveManifest 路徑必須同步更新。不得把 legacy 改標 PASS。完整遷移及驗證規則見 `docs/ARCHIVE_INDEX_POLICY.md`。
 - 日期目標不得覆蓋。既有目標只可在 manifest 為 PASS 且逐檔重新驗證一致時視為可重用。
 - Archive 必須 Copy 來源檔案；不得以 Move 或 Delete 取代來源。
 - 驗證後將 Archive staging directory 發布至日期目標，不會移動或刪除 `outputs/YYYY-MM-DD/`。
@@ -94,7 +95,7 @@ Index schema is fixed:
 Date | Status | Files | Bytes | Manifest | Notes
 ```
 
-- V2 row：`PASS`、verified file count／bytes、`YYYY/YYYY-MM-DD/archive-manifest.json`、`V2 manifest verified`。
+- V2 row：`PASS`、verified file count／bytes、`YYYY/MM/YYYY-MM-DD/archive-manifest.json`、`V2 manifest verified`。
 - Legacy row：`LEGACY_UNVERIFIED`、read-only inventory count／bytes、`N/A`、`Pre-v2 archive; inventory-only counts; integrity not attested`。
 
 `PENDING_INDEX`只屬同日Archive finalization／resume的暫態manifest狀態，不可成為持久index row。更新另一日期的index時，如發現其他日期仍為`PENDING_INDEX`，必須FAIL CLOSED；應先重試該未完成日期並取得final manifest `Status=PASS`。

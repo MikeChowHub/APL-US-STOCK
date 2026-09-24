@@ -1,0 +1,163 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <radialGradient id="deepBg" cx="50%" cy="40%" r="75%">
+      <stop offset="0%" stop-color="#17364A"/>
+      <stop offset="45%" stop-color="#081827"/>
+      <stop offset="100%" stop-color="#030812"/>
+    </radialGradient>
+    <linearGradient id="cyanGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7AFBFF"/>
+      <stop offset="100%" stop-color="#00D7A5"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="9" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1E5167" stroke-width="1" opacity="0.25"/>
+    </pattern>
+    <style>
+      .title{font-family:"Microsoft JhengHei UI","Noto Sans TC",Arial,sans-serif;font-size:42px;font-weight:800;fill:#F4FBFF;letter-spacing:1px}
+      .subtitle{font-family:"Microsoft JhengHei UI","Noto Sans TC",Arial,sans-serif;font-size:20px;fill:#BBD2DD}
+      .label{font-family:"Microsoft JhengHei UI","Noto Sans TC",Arial,sans-serif;font-size:23px;font-weight:700;fill:#F4FBFF}
+      .small{font-family:"Microsoft JhengHei UI","Noto Sans TC",Arial,sans-serif;font-size:15px;fill:#AFC7D4}
+      .tag{font-family:"Segoe UI",Arial,sans-serif;font-size:15px;font-weight:700;fill:#00E6C3;letter-spacing:2px}
+      .panel{fill:#0B1B2A;stroke:#285D72;stroke-width:2;rx:28}
+      .cyan{stroke:#00E6C3;fill:none}
+      .orange{fill:#FF9F1C}
+      .white{fill:#F4FBFF}
+      .dark{fill:#07101A}
+    </style>
+  </defs>
+
+  <rect width="1600" height="1000" fill="url(#deepBg)"/>
+  <rect width="1600" height="1000" fill="url(#grid)" opacity="0.45"/>
+
+  <text x="80" y="82" class="title">APL 美股深海雷達 (Deep-Scan)｜Logo &amp; Icon Concepts</text>
+  <text x="80" y="118" class="subtitle">視覺方向：深海雷達、企鵝 IP、聲納掃描、冷靜精準的市場研究感</text>
+
+  <!-- Panels -->
+  <rect x="70" y="170" width="460" height="330" class="panel"/>
+  <rect x="570" y="170" width="460" height="330" class="panel"/>
+  <rect x="1070" y="170" width="460" height="330" class="panel"/>
+  <rect x="70" y="560" width="460" height="310" class="panel"/>
+  <rect x="570" y="560" width="460" height="310" class="panel"/>
+  <rect x="1070" y="560" width="460" height="310" class="panel"/>
+
+  <!-- Concept A: Penguin in radar center -->
+  <text x="105" y="215" class="label">A｜企鵝雷達核心</text>
+  <text x="105" y="242" class="small">企鵝位於雷達中心，適合主 Logo</text>
+  <g transform="translate(300 335)">
+    <circle r="118" stroke="#00E6C3" stroke-width="2" fill="none" opacity="0.85" filter="url(#glow)"/>
+    <circle r="82" stroke="#00E6C3" stroke-width="1.6" fill="none" opacity="0.55"/>
+    <circle r="47" stroke="#00E6C3" stroke-width="1.3" fill="none" opacity="0.45"/>
+    <path d="M0 0 L84 -84" stroke="#00E6C3" stroke-width="5" opacity="0.75" filter="url(#softGlow)"/>
+    <path d="M-118 0 H118 M0 -118 V118" stroke="#2F8CA1" stroke-width="1" opacity="0.45"/>
+    <ellipse cx="0" cy="18" rx="39" ry="62" fill="#05080D"/>
+    <ellipse cx="0" cy="28" rx="27" ry="45" fill="#F4FBFF"/>
+    <circle cx="-15" cy="-42" r="21" fill="#05080D"/>
+    <circle cx="15" cy="-42" r="21" fill="#05080D"/>
+    <circle cx="-8" cy="-45" r="4" fill="#F4FBFF"/>
+    <circle cx="8" cy="-45" r="4" fill="#F4FBFF"/>
+    <path d="M-10 -30 L10 -30 L0 -18 Z" class="orange"/>
+    <path d="M-24 78 Q-8 88 6 78" fill="#FF9F1C"/>
+    <path d="M8 78 Q24 88 38 78" fill="#FF9F1C"/>
+  </g>
+  <text x="225" y="475" class="tag">APL DEEP-SCAN</text>
+
+  <!-- Concept B: Dashboard badge -->
+  <text x="605" y="215" class="label">B｜深海監測儀表板</text>
+  <text x="605" y="242" class="small">較成熟、研究報告感，適合封面角標</text>
+  <g transform="translate(800 335)">
+    <rect x="-140" y="-105" width="280" height="210" rx="28" fill="#06121E" stroke="#00E6C3" stroke-width="3" filter="url(#glow)"/>
+    <circle r="70" stroke="#00E6C3" stroke-width="2" fill="none" opacity="0.75"/>
+    <circle r="42" stroke="#00E6C3" stroke-width="1.5" fill="none" opacity="0.48"/>
+    <path d="M0 0 L62 -34" stroke="#00E6C3" stroke-width="5" opacity="0.8"/>
+    <path d="M-96 -65 H-54 M54 -65 H98 M-96 68 H-40 M42 68 H98" stroke="#FF9F1C" stroke-width="4" stroke-linecap="round"/>
+    <ellipse cx="0" cy="14" rx="24" ry="39" fill="#05080D"/>
+    <ellipse cx="0" cy="22" rx="16" ry="27" fill="#F4FBFF"/>
+    <circle cx="-9" cy="-22" r="12" fill="#05080D"/>
+    <circle cx="9" cy="-22" r="12" fill="#05080D"/>
+    <path d="M-6 -14 L6 -14 L0 -7 Z" class="orange"/>
+  </g>
+  <text x="702" y="475" class="tag">MARKET RADAR</text>
+
+  <!-- Concept C: Sonar crest logo -->
+  <text x="1105" y="215" class="label">C｜聲納徽章 Logo</text>
+  <text x="1105" y="242" class="small">更像金融研究品牌徽章，適合網站頁首</text>
+  <g transform="translate(1300 335)">
+    <circle r="124" fill="#07101A" stroke="#285D72" stroke-width="3"/>
+    <circle r="98" stroke="#00E6C3" stroke-width="2" fill="none" opacity="0.65"/>
+    <circle r="68" stroke="#00E6C3" stroke-width="1.5" fill="none" opacity="0.45"/>
+    <path d="M-65 42 Q0 -82 65 42" fill="none" stroke="#F4FBFF" stroke-width="13" stroke-linecap="round"/>
+    <ellipse cx="0" cy="28" rx="42" ry="56" fill="#05080D"/>
+    <ellipse cx="0" cy="38" rx="26" ry="38" fill="#F4FBFF"/>
+    <circle cx="-16" cy="-26" r="18" fill="#05080D"/>
+    <circle cx="16" cy="-26" r="18" fill="#05080D"/>
+    <path d="M-11 -15 L11 -15 L0 -2 Z" class="orange"/>
+    <path d="M-90 -88 A126 126 0 0 1 96 -84" stroke="#FF9F1C" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <text x="-42" y="103" font-family="Segoe UI,Arial" font-size="27" font-weight="800" fill="#00E6C3">APL</text>
+  </g>
+  <text x="1205" y="475" class="tag">DEEP-SCAN</text>
+
+  <!-- Icon 1: Three scan arcs -->
+  <text x="105" y="605" class="label">Icon 1｜三道掃描弧線</text>
+  <text x="105" y="632" class="small">最簡潔，適合社群角標與小尺寸 icon</text>
+  <g transform="translate(300 725)" filter="url(#glow)">
+    <path d="M-95 52 Q0 -68 95 52" stroke="#00E6C3" stroke-width="14" stroke-linecap="round" fill="none"/>
+    <path d="M-62 52 Q0 -28 62 52" stroke="#00E6C3" stroke-width="11" stroke-linecap="round" fill="none" opacity="0.7"/>
+    <path d="M-29 52 Q0 12 29 52" stroke="#00E6C3" stroke-width="8" stroke-linecap="round" fill="none" opacity="0.5"/>
+    <circle cx="0" cy="52" r="8" fill="#FF9F1C"/>
+  </g>
+  <text x="226" y="838" class="tag">SCAN ARC</text>
+
+  <!-- Icon 2: Diagonal scan beam -->
+  <text x="605" y="605" class="label">Icon 2｜斜向掃描光束</text>
+  <text x="605" y="632" class="small">動感較強，適合短片封面與轉場動畫</text>
+  <g transform="translate(800 725)">
+    <circle r="92" fill="#07101A" stroke="#285D72" stroke-width="2"/>
+    <path d="M-68 68 L68 -68" stroke="#00E6C3" stroke-width="16" stroke-linecap="round" opacity="0.95" filter="url(#softGlow)"/>
+    <path d="M-95 0 H95 M0 -95 V95" stroke="#2F8CA1" stroke-width="1" opacity="0.45"/>
+    <circle r="65" stroke="#00E6C3" stroke-width="1.4" fill="none" opacity="0.4"/>
+    <circle r="33" stroke="#00E6C3" stroke-width="1.2" fill="none" opacity="0.3"/>
+    <circle cx="29" cy="-29" r="8" fill="#FF9F1C"/>
+  </g>
+  <text x="703" y="838" class="tag">BEAM SCAN</text>
+
+  <!-- Icon 3: Circular radar grid -->
+  <text x="1105" y="605" class="label">Icon 3｜圓形雷達網格</text>
+  <text x="1105" y="632" class="small">最穩重，適合報告圖表與資料卡</text>
+  <g transform="translate(1300 725)" filter="url(#glow)">
+    <circle r="96" stroke="#00E6C3" stroke-width="4" fill="none" opacity="0.9"/>
+    <circle r="64" stroke="#00E6C3" stroke-width="2" fill="none" opacity="0.55"/>
+    <circle r="32" stroke="#00E6C3" stroke-width="1.5" fill="none" opacity="0.4"/>
+    <path d="M-96 0 H96 M0 -96 V96" stroke="#00E6C3" stroke-width="1.6" opacity="0.4"/>
+    <path d="M0 0 L80 -45" stroke="#00E6C3" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="0" cy="0" r="7" fill="#FF9F1C"/>
+    <circle cx="80" cy="-45" r="6" fill="#FF9F1C"/>
+  </g>
+  <text x="1208" y="838" class="tag">RADAR GRID</text>
+
+  <text x="80" y="940" class="subtitle">建議：主 Logo 可從 A / B / C 選一個方向；識別 icon 可從 Icon 1 / 2 / 3 選一個作為 Deep-Scan 固定角標。</text><g id="apl-deepscan-main-logo">
+  <rect x="1361" y="908" width="210" height="63" rx="12" fill="#050F1A" fill-opacity="0.86" stroke="#00D8FF" stroke-opacity="0.9" stroke-width="2"/>
+  <circle cx="1393" cy="940" r="23" fill="none" stroke="#00D8FF" stroke-opacity="0.55" stroke-width="1.4"/>
+  <circle cx="1393" cy="940" r="15" fill="none" stroke="#00D8FF" stroke-opacity="0.38" stroke-width="1.2"/>
+  <circle cx="1393" cy="940" r="8" fill="none" stroke="#00D8FF" stroke-opacity="0.28" stroke-width="1"/>
+  <line x1="1393" y1="940" x2="1411" y2="925" stroke="#00D8FF" stroke-width="3" stroke-linecap="round"/>
+  <ellipse cx="1393" cy="943" rx="7" ry="11" fill="#05080D"/>
+  <ellipse cx="1393" cy="946" rx="4" ry="8" fill="#FFFFFF" opacity="0.95"/>
+  <polygon points="1391,938 1395,938 1393,942" fill="#FF9D00"/>
+  <text x="1421" y="935" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="800" fill="#FFFFFF">APL</text>
+  <text x="1421" y="952" font-family="Segoe UI, Arial, sans-serif" font-size="9" font-weight="600" fill="#00D8FF">Deep-Scan</text>
+</g>
+</svg>

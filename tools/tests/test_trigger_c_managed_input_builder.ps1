@@ -105,7 +105,8 @@ try{
     [ordered]@{observation='領導力仍然存在';meaning='資金集中於盈利路徑清晰公司'},
     [ordered]@{observation='成交確認重要';meaning='需要持續參與才能鞏固趨勢'}
   )}
-  $leaderRows=@(for($i=0;$i-lt3;$i++){$row=$ranking[$i];[ordered]@{rank="#$($i+1)";symbol=[string]$row.Symbol;companyName=[string]$row.Name;coreBusiness='企業營運與市場服務';mainDriver='相對強勢及盈利能見度';compositeScore=[double]$row.'Composite Score'}})
+  $driverFixtures=@('企業設備訂單與交付需求','醫療檢測使用與支付覆蓋','企業軟件客戶續約與收入')
+  $leaderRows=@(for($i=0;$i-lt3;$i++){$row=$ranking[$i];[ordered]@{rank="#$($i+1)";symbol=[string]$row.Symbol;companyName=[string]$row.Name;coreBusiness='企業營運與市場服務';mainDriver=$driverFixtures[$i];compositeScore=[double]$row.'Composite Score'}})
   $leaders=[ordered]@{SchemaVersion='APL Table Card Input v1.1';CardType='TopLeaders';Title='領導公司';Rows=$leaderRows}
   $headingMap=Get-AplBlogHeadingMap -ScanDate $ScanDate
   $topGainersHeading=Get-AplCanonicalTopGainersTitle
@@ -145,7 +146,7 @@ try{
   $sectionMinimum[[string]$headingMap.ExecutiveSummary]=300
   $sectionMinimum[[string]$headingMap.MarketContext]=420
   $sectionMinimum[[string]$headingMap.WhyAPL]=120
-  $sectionMinimum[[string]$headingMap.DeepScanOverview]=120
+  if([datetime]$ScanDate-lt[datetime]'2026-09-08'){$sectionMinimum[[string]$headingMap.DeepScanOverview]=120}else{$sections.Remove([string]$headingMap.DeepScanOverview)}
   $sectionMinimum[[string]$headingMap.TopGainers]=150
   $sectionMinimum[[string]$headingMap.MomentumLeaders]=180
   $sectionMinimum[[string]$headingMap.SectorAnalysis]=120
@@ -168,11 +169,12 @@ try{
       $html.Add("<p>$($paragraphs[$paragraphIndex])</p>")
     }
   }
-  $markdown.Add('## SEO and Sharing');$markdown.Add('');$markdown.Add("詳細文章：https://www.goinvestingnow.com/blog/apl-momentum-leaders-$ScanDate");$markdown.Add('');$markdown.Add("Page title：$title");$markdown.Add('');$markdown.Add('Page description：APL Momentum Leaders追蹤市場領導結構、盈利能見度與資本效率。');$markdown.Add('');$markdown.Add('Sharing summary：市場選股門檻提高，資金轉向具盈利與現金流證據的領導公司。');$markdown.Add('')
+  $markdown.Add('## SEO and Sharing');$markdown.Add('');$markdown.Add("詳細文章：https://www.goinvestingnow.com/blog/apl-deep-scan-$ScanDate");$markdown.Add('');$markdown.Add("Page title：$title");$markdown.Add('');$markdown.Add('Page description：APL Momentum Leaders追蹤市場領導結構、盈利能見度與資本效率。');$markdown.Add('');$markdown.Add('Sharing summary：市場選股門檻提高，資金轉向具盈利與現金流證據的領導公司。');$markdown.Add('')
   $package=Join-Path $StagingDate 'publishing\production-package'
   Write-Utf8 (Join-Path $package "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md") ($markdown-join[Environment]::NewLine)
   Write-Utf8 (Join-Path $package "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.html.txt") ($html-join[Environment]::NewLine)
-  Write-Utf8 (Join-Path $package "WhatsApp_$ScanDate.md") ('**APL Deep-Scan 美股深海雷達**`n**能源與利率門檻提高 | '+$ScanDate+'**`nhttps://www.goinvestingnow.com/blog/apl-momentum-leaders-'+$ScanDate+'`n`n能源利率重估提高估值與盈利門檻，市場資金由全面追逐轉向選擇性配置。`n`n📊 **APL Deep-Scan 觀察近期美股領導結構**，量化領導股仍然存在，但成交參與與群組廣度尚需確認。`n`n• 投資者應關注相對強度、成交活躍度、能源成本及企業盈利。`n• 下一步觀察領導廣度能否擴散。`n`n🐧 APL Deep-Scan 持續追蹤市場變化。`n`n研究摘要，不構成投資建議。')
+  $issueUrl="https://www.goinvestingnow.com/blog/apl-deep-scan-$ScanDate";$trialUrl='https://www.goinvestingnow.com/ExploreCourses'
+  Write-Utf8 (Join-Path $package "WhatsApp_$ScanDate.md") ("**APL Deep-Scan 美股深海雷達**`n**能源與利率門檻提高 | $ScanDate**`n`n能源利率重估提高估值與盈利門檻，市場資金由全面追逐轉向選擇性配置。`n`nAPL Deep-Scan 觀察近期美股領導結構，領導股仍需盈利與成交確認。投資者應關注能源成本及企業現金流，下一步觀察領導廣度能否擴散。`n`n今日文章會分析這些需求線索能否轉成持續收入。`n`n研究摘要，不構成投資建議。`n`n📖 今日完整研究：`n[$issueUrl]($issueUrl)`n🐧 APL 三日免費體驗｜工具・分析・課程`n[$trialUrl]($trialUrl)")
   $companyLines=New-Object Collections.Generic.List[string]
   $companyLines.Add('# Top 30 Company Business Analysis')
   foreach($row in @($ranking|Select-Object -First 30)){$companyLines.Add("## $($row.Symbol) $($row.Name)");$companyLines.Add('公司核心業務涵蓋企業營運、市場服務及客戶解決方案，收入增長需要由產品需求、執行能力、成本控制與現金流共同支持。本期排名只代表相對市場領導，仍需持續檢查商業模式、盈利能見度與主要風險。')}

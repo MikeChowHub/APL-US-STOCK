@@ -26,6 +26,8 @@ production-package/
 |-- WhatsApp_<ScanDate>.md
 |-- APL_Momentum_Leaders_Market_Analysis_Blog_<ScanDate>.md
 |-- APL_Momentum_Leaders_Market_Analysis_Blog_<ScanDate>.html.txt
+|-- APL_Momentum_Leaders_Market_Analysis_Blog_<ScanDate>.public-preview.html.txt
+|-- APL_Momentum_Leaders_Market_Analysis_Blog_<ScanDate>.article.sql
 |-- table-card-log/APL_Momentum_Leaders_Top_30_Company_Business_Analysis_<ScanDate>.md
 `-- APL_Production_Package_Manifest_<ScanDate>.json
 ```
@@ -47,6 +49,8 @@ The package manifest is generated only after renderers and publishing import fin
 
 All four required cards use `APL Table Card Input v1.1`. Rows are keyed objects rather than positional arrays. The shared validator/renderer mapping is authoritative and Final Production Audit revalidates each input path and SHA before Archive.
 
+For `TopLeaders`, `rank` and `compositeScore` already state position and quantitative strength. `mainDriver` must instead give a concise, company-specific business demand or operating variable that a reader can investigate (for example customer usage and renewals, test utilisation and reimbursement, orders and delivery, or product adoption and licensing). It is an evidence/verification lens, not an invented confirmed catalyst or return forecast. Repeating rank, score, relative-strength status, or the same generic phrase for several companies fails the semantic gate. `coreBusiness` says what the company does; `mainDriver` says what demand or commercial conversion matters now. The card may not publish if any required driver lacks that distinction.
+
 ## Production completion response
 
 Every successful Daily Production completion response must list the four Table Card PNG artifacts individually under a visible `Table Cards` label. A directory-only link is not an acceptable substitute.
@@ -54,11 +58,16 @@ Every successful Daily Production completion response must list the four Table C
 The fixed display labels and file mappings are:
 
 - `Executive Summary` → `production-package/Table Cards/APL_Blog_ExecutiveSummary_<ScanDate>.png`
-- `Top Leaders` → `production-package/Table Cards/APL_Blog_TopLeaders_<ScanDate>.png`
+- `Deep-Scan Dashboard` → `production-package/APL_DeepScan_Radar_Dashboard_Top30_<ScanDate>_1920x1080.png`
 - `Top Gainers` → `production-package/Table Cards/APL_Blog_TopGainers_<ScanDate>.png`
+- `Top Leaders` → `production-package/Table Cards/APL_Blog_TopLeaders_<ScanDate>.png`
 - `Sector Structure` → `production-package/Table Cards/APL_Blog_SectorStructure_<ScanDate>.png`
 
-Each item must be a directly clickable link to its published PNG for the completed ScanDate. The order above is fixed. Renderer logs and the Table Card manifest remain package artifacts but are not part of this reader-facing four-link list.
+Each item must be a directly clickable link to its published PNG for the completed ScanDate. The reader-facing `Table Cards` group includes the standalone Dashboard between Executive Summary and Top Gainers, so its fixed five-link order is `Executive Summary → Deep-Scan Dashboard → Top Gainers → Top Leaders → Sector Structure`. This presentation order does not move the Dashboard into the physical `Table Cards/` directory.
+
+After `Table Cards`, the response must list `正式圖像` in this order: `Social Card → Social 完整 Radar → Cover → SEO`. It must then list `文章及發布文件` in this order: `今日文章 Markdown → HTML 原始碼 TXT → 公開預覽 HTML 原始碼 → 會員文章 SQL → WhatsApp → Top 30 公司分析`. All links are individual absolute paths. Missing, duplicated, mis-grouped or folder-only entries are an incomplete delivery response.
+
+The three HTML/member publishing artifacts are not interchangeable. The full `.html.txt` retains the entire source, `.public-preview.html.txt` ends at the single empty `<div id="apl-member-content"></div>` boundary after the controlled Market Context excerpt, and `.article.sql` contains the exact same-date `apl-deep-scan-<ScanDate>` manual `'<p>PASTE'` template. Final Audit validates all three before Archive.
 
 ## Migration policy
 
@@ -66,4 +75,4 @@ Completed runs before this integration retain their original paths and Archive m
 
 ## Archive
 
-Archive V2 copies `outputs/<ScanDate>/` without reclassification. Therefore `production-package/` is preserved byte-for-byte at `Archive/YYYY/<ScanDate>/production-package/`. Archive is permitted only when Final Audit reports both `ProductionPackage.Status=PASS` and four PASS Table Card semantic records.
+Archive V2 copies `outputs/<ScanDate>/` without reclassification. Therefore `production-package/` is preserved byte-for-byte at `Archive/YYYY/MM/<ScanDate>/production-package/`. Archive is permitted only when Final Audit reports both `ProductionPackage.Status=PASS` and four PASS Table Card semantic records.

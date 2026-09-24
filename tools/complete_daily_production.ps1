@@ -22,12 +22,13 @@ $scanDateValue=[datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.Cult
 $editorialQualityFrom=[datetime]::ParseExact('2026-08-10','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
 $ctaDisclaimerRemovalFrom=[datetime]::ParseExact('2026-08-28','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
 $investmentImplicationFrom=[datetime]::ParseExact('2026-08-30','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
-$expectedEditorialSectionCount=if($scanDateValue-ge$investmentImplicationFrom){10}elseif($scanDateValue-ge$editorialQualityFrom-and$scanDateValue-lt$ctaDisclaimerRemovalFrom){11}else{9}
+$expectedEditorialSectionCount=if($scanDateValue-ge[datetime]'2026-09-08'){9}elseif($scanDateValue-ge$investmentImplicationFrom){10}elseif($scanDateValue-ge$editorialQualityFrom-and$scanDateValue-lt$ctaDisclaimerRemovalFrom){11}else{9}
 $allowedRoot = if ($RegressionTest) { Join-Path $ProjectRoot 'tmp' } else { $ProjectRoot }
 $FinalAuditPath = Assert-AplNoReparsePath -Path $FinalAuditPath -AllowedRoot $allowedRoot -RequireFile
 $ArchiveManifestPath = Assert-AplNoReparsePath -Path $ArchiveManifestPath -AllowedRoot $allowedRoot -RequireFile
 $archiveDatePath = Split-Path $ArchiveManifestPath -Parent
-$archiveRoot = Split-Path (Split-Path $archiveDatePath -Parent) -Parent
+$archiveRoot = Split-Path (Split-Path (Split-Path $archiveDatePath -Parent) -Parent) -Parent
+if ((Get-AplCanonicalPath $archiveDatePath) -cne (Get-AplCanonicalPath (Join-Path $archiveRoot (Get-AplArchiveRelativeDatePath $ScanDate)))) { throw 'Archive date must use YYYY/MM/YYYY-MM-DD layout.' }
 $ArchiveIndexPath = Assert-AplNoReparsePath -Path $ArchiveIndexPath -AllowedRoot $archiveRoot -RequireFile
 $PipelineLog = Assert-AplNoReparsePath -Path $PipelineLog -AllowedRoot $allowedRoot -RequireFile
 $PipelineTrace = Assert-AplNoReparsePath -Path $PipelineTrace -AllowedRoot $allowedRoot -RequireFile

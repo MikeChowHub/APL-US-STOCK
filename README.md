@@ -78,7 +78,7 @@ Regression fixtures 屬本機測試資料，不隨 v1.0.0 repository 發布；�
 
 每次成功 run 產生 ranking、Top 30、watchlist、SMA200 audit、metadata、renderer contracts、Dashboard／Social SVG、正式 `production-package/`、renderer logs，以及包含 artifact SHA-256 的 pipeline JSONL trace。
 
-日期 Production Package 由 runner 在 staging 原生建立。`production-package/Table Cards/` 保存四張 required Table Card PNG、logs及publication manifest；package根目錄保存Dashboard／Social PNG、Cover、SEO、WhatsApp、Blog Markdown／HTML及`APL_Production_Package_Manifest_<ScanDate>.json`。SVG、renderer contracts、ranking、SMA200及其他machine records留在日期根目錄。上述publishing artifacts不得在日期根目錄重複出現，亦不得在publish後手動搬移。
+日期 Production Package 由 runner 在 staging 原生建立。`production-package/Table Cards/` 保存四張 required Table Card PNG、logs及publication manifest；package根目錄保存Dashboard／Social PNG、Cover、SEO、WhatsApp、Blog Markdown、完整HTML原始碼TXT、公開預覽HTML原始碼、會員文章SQL及`APL_Production_Package_Manifest_<ScanDate>.json`。公開預覽與SQL由runner在Final Audit前從已驗證HTML原始碼派生並以SHA納入manifest，不是發布後手製補檔。SVG、renderer contracts、ranking、SMA200及其他machine records留在日期根目錄。上述publishing artifacts不得在日期根目錄重複出現，亦不得在publish後手動搬移。
 
 完整package規則及舊路徑migration policy見 [Production Package Rules](KnowledgeBase/Rules/APL_US_Stock_Production_Package_Rules.md)。
 
@@ -110,10 +110,10 @@ Production PASS
 ```
 
 - Source：`outputs/YYYY-MM-DD/`
-- Destination：`Archive/YYYY/YYYY-MM-DD/`
+- Destination：`Archive/YYYY/MM/YYYY-MM-DD/`
 - Runner：`tools/run_daily_production.ps1`
 - Archive executor：`tools/archive_daily_production.ps1`
-- Evidence：`outputs/YYYY-MM-DD/Final_Production_Audit_YYYY-MM-DD.json` 與 `Archive/YYYY/YYYY-MM-DD/archive-manifest.json`
+- Evidence：`outputs/YYYY-MM-DD/Final_Production_Audit_YYYY-MM-DD.json` 與 `Archive/YYYY/MM/YYYY-MM-DD/archive-manifest.json`
 - Index：`Archive/index.md`
 
 Archive 採 Copy 並保留來源；不以 Move／Delete 取代。正式 Blog、HTML、Top 30 analysis、publishing materials、Dashboard、Social、Table Cards、Cover、SEO、manifest、必要 audits/logs 會保留；staging、temporary、cache、diagnostic 與指定重複中間檔會排除。

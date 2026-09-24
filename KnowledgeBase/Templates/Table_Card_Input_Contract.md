@@ -120,6 +120,7 @@ Rules:
 - Numeric observations must connect the figure to its market implication; explain terms such as Leader Lock and Buyability in the accompanying `meaning` field.
 - Header count must equal the renderer's mapped display-field count.
 - `compositeScore` must be numeric and cannot occupy `coreBusiness`.
+- `TopLeaders.mainDriver` must be a Chinese, company-specific business demand or verifiable operating variable, distinct from `rank`, `compositeScore` and the static `coreBusiness` description. Rank/score/relative-strength restatements (for example `量化相對強度排名第二`) and a shared generic driver repeated across companies are invalid. If a catalyst is not evidenced, state the business question to verify; do not imply it has already happened.
 - `changePct` must be a signed percentage and cannot occupy `sectorTheme`.
 - `representativeSymbols` must be a symbol list and cannot occupy `direction`.
 - `direction` is a concise Chinese market-structure／capital-flow summary and must contain at least one Chinese character. English-only direction text is invalid; symbols must remain in `representativeSymbols`.

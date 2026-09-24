@@ -51,6 +51,10 @@ function New-ProductionFixture([string]$Root) {
   Write-Text (Join-Path $packageRoot "APL_Momentum_Leaders_Blog_SEO_${ScanDate}_1280x720.png") 'seo'
   Write-Text (Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md") '# Formal Blog'
   Write-Text (Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.html.txt") '<h1>Formal Blog</h1>'
+  Write-Text (Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.public-preview.html.txt") '<h1>Formal Blog</h1><h3>Executive Summary｜執行摘要</h3><p>摘要內容。</p><h3>Market Context｜市場背景</h3><p>市場背景。</p><p>第二段...</p><div id="apl-member-content"></div>'
+  $slug="apl-deep-scan-$ScanDate"
+  $memberSql=@('INSERT INTO articles (slug, required_product, content)',"SELECT '$slug', 'deepscan', '<p>PASTE'",'WHERE NOT EXISTS (',"  SELECT 1 FROM articles WHERE slug = '$slug'",');')-join[Environment]::NewLine
+  Write-Text (Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.article.sql") $memberSql
   Write-Text (Join-Path $packageRoot "table-card-log\APL_Momentum_Leaders_Top_30_Company_Business_Analysis_$ScanDate.md") '# Company analysis'
   $editorialArtifacts=@(
     @('blog-markdown',(Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md")),
@@ -62,6 +66,7 @@ function New-ProductionFixture([string]$Root) {
   $headingMap=Get-AplBlogHeadingMap -ScanDate $ScanDate
   $mandatorySections=@([string]$headingMap.ExecutiveSummary,[string]$headingMap.MarketContext,[string]$headingMap.WhyAPL,[string]$headingMap.DeepScanOverview,[string]$headingMap.TopGainers,[string]$headingMap.MomentumLeaders,[string]$headingMap.SectorAnalysis)
   $scanDateValue=[datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+  if($scanDateValue-ge[datetime]'2026-09-08'){$mandatorySections=@($mandatorySections|Where-Object{$_-cne[string]$headingMap.DeepScanOverview})}
   $editorialQualityFrom=[datetime]::ParseExact('2026-08-10','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   $ctaDisclaimerRemovalFrom=[datetime]::ParseExact('2026-08-28','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   $investmentImplicationFrom=[datetime]::ParseExact('2026-08-30','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
@@ -73,7 +78,7 @@ function New-ProductionFixture([string]$Root) {
   $inputRoot = Join-Path (Split-Path $Root -Parent) 'semantic-inputs'
   $semanticFixtures = @{
     ExecutiveSummary = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"ExecutiveSummary","Title":"Executive","Rows":[{"observation":"市場結構仍然集中","meaning":"資金配置保持選擇性，領導層未全面擴散"},{"observation":"資金流向需要確認","meaning":"成交參與若未擴散，現有領導結構仍須接受檢驗"},{"observation":"能源與 AI 回報是關鍵變數","meaning":"兩者將決定短線反彈能否轉化為中期領導"}]}'
-    TopLeaders = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"TopLeaders","Title":"Leaders","Rows":[{"rank":"#1","symbol":"TEST","companyName":"Test Company","coreBusiness":"Test business","mainDriver":"Relative strength","compositeScore":100}]}'
+    TopLeaders = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"TopLeaders","Title":"Leaders","Rows":[{"rank":"#1","symbol":"TEST","companyName":"Test Company","coreBusiness":"Test business","mainDriver":"企業客戶訂單與交付需求","compositeScore":100}]}'
     TopGainers = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"TopGainers","Title":"Top Gainers — Past 7 Days","Rows":[{"symbol":"TEST","companyName":"Test Company","sectorTheme":"Technology","changePct":"+10.00%"}]}'
     SectorStructure = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"SectorStructure","Title":"Structure","Rows":[{"theme":"Technology","count":1,"direction":"科技基礎設施保持選擇性領導","representativeSymbols":"TEST"}]}'
   }
@@ -106,6 +111,8 @@ function New-ProductionFixture([string]$Root) {
     @('whatsapp',"WhatsApp_$ScanDate.md"),
     @('formal-blog-markdown',"APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md"),
     @('formal-blog-html-source',"APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.html.txt"),
+    @('public-preview-html-source',"APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.public-preview.html.txt"),
+    @('member-article-sql',"APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.article.sql"),
     @('company-business-analysis',"table-card-log/APL_Momentum_Leaders_Top_30_Company_Business_Analysis_$ScanDate.md"),
     @('editorial-completion-audit',"APL_Editorial_Completion_Audit_$ScanDate.json")
   )
@@ -156,11 +163,11 @@ try {
   $archiveRoot = Join-Path $TestRoot '_archive'
   foreach ($legacyDateValue in @($archivePolicy.LegacyUnverifiedDates)) {
     $legacyDate = [string]$legacyDateValue
-    $legacyDirectory = Join-Path $archiveRoot (Join-Path $legacyDate.Substring(0,4) $legacyDate)
+    $legacyDirectory = Join-Path $archiveRoot (Get-AplArchiveRelativeDatePath $legacyDate)
     Write-Text (Join-Path $legacyDirectory 'legacy-artifact.txt') ("pre-v2 archive " + $legacyDate)
   }
   Invoke-ExpectExit 'copy-integrity-index-final-manifest' $archiveScript @('-RegressionTest','-SourceDatePath',$source,'-ScanDate',$ScanDate,'-FinalAuditPath',$audit,'-ArchiveRoot',$archiveRoot) 0
-  $archiveDate = Join-Path $archiveRoot "2040\$ScanDate"
+  $archiveDate = Join-Path $archiveRoot (Get-AplArchiveRelativeDatePath $ScanDate)
   $manifestPath = Join-Path $archiveDate 'archive-manifest.json'
   $manifest = Get-Content -Raw -Encoding UTF8 $manifestPath | ConvertFrom-Json
   $actual = @(Get-AplArchiveInventory $archiveDate -ExcludeManifest)
@@ -168,7 +175,7 @@ try {
   try {
     foreach ($legacyDateValue in @($archivePolicy.LegacyUnverifiedDates)) {
       $legacyDate = [string]$legacyDateValue
-      $legacyDirectory = Join-Path $archiveRoot (Join-Path $legacyDate.Substring(0,4) $legacyDate)
+      $legacyDirectory = Join-Path $archiveRoot (Get-AplArchiveRelativeDatePath $legacyDate)
       $legacyInventory = @(Get-AplArchiveInventory $legacyDirectory -ExcludeManifest)
       Assert-AplLegacyArchiveIndexRow (Join-Path $archiveRoot 'index.md') $legacyDate $legacyInventory.Count ([long](($legacyInventory | Measure-Object Size -Sum).Sum)) $archiveRoot | Out-Null
     }
@@ -187,7 +194,7 @@ try {
   Add-Result 'same-date-pending-final-pass' ([string]$sameDateResumed.Status-ceq'PASS')
 
   $unrelatedPendingDate='2040-01-05'
-  $unrelatedPending=Join-Path $archiveRoot "2040\$unrelatedPendingDate"
+  $unrelatedPending=Join-Path $archiveRoot (Get-AplArchiveRelativeDatePath $unrelatedPendingDate)
   Copy-Item -LiteralPath $archiveDate -Destination $unrelatedPending -Recurse
   $unrelatedManifestPath=Join-Path $unrelatedPending 'archive-manifest.json'
   $unrelatedManifest=Get-Content -Raw -Encoding UTF8 $unrelatedManifestPath|ConvertFrom-Json
@@ -210,7 +217,7 @@ try {
   Invoke-ExpectExit 'post-adoption-missing-manifest' $archiveScript @('-RegressionTest','-SourceDatePath',$source,'-ScanDate',$ScanDate,'-FinalAuditPath',$audit,'-ArchiveRoot',$archiveRoot) 1
   Remove-Item -LiteralPath $postAdoption -Recurse -Force
 
-  $unknownPreAdoption = Join-Path $archiveRoot '2026\2026-07-13'
+  $unknownPreAdoption = Join-Path $archiveRoot '2026\07\2026-07-13'
   Write-Text (Join-Path $unknownPreAdoption 'unknown-pre-v2.txt') 'must fail'
   Invoke-ExpectExit 'unknown-pre-adoption-missing-manifest' $archiveScript @('-RegressionTest','-SourceDatePath',$source,'-ScanDate',$ScanDate,'-FinalAuditPath',$audit,'-ArchiveRoot',$archiveRoot) 1
   Remove-Item -LiteralPath $unknownPreAdoption -Recurse -Force
@@ -221,7 +228,7 @@ try {
   Remove-Item -LiteralPath $malformedDate -Recurse -Force
 
   $legacyProbeDate = [string]@($archivePolicy.LegacyUnverifiedDates)[0]
-  $legacyProbeDirectory = Join-Path $archiveRoot (Join-Path $legacyProbeDate.Substring(0,4) $legacyProbeDate)
+  $legacyProbeDirectory = Join-Path $archiveRoot (Get-AplArchiveRelativeDatePath $legacyProbeDate)
   $legacyManifestProbe = Join-Path $legacyProbeDirectory 'archive-manifest.json'
   Write-Text $legacyManifestProbe '{"SchemaVersion":"APL Daily Archive Manifest v2.0","Status":"PASS"}'
   Invoke-ExpectExit 'legacy-date-fake-pass-forbidden' $archiveScript @('-RegressionTest','-SourceDatePath',$source,'-ScanDate',$ScanDate,'-FinalAuditPath',$audit,'-ArchiveRoot',$archiveRoot) 1
@@ -232,6 +239,8 @@ try {
 
   foreach ($case in @(
     @('missing-blog',"production-package\APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md"),
+    @('missing-public-preview',"production-package\APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.public-preview.html.txt"),
+    @('missing-member-sql',"production-package\APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.article.sql"),
     @('missing-company-analysis',"production-package\table-card-log\APL_Momentum_Leaders_Top_30_Company_Business_Analysis_$ScanDate.md"),
     @('missing-whatsapp',"production-package\WhatsApp_$ScanDate.md")
   )) {

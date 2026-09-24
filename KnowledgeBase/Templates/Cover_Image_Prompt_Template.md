@@ -295,3 +295,15 @@ Local renderer may still be used for:
 - Dashboard;
 - Social Card;
 - Table Card.
+
+## Answer-led headline private drafting card (effective 2026-09-06)
+
+填寫 overlay 主標題前，私下回答：
+
+- 本期發生什麼變化？
+- 讀者最想知道哪些領導公司、受惠業務或分化方向？
+- 目前證據支持的具體答案是什麼？來源在哪裏？
+- Executive Summary 是否兌現答案，正文是否解釋機制？
+- 後半句是否仍是「待確認」類空話，或反過來變成無根據的保證？
+
+保持既有標題格式、kicker 與 description 職責。此卡不渲染、不輸出給客戶。

@@ -106,6 +106,7 @@ function Get-AplTableCardPresentation([object]$Json, [string]$CardType, [switch]
       }
     }
     'TopLeaders' {
+      $seenTopLeaderDrivers = @{}
       foreach ($column in @(
         [pscustomobject]@{ Key='rank'; Label='Rank'; Width=0.07; Align='Center'; Bold=$true },
         [pscustomobject]@{ Key='symbol'; Label='Symbol'; Width=0.09; Align='Center'; Bold=$true },
@@ -121,6 +122,13 @@ function Get-AplTableCardPresentation([object]$Json, [string]$CardType, [switch]
         foreach ($key in @('rank','symbol','companyName','coreBusiness','mainDriver')) { Assert-AplStringProperty $row $key "Table card input TopLeaders row $rowIndex" -Required -NonEmpty }
         if ([string]$row.rank -notmatch '^#[1-9][0-9]*$') { throw "Table card input TopLeaders row $rowIndex rank must use '#N' only." }
         if ([string]$row.symbol -notmatch '^[A-Z0-9][A-Z0-9.-]*$') { throw "Table card input TopLeaders row $rowIndex symbol is invalid." }
+        $driver = ([string]$row.mainDriver).Trim()
+        if ($driver -notmatch '[\u3400-\u9FFF]' -or $driver.Length -lt 8) { throw "Table card input TopLeaders row $rowIndex mainDriver must be substantive Chinese business analysis." }
+        if ($driver -match '(?i)排名|第[一二三四五六七八九十0-9]+|相對強勢|相對強度|量化動能|(?:composite\s*)?score|高分|入榜|居首|領先排名') { throw "Table card input TopLeaders row $rowIndex mainDriver repeats rank or score instead of business demand." }
+        if ($driver -notmatch '需求|使用|採用|支付|覆蓋|收入|續約|交付|訂單|毛利|盈利|現金流|商業化|價差|成本|客戶|合作|產品|研發|治療|產能|檢測|服務|授權|儲存') { throw "Table card input TopLeaders row $rowIndex mainDriver lacks a verifiable business variable." }
+        $driverKey = ($driver -replace '\s+', '')
+        if ($seenTopLeaderDrivers.ContainsKey($driverKey)) { throw "Table card input TopLeaders row $rowIndex mainDriver duplicates another company's generic driver." }
+        $seenTopLeaderDrivers[$driverKey] = $true
         if (-not (Test-AplJsonNumber $row.compositeScore)) { throw "Table card input TopLeaders row $rowIndex compositeScore must be a JSON number." }
         $score = [double]$row.compositeScore
         if ([double]::IsNaN($score) -or [double]::IsInfinity($score)) { throw "Table card input TopLeaders row $rowIndex compositeScore must be finite." }

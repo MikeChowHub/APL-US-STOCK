@@ -2,6 +2,14 @@
 
 `Archive/index.md` is a generated navigation and status index. It is not a substitute for a v2 archive manifest.
 
+## Monthly layout (2026-09-14)
+
+The canonical layout is `Archive/YYYY/MM/YYYY-MM-DD/`, with zero-padded numeric months (`07`, `08`, `09`). New archives, index paths and live completion records must use this layout. A date in the wrong year/month or an unmigrated flat date directory fails validation; do not silently omit it from the index.
+
+The authorized 2026 relocation preserves every byte inside each historical date directory, including its original manifest and logs. Historical `Destination` and trace paths describe the original run, not the current location. `Archive/monthly-layout-migration-2026.json` supplies the explicit old-to-new mapping and per-file SHA/size evidence; the index and live completion records point to the relocated manifest. Do not rewrite historical manifests to pretend that they were originally created in the new location. Legacy dates remain `LEGACY_UNVERIFIED`.
+
+Migration order: preflight all manifests and destinations -> inventory every file (including files normally excluded by production archiving) -> copy all dates -> verify source and destination count/size/SHA -> persist evidence -> delete only verified source files and empty directories -> update index and live completion references -> verify every relocated manifest/index/reference. `tools/migrate_archive_monthly_layout.ps1` defaults to read-only preflight; `-Apply` performs the explicitly authorized migration. No scoring, rendering or production rerun is part of relocation.
+
 ## Authority
 
 - Adoption marker：`tools/archive-v2-policy.json`
@@ -19,7 +27,7 @@ Date | Status | Files | Bytes | Manifest | Notes
 ### V2 Verified Archive
 
 ```text
-YYYY-MM-DD | PASS | <verified count> | <verified bytes> | YYYY/YYYY-MM-DD/archive-manifest.json | V2 manifest verified
+YYYY-MM-DD | PASS | <verified count> | <verified bytes> | YYYY/MM/YYYY-MM-DD/archive-manifest.json | V2 manifest verified
 ```
 
 The manifest schema, date, status, file records, count, bytes and SHA-256 must match the actual Archive directory.

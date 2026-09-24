@@ -411,3 +411,7 @@ Visual Templates define execution structure.
 Renderers and scripts implement the rules but must not become rule sources.
 
 `outputs/`, `Archive/`, and one-off image files are not visual rule sources.
+
+## Answer-led headline rule (effective 2026-09-06)
+
+Cover／SEO 必須遵循 Blog Rules 的 answer-led headline 規則：前半句交代事件，後半句給出具體研究發現、受惠機制或正文回答的問題。禁止以「領導結構待確認」「有待觀察」結尾，也不可改成無證據的保證升跌。精簡標題不可改變研究結論。Subtitle 解釋發現為何重要，不重複品牌、日期或空泛等待句。Kicker、renderer 與版面規格不變。

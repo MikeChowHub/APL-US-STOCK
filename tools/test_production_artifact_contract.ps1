@@ -144,6 +144,8 @@ try {
   $expectedPackageRequired['whatsapp'] = "WhatsApp_${ScanDate}.md"
   $expectedPackageRequired['formal-blog-markdown'] = "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.md"
   $expectedPackageRequired['formal-blog-html-source'] = "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.html.txt"
+  $expectedPackageRequired['public-preview-html-source'] = "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.public-preview.html.txt"
+  $expectedPackageRequired['member-article-sql'] = "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.article.sql"
   $expectedPackageRequired['company-business-analysis'] = "table-card-log/APL_Momentum_Leaders_Top_30_Company_Business_Analysis_${ScanDate}.md"
   $expectedPackageRequired['editorial-completion-audit'] = "APL_Editorial_Completion_Audit_${ScanDate}.json"
 
@@ -165,6 +167,23 @@ try {
   }
   foreach ($id in $expectedPackageRequired.Keys) { if (-not $seenPackageIds.ContainsKey($id.ToLowerInvariant())) { throw "Production package missing required id: $id" } }
 
+  $previewPath = Assert-AplNoReparsePath -Path (Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.public-preview.html.txt") -AllowedRoot $packageRoot -RequireFile
+  $memberSqlPath = Assert-AplNoReparsePath -Path (Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.article.sql") -AllowedRoot $packageRoot -RequireFile
+  $previewText = [IO.File]::ReadAllText($previewPath,[Text.Encoding]::UTF8)
+  $memberSqlText = [IO.File]::ReadAllText($memberSqlPath,[Text.Encoding]::UTF8)
+  if (@([regex]::Matches($previewText,'(?is)<div\s+id=["'']apl-member-content["'']\s*>\s*</div>')).Count -ne 1) { throw 'Public preview must contain exactly one empty apl-member-content boundary.' }
+  if ($previewText -cnotmatch '(?is)<h1>.+?</h1>' -or $previewText -cnotmatch '(?is)<h3>\s*Executive Summary｜執行摘要\s*</h3>' -or $previewText -cnotmatch '(?is)<h3>\s*Market Context｜市場背景\s*</h3>') { throw 'Public preview is missing its title or required opening sections.' }
+  if ($previewText.IndexOf('<div id="apl-member-content"></div>',[StringComparison]::Ordinal) -lt $previewText.IndexOf('<h3>Market Context｜市場背景</h3>',[StringComparison]::Ordinal)) { throw 'Public preview member boundary is out of order.' }
+  $slug = "apl-deep-scan-$ScanDate"
+  $expectedSql = @(
+    'INSERT INTO articles (slug, required_product, content)',
+    "SELECT '$slug', 'deepscan', '<p>PASTE'",
+    'WHERE NOT EXISTS (',
+    "  SELECT 1 FROM articles WHERE slug = '$slug'",
+    ');'
+  ) -join [Environment]::NewLine
+  if ($memberSqlText.Trim() -cne $expectedSql.Trim()) { throw 'Member article SQL does not match the exact same-date manual PASTE template.' }
+
   $editorialAuditPath = Assert-AplNoReparsePath -Path (Join-Path $packageRoot "APL_Editorial_Completion_Audit_${ScanDate}.json") -AllowedRoot $packageRoot -RequireFile
   $editorialAudit = Read-AplStrictJson $editorialAuditPath $packageRoot
   if ([string]$editorialAudit.SchemaVersion -cne [string]$readinessContract.SchemaVersion -or [string]$editorialAudit.ScanDate -cne $ScanDate -or [string]$editorialAudit.Status -cne 'PASS' -or $editorialAudit.EditorialCompletion -ne $true -or $editorialAudit.ProductionReadiness -ne $true -or $editorialAudit.DailyProductionPublishableCandidate -ne $true) { throw 'Editorial Completion Audit schema/date/status/readiness mismatch.' }
@@ -179,6 +198,7 @@ try {
     [string]$headingMap.SectorAnalysis
   )
   $scanDateValue=[datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+  if($scanDateValue-ge[datetime]'2026-09-08'){$mandatorySections=@($mandatorySections|Where-Object{$_-cne[string]$headingMap.DeepScanOverview})}
   $editorialQualityFrom=[datetime]::ParseExact('2026-08-10','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   $ctaDisclaimerRemovalFrom=[datetime]::ParseExact('2026-08-28','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   $investmentImplicationFrom=[datetime]::ParseExact('2026-08-30','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)

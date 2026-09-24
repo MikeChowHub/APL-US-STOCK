@@ -1,0 +1,224 @@
+{
+    "SchemaVersion":  "APL Brand Catalog v1",
+    "GeneratedUtc":  "2026-09-11T10:46:41.2302017Z",
+    "Purpose":  "Discovery inventory; only brand-manifest.json authorizes production assets",
+    "Assets":  [
+                   {
+                       "File":  "APL_Deep_Scan_Brand_Logo_Renderer_Clean.png",
+                       "Status":  "PRODUCTION_APPROVED",
+                       "SHA256":  "00195DA733D1715BA82A096DBAA4A34848D1A5489A595C4F911B06E28534F669",
+                       "Bytes":  614857,
+                       "Sources":  [
+                                       "Assets/Brand/APL_Deep_Scan_Brand_Logo_Renderer_Clean.png",
+                                       "outputs/APL_Deep_Scan_Brand_Logo_Renderer_Clean_2026-06-28.png",
+                                       "outputs/2026-06-28/APL_Deep_Scan_Brand_Logo_Renderer_Clean_2026-06-28.png"
+                                   ]
+                   },
+                   {
+                       "File":  "Variants/APL_Deep_Scan_Brand_Logo.png",
+                       "Status":  "REFERENCE_ONLY",
+                       "SHA256":  "0CE6FE889ECA326BF39B1C720FC80657041C1F3A4C3CAC584EF8378A9389A36D",
+                       "Bytes":  13728,
+                       "Sources":  [
+                                       "outputs/APL_Deep_Scan_Brand_Logo.png",
+                                       "outputs/APL_Deep_Scan_Brand_Logo_Inline.png"
+                                   ]
+                   },
+                   {
+                       "File":  "Variants/APL_Deep_Scan_Brand_Logo_HiRes.png",
+                       "Status":  "REFERENCE_ONLY",
+                       "SHA256":  "1A7800293D82E4DC0981E9E9819B0F37152119714A6D236875C43C7C8DB987E2",
+                       "Bytes":  591772,
+                       "Sources":  [
+                                       "outputs/APL_Deep_Scan_Brand_Logo_HiRes.png",
+                                       "outputs/APL_Deep_Scan_Brand_Logo_White_BG.png"
+                                   ]
+                   },
+                   {
+                       "File":  "Variants/APL_Deep_Scan_Brand_Logo_Renderer_NoFrame_2026-06-28.png",
+                       "Status":  "REFERENCE_ONLY",
+                       "SHA256":  "C9372AA53B93490FCA30127A574A6938142D929359873CAF694C213853184B75",
+                       "Bytes":  662108,
+                       "Sources":  [
+                                       "outputs/APL_Deep_Scan_Brand_Logo_Renderer_NoFrame_2026-06-28.png",
+                                       "outputs/2026-06-28/APL_Deep_Scan_Brand_Logo_Renderer_NoFrame_2026-06-28.png"
+                                   ]
+                   },
+                   {
+                       "File":  "Sources/APL_Deep_Scan_Brand_Logo_Renderer_Source_2026-06-28.png",
+                       "Status":  "HISTORICAL_SOURCE",
+                       "SHA256":  "1A05EB5619BDCC9C2163439E6EA73149DA1B5C21D1D18F63D99E41AC5C0EA7F9",
+                       "Bytes":  1976816,
+                       "Sources":  [
+                                       "outputs/APL_Deep_Scan_Brand_Logo_Renderer_Source_2026-06-28.png",
+                                       "outputs/2026-06-28/APL_Deep_Scan_Brand_Logo_Renderer_Source_2026-06-28.png"
+                                   ]
+                   },
+                   {
+                       "File":  "Variants/APL_Deep_Scan_Brand_Logo_Renderer_Transparent_2026-06-28.png",
+                       "Status":  "REFERENCE_ONLY",
+                       "SHA256":  "215366377BD9B6C0D5B79AE0972D917F8B8C6B828162BBD8B1BDC35F4D555196",
+                       "Bytes":  1846404,
+                       "Sources":  [
+                                       "outputs/APL_Deep_Scan_Brand_Logo_Renderer_Transparent_2026-06-28.png",
+                                       "outputs/2026-06-28/APL_Deep_Scan_Brand_Logo_Renderer_Transparent_2026-06-28.png"
+                                   ]
+                   },
+                   {
+                       "File":  "Variants/APL_Deep_Scan_Brand_Logo_Renderer_White_BG_2026-06-28.png",
+                       "Status":  "REFERENCE_ONLY",
+                       "SHA256":  "6156853A63AD34492565DB8C1E408A5F7FAC9C8CA80EAA4D99D4A2F0DD946CB3",
+                       "Bytes":  1676037,
+                       "Sources":  [
+                                       "outputs/APL_Deep_Scan_Brand_Logo_Renderer_White_BG_2026-06-28.png",
+                                       "outputs/2026-06-28/APL_Deep_Scan_Brand_Logo_Renderer_White_BG_2026-06-28.png"
+                                   ]
+                   },
+                   {
+                       "File":  "Icons/APL_Deep_Scan_Logo_Icon_Concepts_2026-06-28.png",
+                       "Status":  "CONCEPT_ONLY",
+                       "SHA256":  "C26AC647B4F4084AC8B32A6F76404CE2ECFD01E708BC82BAEBF524D40197A629",
+                       "Bytes":  227806,
+                       "Sources":  [
+                                       "outputs/APL_Deep_Scan_Logo_Icon_Concepts_2026-06-28.png",
+                                       "outputs/2026-06-28/APL_Deep_Scan_Logo_Icon_Concepts_2026-06-28.png"
+                                   ]
+                   },
+                   {
+                       "File":  "Icons/APL_Deep_Scan_Logo_Icon_Concepts_2026-06-28.svg",
+                       "Status":  "CONCEPT_ONLY",
+                       "SHA256":  "7C24474F03038FBEE068077ACB49E1AEC11F18847B95BCF864B045B8E1FA8CBA",
+                       "Bytes":  9854,
+                       "Sources":  [
+                                       "outputs/APL_Deep_Scan_Logo_Icon_Concepts_2026-06-28.svg",
+                                       "outputs/2026-06-28/APL_Deep_Scan_Logo_Icon_Concepts_2026-06-28.svg"
+                                   ]
+                   },
+                   {
+                       "File":  "Sources/APL_Deep_Scan_Official_Brand_LOGO_BOOK_v1.0.png",
+                       "Status":  "HISTORICAL_SOURCE",
+                       "SHA256":  "A3AA05B88FFCE962B5F99468E6A9095630DE51D54BF4C07EB92B4F005A309DB3",
+                       "Bytes":  2116226,
+                       "Sources":  [
+                                       "outputs/APL_Deep_Scan_Official_Brand_LOGO_BOOK_v1.0.png"
+                                   ]
+                   },
+                   {
+                       "File":  "Sources/APL_Deep_Scan_Official_Brand_LOGO_v1.0_Source.png",
+                       "Status":  "HISTORICAL_SOURCE",
+                       "SHA256":  "637132ABBBE4CA34678B903064D1CA4CFEBC46446780654B0FDA7E36A9D861CB",
+                       "Bytes":  209733,
+                       "Sources":  [
+                                       "outputs/APL_Deep_Scan_Official_Brand_LOGO_v1.0_Source.png"
+                                   ]
+                   },
+                   {
+                       "File":  "Sources/APL_Deep_Scan_Official_Brand_LOGO_v1.0_Source_Original_Backup.png",
+                       "Status":  "HISTORICAL_SOURCE",
+                       "SHA256":  "88EA092315DD5FEA1CDA7EC83D2A9A7DEE8E6EFB09F2F4C36F3C386379F797CD",
+                       "Bytes":  189763,
+                       "Sources":  [
+                                       "outputs/APL_Deep_Scan_Official_Brand_LOGO_v1.0_Source_Original_Backup.png"
+                                   ]
+                   },
+                   {
+                       "File":  "Review/2026-09-11/APL_Deep_Scan_Logo_Vector_Candidate.png",
+                       "Status":  "REVIEW_ONLY",
+                       "SHA256":  "C26FA54118530869C9A875C8CA970B643CD040E23AF2EF689491D7E9EA9A8A6C",
+                       "Bytes":  153606,
+                       "Sources":  [
+                                       "work/brand-review/2026-09-11/APL_Deep_Scan_Logo_Vector_Candidate.png"
+                                   ]
+                   },
+                   {
+                       "File":  "Review/2026-09-11/APL_Deep_Scan_Logo_Vector_Candidate.svg",
+                       "Status":  "REVIEW_ONLY",
+                       "SHA256":  "E3F547D5589C326392CCF999C78015FFADFDA7886CF5F972022FD9E5EE5C389A",
+                       "Bytes":  52207,
+                       "Sources":  [
+                                       "work/brand-review/2026-09-11/APL_Deep_Scan_Logo_Vector_Candidate.svg"
+                                   ]
+                   },
+                   {
+                       "File":  "Review/2026-09-11/APL_Deep_Scan_Logo_Vector_Candidate_v2.png",
+                       "Status":  "REVIEW_ONLY",
+                       "SHA256":  "003C2A8AD3E50E8EBEF204DD711B1D5DD04BF760A03ADAC7C90FD90843BC0AEB",
+                       "Bytes":  148460,
+                       "Sources":  [
+                                       "work/brand-review/2026-09-11/APL_Deep_Scan_Logo_Vector_Candidate_v2.png"
+                                   ]
+                   },
+                   {
+                       "File":  "Review/2026-09-11/APL_Deep_Scan_Logo_Vector_Candidate_v2.svg",
+                       "Status":  "REVIEW_ONLY",
+                       "SHA256":  "2D409B19E763EA6E66D10B86629B76347DC99F3D90010FDE0CD67A0D950F795C",
+                       "Bytes":  42730,
+                       "Sources":  [
+                                       "work/brand-review/2026-09-11/APL_Deep_Scan_Logo_Vector_Candidate_v2.svg"
+                                   ]
+                   },
+                   {
+                       "File":  "Review/2026-09-11/APL_Logo_Clean_1677_Vector.png",
+                       "Status":  "REVIEW_ONLY",
+                       "SHA256":  "197DAA331C71C1DD66D792573127703CD31CA65763BCD571B8C1ADAD0B833A51",
+                       "Bytes":  90120,
+                       "Sources":  [
+                                       "work/brand-review/2026-09-11/APL_Logo_Clean_1677_Vector.png"
+                                   ]
+                   },
+                   {
+                       "File":  "Review/2026-09-11/APL_Logo_Clean_1677_Vector.svg",
+                       "Status":  "REVIEW_ONLY",
+                       "SHA256":  "AC3B13B4803E09AC2E2C3C5155418DA97B0953ADA4E5100F984C43037D9029D4",
+                       "Bytes":  2047567,
+                       "Sources":  [
+                                       "work/brand-review/2026-09-11/APL_Logo_Clean_1677_Vector.svg"
+                                   ]
+                   },
+                   {
+                       "File":  "Review/2026-09-11/APL_Logo_Reference_Contour.png",
+                       "Status":  "REVIEW_ONLY",
+                       "SHA256":  "5DB61FF2E4BEDDC69F211BC6F14524312358D474042A9A2C6377456BA8A2B41F",
+                       "Bytes":  16604,
+                       "Sources":  [
+                                       "work/brand-review/2026-09-11/APL_Logo_Reference_Contour.png"
+                                   ]
+                   },
+                   {
+                       "File":  "Review/2026-09-11/APL_Logo_Reference_Contour.svg",
+                       "Status":  "REVIEW_ONLY",
+                       "SHA256":  "4028D7DF05C277C0101AEC04CECDF612F0709C4834563007507DD3220F608BD4",
+                       "Bytes":  117567,
+                       "Sources":  [
+                                       "work/brand-review/2026-09-11/APL_Logo_Reference_Contour.svg"
+                                   ]
+                   },
+                   {
+                       "File":  "Review/2026-09-11/APL_Logo_Reference_Contour_Smooth.png",
+                       "Status":  "REVIEW_ONLY",
+                       "SHA256":  "78F3F778CC8A640E3F9D03039E579E4C847E3A02C67EDD7947FC9F7D4B2B342E",
+                       "Bytes":  60526,
+                       "Sources":  [
+                                       "work/brand-review/2026-09-11/APL_Logo_Reference_Contour_Smooth.png"
+                                   ]
+                   },
+                   {
+                       "File":  "Review/2026-09-11/APL_Logo_Reference_Contour_Smooth.svg",
+                       "Status":  "REVIEW_ONLY",
+                       "SHA256":  "7DF4E20491C03EEAA84BB31C156E5DBBBB03FC3A179482662B4827C98D0F11E7",
+                       "Bytes":  361708,
+                       "Sources":  [
+                                       "work/brand-review/2026-09-11/APL_Logo_Reference_Contour_Smooth.svg"
+                                   ]
+                   },
+                   {
+                       "File":  "Review/2026-09-11/APL_Original_NoFrame_Transparent.png",
+                       "Status":  "REVIEW_ONLY",
+                       "SHA256":  "C11E77DE3171865B4D6ED0E698ED1A1AD594E95A90B7C3214782A28051C3CB38",
+                       "Bytes":  724230,
+                       "Sources":  [
+                                       "work/brand-review/2026-09-11/APL_Original_NoFrame_Transparent.png"
+                                   ]
+                   }
+               ]
+}

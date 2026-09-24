@@ -3,6 +3,31 @@
 
 This template provides the production skeleton for formal APL Momentum Leaders 領導股 Blog articles.
 
+## Public preview and member SQL supplement
+
+Apply the Blog Rules public-preview/member-SQL rule. Keep the full .html.txt unchanged as complete article source. Derive .public-preview.html.txt from it. For .article.sql, keep content exactly '<p>PASTE' for the user to fill manually, required_product='deepscan', and both slug values equal to the final path segment of the same-date 詳細文章 URL. Never embed article HTML or execute the SQL template.
+
+Example preview ending:
+<p>供稿所列 Brent 早段約報每桶101.52美元...</p>
+
+<div id="apl-member-content"></div>
+
+Use the actual second Market Context paragraph, not this example sentence. The decimal point is not punctuation for truncation. The public preview contains no later article content. HTML source files contain literal tags without Markdown fences. Historical supplements under `work/publishing-revisions/<ScanDate>/` remain legacy evidence; new full Trigger C runs generate the complete HTML source, public preview and member SQL natively inside `production-package/` before Final Audit.
+
+
+## 2026-09-08 起稿優先指引
+
+省略下方legacy示例的 Deep-Scan Overview（Markdown及HTML均不生成），其餘九個分析章節保留，不改名重建公式化數字摘要。下方Overview僅供2026-09-07及以前歷史相容。新稿由Why APL當期問題直接帶入Top Gainers，再推進公司與板塊分析。
+
+私有編輯卡（不得複製到客戶稿）：
+- 標題第二句有何具體發現？摘要是否回答，而非只說待確認？
+- 與最近三期相比，有何新證據或有證據的延續？
+- 新入榜以最近可比正式Top30作對照，記錄日期；只挑值得解釋公司，不寫退出名單，不硬湊新公司。
+- 每節有何新推理？數字若無助理解便省略，不以分號長串或平均分代替業務解釋。
+- 累計上榜名單／次數／4期門檻、候選排序、5／10日績效完全限內部，不進公開文章、分享稿或圖表。
+- 獨立公司文章先查已有及製作中稿件；每次編輯排期最多一間或零間，候選達標不自動起稿或發布。
+- Markdown與HTML順序及論點對等；人工讀者審稿不得冒充machine自動判定。
+
 It is used during Trigger C only:
 
 ```text
@@ -42,6 +67,21 @@ verified Trigger B metadata and ranking
 Do not use this template for Trigger A or Trigger B alone.
 
 ---
+
+
+### Reader-first drafting card（私有指引；2026-09-05 起）
+
+起稿前簡短回答：
+- 讀者今期最需要釐清哪一個問題？
+- 哪項當期事實或矛盾值得開場？為何重要？
+- 哪些是來源事實、分析推論或條件情境？
+- 與最近三期可取得文章相比，是新證據、判斷改變，還是原判斷延續？記錄比較日期；取不到舊稿便記錄限制。
+- 哪幾個公司／數字最能解釋問題？每個例子增加什麼理解？
+- 結尾回答什麼，下一步可以觀察哪些具體訊號？
+
+以上是思考問題，不是可複製的文章句子。依 Blog Rules 的 Reader-first editorial standard 起稿；保留固定 section 次序，讓行文及承接由當期證據推動。不得只把昨日「結構變化」換成今日「市場變化」。
+
+完成後連續閱讀全文：刪去重複背景、解釋術語、把數字連接至讀者意義，確認價格／排名證據沒有被寫成已量度的資金淨流入。分別記錄事實審稿與讀者品質判定；machine preflight 不代表文章自然好讀。
 
 ## 1. Narrative chain
 
@@ -156,18 +196,18 @@ APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.md
 APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.html.txt
 ```
 
-The `.md` file is the editorial manuscript and must end with the Markdown-only `## SEO and Sharing` metadata block. The `.html` file is the publish-ready article source and contains article content only. Neither file may embed or reference images. A raw-code `.txt` presentation for operator viewing requires an explicit Production Artifact Contract migration; it must not silently rename or replace the required `.html` artifact.
+The `.md` manuscript ends with Markdown-only `## SEO and Sharing`. The `.html.txt` file contains publish-ready HTML source with literal tags visible to the operator and article content only. Neither file may embed or reference images. Do not generate a duplicate `.html` artifact.
 
 The same editorial preparation also creates two independent companion text artifacts:
 
-- `WhatsApp_<ScanDate>.md`: a concise distribution message whose first screen states the largest market change; it selects only the evidence needed for mobile reading and does not reproduce the complete Blog. From 2026-08-05, use this narrative order: title／article URL, market event, APL Deep-Scan viewpoint, investor watchpoints／risk, reading CTA and disclaimer. Short paragraphs and `•` bullets are encouraged; literal block labels are optional. The article URL must match the ScanDate exactly.
+- `WhatsApp_<ScanDate>.md`: a concise distribution message whose first screen states the largest market change and the question it raises. Select only the evidence needed for mobile reading; do not reproduce the complete Blog. Use a natural market event → APL viewpoint → investor watchpoints／risk → issue-specific reading invitation sequence. Vary paragraphing and sentence shape; literal block labels are optional. From 2026-09-25, put the disclaimer before the fixed two-link footer below.
+- For ScanDate 2026-09-04 onward, use the canonical URL `https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD`; do not generate the retired `apl-momentum-leaders-YYYY-MM-DD` slug for a new package.
 
-Recommended WhatsApp shape:
+Recommended WhatsApp shape (the prose above the footer is guidance, not a fill-in form):
 
 ```markdown
 **APL Deep-Scan 美股深海雷達**
 **[Issue-specific conclusion] | YYYY-MM-DD**
-https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD
 
 [Market event and why the market standard changed.]
 
@@ -177,9 +217,14 @@ https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD
 • [Investor watchpoint 2]
 • [Risk or falsification condition]
 
-🐧 APL Deep-Scan [reading CTA].
+[One natural sentence explaining what today's full research resolves.]
 
 研究摘要，不構成投資建議。
+
+📖 今日完整研究：
+[https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD](https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD)
+🐧 APL 三日免費體驗｜工具・分析・課程
+[https://www.goinvestingnow.com/ExploreCourses](https://www.goinvestingnow.com/ExploreCourses)
 ```
 - `APL_Momentum_Leaders_Top_30_Company_Business_Analysis_<ScanDate>.md`: a company and business-model reference for the current Top 30; it does not repeat the Blog's market argument.
 
@@ -209,7 +254,9 @@ The managed source is authoritative for facts, dates, numbers, company names, ev
 <h1>APL Deep-Scan｜美股深海雷達: [當期核心市場結論] | YYYY-MM-DD</h1>
 
 <h3>Executive Summary｜執行摘要</h3>
-<p>[One concise market observation.]</p>
+<p>[Open with current source-supported evidence or tension and the issue judgment.]</p>
+<p>[Explain reader significance and leadership implications, separating facts from inference.]</p>
+<p>[Identify the next observable confirmation or invalidation signal; complete required depth without filler.]</p>
 
 <h3>Market Context｜市場背景</h3>
 
@@ -252,11 +299,6 @@ The managed source is authoritative for facts, dates, numbers, company names, ev
 <p>[Integrate only prior leadership and sector evidence; explain what is confirmed and what remains selective or unresolved.]</p>
 <p>[State the next confirmation or invalidation signal and end with a research-style market observation. Do not add a new argument.]</p>
 
-<h3>Call to Action｜延伸閱讀</h3>
-<p>[Text-only CTA.]</p>
-
-<h3>Disclaimer｜免責聲明</h3>
-<p>[Research disclaimer; no investment advice.]</p>
 
 ```
 
@@ -351,7 +393,7 @@ For ScanDate 2026-08-28 onward, append this final block directly after `## Deep-
 ```markdown
 ## SEO and Sharing
 
-詳細文章：https://www.goinvestingnow.com/blog/apl-momentum-leaders-YYYY-MM-DD
+詳細文章：https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD
 
 Page title：[Must exactly match the article title]
 

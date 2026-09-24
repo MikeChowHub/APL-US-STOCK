@@ -146,16 +146,38 @@ function Assert-AplWhatsAppSequence([string]$Text,[string]$ScanDate){
   $effectiveDate=[datetime]::ParseExact('2026-08-05','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   $scanDateValue=[datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   if($scanDateValue-lt$effectiveDate){return $true}
-  $articleUrl='https://www.goinvestingnow.com/blog/apl-momentum-leaders-'+$ScanDate
+  $deepScanSlugFrom=[datetime]::ParseExact('2026-09-04','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+  $articleSlug=if($scanDateValue-ge$deepScanSlugFrom){'apl-deep-scan-'}else{'apl-momentum-leaders-'}
+  $articleUrl='https://www.goinvestingnow.com/blog/'+$articleSlug+$ScanDate
   if([int]$Text.IndexOf($articleUrl,[StringComparison]::Ordinal)-lt0){throw 'WhatsApp must contain the exact-date article URL.'}
   if([int]$Text.IndexOf('APL Deep-Scan',[StringComparison]::Ordinal)-lt0-and[int]$Text.IndexOf('APL Momentum Leaders',[StringComparison]::Ordinal)-lt0){throw 'WhatsApp must contain an explicit APL viewpoint.'}
-  if([string]$Text -notmatch '觀察|關注|投資者|下一步|watch|Watch'){throw 'WhatsApp must state investor watchpoints or next confirmation signals.'}
-  if([string]$Text -notmatch '不構成投資建議|研究摘要'){throw 'WhatsApp must end with a research disclaimer.'}
+  if([string]$Text -notmatch '觀察|關注|留意|檢查|跟進|投資者|下一步|watch|Watch'){throw 'WhatsApp must state investor watchpoints or next confirmation signals.'}
+  if([string]$Text -notmatch '不構成投資建議|研究摘要'){throw 'WhatsApp must contain a research disclaimer.'}
   $explicitMarkers=@('市場事件：','APL 觀點：','投資者應關注：','詳細文章：')
   $positions=@($explicitMarkers|ForEach-Object{[int]$Text.IndexOf($_,[StringComparison]::Ordinal)})
   $present=@($positions|Where-Object{$_-ge0})
   if($present.Count-eq$explicitMarkers.Count){for($i=1;$i-lt$positions.Count;$i++){if($positions[$i]-le$positions[$i-1]){throw 'Explicit WhatsApp labels are out of order.'}}}
+  if($scanDateValue-ge[datetime]'2026-09-25'){
+    $footerArticle=[regex]::Escape($articleUrl)
+    $trial='https://www.goinvestingnow.com/ExploreCourses'
+    $footerTrial=[regex]::Escape($trial)
+    $footerPattern='(?s)📖 今日完整研究：\s*\['+$footerArticle+'\]\('+$footerArticle+'\)\s*🐧 APL 三日免費體驗｜工具・分析・課程\s*\['+$footerTrial+'\]\('+$footerTrial+'\)\s*$'
+    $footer=[regex]::Match($Text,$footerPattern)
+    if(-not$footer.Success){throw 'WhatsApp fixed research/trial footer is missing, malformed, out of order, or followed by extra content.'}
+    $disclaimer=[regex]::Match($Text,'研究摘要，不構成投資建議。|不構成投資建議')
+    if(-not$disclaimer.Success-or$disclaimer.Index-ge$footer.Index){throw 'WhatsApp research disclaimer must precede the fixed footer.'}
+    $intro=$Text.Substring(0,$footer.Index)
+    if($intro -notmatch '今日文章|今日完整文章|完整文章|閱讀|想了解|文章會'){throw 'WhatsApp must include an issue-specific reading invitation before the fixed footer.'}
+    if($intro -match '完整黃金分析'){throw 'WhatsApp must not reuse a gold-analysis CTA from another product.'}
+  }
   return $true
+}
+
+function Assert-AplBlogOverviewPolicy([string]$ScanDate,[string]$Markdown,[string]$Html){
+  $date=[datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+  $required=$date-lt[datetime]'2026-09-08'
+  if(-not$required-and($Markdown-match'(?im)^#{1,6}\s+Deep-Scan Overview\b'-or$Html-match'(?is)<h[1-6][^>]*>\s*Deep-Scan Overview\b')){throw 'Deep-Scan Overview is retired from 2026-09-08.'}
+  return $required
 }
 
 function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[string]$WhatsAppPath,[string]$CompanyPath,[string]$MarketPath,[string]$TopGainersPath,[string]$MetaPath,[string]$AllowedRoot,[string]$ScanDate){
@@ -181,7 +203,8 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
   $mandatory[[string]$headingMap.ExecutiveSummary]=if($requiresExpandedWeeklyOpening){300}else{80}
   $mandatory[[string]$headingMap.MarketContext]=if($requiresExpandedWeeklyOpening){420}else{160}
   $mandatory[[string]$headingMap.WhyAPL]=120
-  $mandatory[[string]$headingMap.DeepScanOverview]=120
+  $requiresOverview=Assert-AplBlogOverviewPolicy $ScanDate $markdown $html
+  if($requiresOverview){$mandatory[[string]$headingMap.DeepScanOverview]=120}
   $mandatory[[string]$headingMap.TopGainers]=150
   $mandatory[[string]$headingMap.MomentumLeaders]=180
   $mandatory[[string]$headingMap.SectorAnalysis]=120
@@ -310,11 +333,13 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
 
   $meta=Read-AplStrictJson $MetaPath $AllowedRoot
   if([string]$meta.scanDate-cne$ScanDate){throw 'Trigger B metadata ScanDate mismatch.'}
+  if($requiresOverview){
   $overview=ConvertTo-AplPlainText (Get-AplMarkdownSection $markdown ([string]$headingMap.DeepScanOverview))
   foreach($field in @('universe','qualified','leaders','leaderLock','removedBelowSma200Count','finalWatchlistCount','averageMomentum','averageBuyability')){
     $value=[string]$meta.$field;$escaped=[regex]::Escape($value)
     if($value-match'\.'){ $pattern='(?<![0-9])'+$escaped+'0*(?![0-9])' }else{ $pattern='(?<![0-9])'+$escaped+'(?![0-9])' }
     if($overview-cnotmatch$pattern){throw "Blog Deep-Scan Overview does not match Trigger B metadata field: $field=$value"}
+  }
   }
   $rankingPath=Resolve-AplManagedMetaPath $MetaPath ([string]$meta.fullRankingCsv) $AllowedRoot 'Trigger B metadata fullRankingCsv'
   $ranking=@(Import-Csv -LiteralPath $rankingPath)
