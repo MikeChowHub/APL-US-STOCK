@@ -56,7 +56,7 @@ try{
   $fontFiles=@(Get-ChildItem (Join-Path $ProjectRoot 'Assets\Fonts') -Recurse -File|Where-Object{$fontExtensions-contains$_.Extension}|ForEach-Object{$_.FullName.Substring($ProjectRoot.Length+1).Replace('\','/')})
   $declared=@($fontManifest.Fonts|ForEach-Object{[string]$_.file})
   if(Compare-Object ($fontFiles|Sort-Object) ($declared|Sort-Object)){throw 'Font manifest does not cover every repository font exactly once.'}
-  foreach($font in @($fontManifest.Fonts)){$path=Join-Path $ProjectRoot ([string]$font.file).Replace('/','\');if((Get-FileHash $path -Algorithm SHA256).Hash-cne[string]$font.sha256){throw "Font SHA mismatch: $($font.file)"}}
+  foreach($font in @($fontManifest.Fonts)){$path=Join-Path $ProjectRoot ([string]$font.file).Replace('/','\');if((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash-cne[string]$font.sha256){throw "Font SHA mismatch: $($font.file)"}}
   . (Join-Path $ProjectRoot 'tools\repository_font_loader.ps1')
   $alibabaChineseName=(-join @([char]0x963F,[char]0x91CC,[char]0x5DF4,[char]0x5DF4,[char]0x666E,[char]0x60E0,[char]0x9AD4))
   $aliasPolicy=@{
@@ -83,7 +83,7 @@ try{
   $manifest=Get-Content -Raw -Encoding UTF8 (Join-Path $ProjectRoot 'tools\renderers\resvg\renderer-manifest.json')|ConvertFrom-Json;$exe=Join-Path $ProjectRoot 'tools\renderers\resvg\resvg.exe'
   if((Get-FileHash $exe -Algorithm SHA256).Hash-cne[string]$manifest.executableSha256-or(Get-Item $exe).Length-ne[long]$manifest.executableBytes){throw 'resvg hash/size mismatch.'};$actual=((& $exe --version 2>$null)-join ' ');if($actual-notmatch[regex]::Escape([string]$manifest.version)){throw "resvg version mismatch: $actual"};if([string]$manifest.policy.chromiumFallback-cne'disabled-explicit-fail'-or$manifest.policy.skipSystemFonts-ne$true){throw 'resvg browser/system-font policy mismatch.'};Pass "resvg $actual"
 }catch{Fail $_.Exception.Message}
-try{$brand=Get-Content -Raw -Encoding UTF8 (Join-Path $ProjectRoot 'Assets\Brand\brand-manifest.json')|ConvertFrom-Json;foreach($asset in @($brand.Assets)){$path=Join-Path $ProjectRoot ([string]$asset.File).Replace('/','\');if((Get-FileHash $path -Algorithm SHA256).Hash-cne[string]$asset.SHA256){throw "Brand asset SHA mismatch: $($asset.File)"}};Pass 'brand assets'}catch{Fail $_.Exception.Message}
+try{$brand=Get-Content -Raw -Encoding UTF8 (Join-Path $ProjectRoot 'Assets\Brand\brand-manifest.json')|ConvertFrom-Json;foreach($asset in @($brand.Assets)){$path=Join-Path $ProjectRoot ([string]$asset.File).Replace('/','\');if((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash-cne[string]$asset.SHA256){throw "Brand asset SHA mismatch: $($asset.File)"}};Pass 'brand assets'}catch{Fail $_.Exception.Message}
 
 $runtimeFiles=@('tools/run_daily_production.ps1','tools/create_blog_delivery_supplements.ps1','tools/renderer_production_common.ps1','tools/render_blog_table_cards.ps1','tools/render_deep_scan_dashboard_svg.ps1','tools/render_deep_scan_social_card_svg.ps1','tools/render_deep_scan_social_radar_svg.ps1','tools/render_blog_cover_overlay.ps1','tools/convert_svg_to_png.ps1','tools/archive_daily_production.ps1','tools/test_production_artifact_contract.ps1')
 foreach($relative in $runtimeFiles){$lineNo=0;foreach($line in [IO.File]::ReadAllLines((Join-Path $ProjectRoot $relative),[Text.Encoding]::UTF8)){$lineNo++;if($line-match'(?i)[A-Z]:\\' -and -not ($relative-eq'tools/renderer_production_common.ps1'-and$line-match'legacyPrefix')){Fail "local absolute path dependency: ${relative}:$lineNo"}}}
