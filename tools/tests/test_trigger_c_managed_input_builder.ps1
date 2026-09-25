@@ -174,7 +174,7 @@ try{
   Write-Utf8 (Join-Path $package "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md") ($markdown-join[Environment]::NewLine)
   Write-Utf8 (Join-Path $package "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.html.txt") ($html-join[Environment]::NewLine)
   $issueUrl="https://www.goinvestingnow.com/blog/apl-deep-scan-$ScanDate";$trialUrl='https://www.goinvestingnow.com/ExploreCourses'
-  Write-Utf8 (Join-Path $package "WhatsApp_$ScanDate.md") ("**APL Deep-Scan 美股深海雷達**`n**能源與利率門檻提高 | $ScanDate**`n`n能源利率重估提高估值與盈利門檻，市場資金由全面追逐轉向選擇性配置。`n`nAPL Deep-Scan 觀察近期美股領導結構，領導股仍需盈利與成交確認。投資者應關注能源成本及企業現金流，下一步觀察領導廣度能否擴散。`n`n今日文章會分析這些需求線索能否轉成持續收入。`n`n研究摘要，不構成投資建議。`n`n📖 今日完整研究：`n[$issueUrl]($issueUrl)`n🐧 APL 三日免費體驗｜工具・分析・課程`n[$trialUrl]($trialUrl)")
+  Write-Utf8 (Join-Path $package "WhatsApp_$ScanDate.md") ("**APL Deep-Scan 美股深海雷達**`n**能源與利率門檻提高 | $ScanDate**`n`n能源利率重估提高估值與盈利門檻，市場資金由全面追逐轉向選擇性配置。`n`nAPL Deep-Scan 觀察近期美股領導結構，領導股仍需盈利與成交確認。投資者應關注能源成本及企業現金流，下一步觀察領導廣度能否擴散。`n`n今日文章會分析這些需求線索能否轉成持續收入。`n`n研究摘要，不構成投資建議。`n`n📖 今日完整研究：`n$issueUrl`n`n🐧 APL 三日免費體驗｜工具・分析・課程`n$trialUrl")
   $companyLines=New-Object Collections.Generic.List[string]
   $companyLines.Add('# Top 30 Company Business Analysis')
   foreach($row in @($ranking|Select-Object -First 30)){$companyLines.Add("## $($row.Symbol) $($row.Name)");$companyLines.Add('公司核心業務涵蓋企業營運、市場服務及客戶解決方案，收入增長需要由產品需求、執行能力、成本控制與現金流共同支持。本期排名只代表相對市場領導，仍需持續檢查商業模式、盈利能見度與主要風險。')}

@@ -222,9 +222,10 @@ Recommended WhatsApp shape (the prose above the footer is guidance, not a fill-i
 研究摘要，不構成投資建議。
 
 📖 今日完整研究：
-[https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD](https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD)
+https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD
+
 🐧 APL 三日免費體驗｜工具・分析・課程
-[https://www.goinvestingnow.com/ExploreCourses](https://www.goinvestingnow.com/ExploreCourses)
+https://www.goinvestingnow.com/ExploreCourses
 ```
 - `APL_Momentum_Leaders_Top_30_Company_Business_Analysis_<ScanDate>.md`: a company and business-model reference for the current Top 30; it does not repeat the Blog's market argument.
 

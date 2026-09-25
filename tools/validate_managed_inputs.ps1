@@ -161,7 +161,12 @@ function Assert-AplWhatsAppSequence([string]$Text,[string]$ScanDate){
     $footerArticle=[regex]::Escape($articleUrl)
     $trial='https://www.goinvestingnow.com/ExploreCourses'
     $footerTrial=[regex]::Escape($trial)
-    $footerPattern='(?s)📖 今日完整研究：\s*\['+$footerArticle+'\]\('+$footerArticle+'\)\s*🐧 APL 三日免費體驗｜工具・分析・課程\s*\['+$footerTrial+'\]\('+$footerTrial+'\)\s*$'
+    if($scanDateValue-ge[datetime]'2026-09-26'){
+      $footerPattern='(?s)📖 今日完整研究：\r?\n'+$footerArticle+'\r?\n\r?\n🐧 APL 三日免費體驗｜工具・分析・課程\r?\n'+$footerTrial+'\s*$'
+    }else{
+      # The completed 2026-09-25 package uses the historical Markdown-link footer.
+      $footerPattern='(?s)📖 今日完整研究：\s*\['+$footerArticle+'\]\('+$footerArticle+'\)\s*🐧 APL 三日免費體驗｜工具・分析・課程\s*\['+$footerTrial+'\]\('+$footerTrial+'\)\s*$'
+    }
     $footer=[regex]::Match($Text,$footerPattern)
     if(-not$footer.Success){throw 'WhatsApp fixed research/trial footer is missing, malformed, out of order, or followed by extra content.'}
     $disclaimer=[regex]::Match($Text,'研究摘要，不構成投資建議。|不構成投資建議')

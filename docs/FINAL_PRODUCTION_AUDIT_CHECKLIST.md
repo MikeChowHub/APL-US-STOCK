@@ -1,4 +1,4 @@
-# Final Production Audit Checklist
+﻿# Final Production Audit Checklist
 
 
 ## Reader-first editorial review（新起稿自 2026-09-05）
@@ -69,7 +69,7 @@
 - [ ] 自 2026-08-30 起，Investment Implication 至少650個實質字符及五個自然段落，回答投資者應如何理解當前環境，涵蓋主要經濟方向、次級受益／板塊擴散、資金與市場廣度、APL Momentum Leaders連結、宏觀／估值／現金流約束及下一個確認或反證訊號。
 - [ ] CTA／Disclaimer policy matches ScanDate: required for 2026-08-10 through 2026-08-27 and prohibited from 2026-08-28 onward.
 - [ ] WhatsApp第一屏交代最大市場改變，並只保留移動閱讀所需證據；按「市場事件 → APL 觀點 → 投資者關注與風險 → 當期閱讀引導」自然成文，包含與ScanDate完全相符的文章 URL及研究 disclaimer；自2026-09-25起連結只在固定頁腳，不要求開頭放 URL。Company Business Analysis涵蓋當次完整Top 30 symbols且不是空殼。既有 Archive 不回寫。
-- [ ] 自2026-09-25起，WhatsApp上半部按當期事件自然成文，閱讀引導回答當期文章的具體問題；研究 disclaimer 在固定頁腳之前。最後只保留「📖 今日完整研究：」＋當日 `apl-deep-scan-YYYY-MM-DD` Markdown 連結，以及「🐧 APL 三日免費體驗｜工具・分析・課程」＋固定 ExploreCourses Markdown 連結；頁腳後無其他內容。歷史 2026-09-24 package 不回寫。
+- [ ] 自2026-09-26起，WhatsApp上半部按當期事件自然成文，閱讀引導回答當期文章的具體問題；研究 disclaimer 在固定頁腳之前。最後只保留「📖 今日完整研究：」＋當日 `https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD` 純文字 URL、空行、「🐧 APL 三日免費體驗｜工具・分析・課程」＋固定 `https://www.goinvestingnow.com/ExploreCourses` 純文字 URL；只有文章日期可變，頁腳後無其他內容。2026-09-25 及更早正式 package／Archive 不回寫。
 - [ ] ScanDate 2026-09-04 起，WhatsApp 與 Markdown `SEO and Sharing` 均使用 `https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD`；沒有再生成舊 `apl-momentum-leaders-YYYY-MM-DD` slug。2026-09-03 及之前的正式歷史輸出不回寫。
 - [ ] Final authoritative state同時為`DailyProductionComplete=true`及`DailyProductionPublishable=true`；任一為false即FAIL。
 
@@ -93,7 +93,7 @@
 - [ ] Table Card publication manifest（適用時）為 PASS。
 - [ ] 使用者向正式交付清單中的`Table Cards`組別按固定次序逐項列出並連結：`Executive Summary → Deep-Scan Dashboard → Top Gainers → Top Leaders → Sector Structure`；沒有以資料夾連結取代個別artifact，亦沒有把Top Leaders列在Top Gainers之前。
 - [ ] Deep-Scan Dashboard只在上述人類閱讀次序中插入；其artifact仍在`production-package/`根目錄，沒有被誤分類或搬入`Table Cards/`。
-- [ ] `正式圖像`按`Social Card → Social 完整 Radar → Cover → SEO`逐項列出；`文章及發布文件`按`今日文章 Markdown → HTML 原始碼 TXT → 公開預覽 HTML 原始碼 → 會員文章 SQL → WhatsApp → Top 30 公司分析`逐項列出。
+- [ ] `正式圖像`按`Social Card → Social 完整 Radar → Cover → SEO`逐項列出；`文章及發布文件`按`今日文章 Markdown → HTML 原始碼 TXT → WhatsApp → Top 30 公司分析 → 公開預覽 HTML 原始碼 → 會員文章 SQL`逐項列出。
 - [ ] 完整 HTML、公開預覽與會員 SQL 均在`production-package/`且各自只有一份；公開預覽只有一個空的`apl-member-content`邊界，SQL使用同日`apl-deep-scan-<ScanDate>`及精確`'<p>PASTE'`模板。
 - [ ] 每張 required Table Card 的 input SHA 與 publication manifest 一致，並通過 `APL Table Card Input v1.1` semantic contract。
 - [ ] Table Card required semantic fields 全部非空；header/display column 數與 renderer mapping 一致；score、percentage、sector/theme、direction及symbols沒有錯欄。

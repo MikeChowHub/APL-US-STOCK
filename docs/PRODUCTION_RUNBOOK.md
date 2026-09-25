@@ -1,4 +1,4 @@
-# Production Runbook
+﻿# Production Runbook
 
 For a fresh clone or another computer, complete [Cross-PC Production Runbook](CROSS_PC_RELEASE_RUNBOOK.md) before this daily runbook.
 
@@ -137,7 +137,7 @@ PublishArtifacts 完成後，runner 必須執行 `LockPublishedArtifacts`：對�
 - `APL_Production_Package_Manifest_<ScanDate>.json`，記錄required mapping及全部package files的path／size／SHA。
 正式完成後向使用者列出視覺研究成果時，`Table Cards`交付組必須逐項提供連結，固定為：`Executive Summary → Deep-Scan Dashboard → Top Gainers → Top Leaders → Sector Structure`。不可只提供`Table Cards/`資料夾連結。Dashboard仍位於package根目錄；此要求只控制交付顯示次序，不改變renderer、manifest或Archive路徑。
 
-完成回報其後固定列出：`正式圖像`（Social Card → Social 完整 Radar → Cover → SEO），再列出`文章及發布文件`（今日文章 Markdown → HTML 原始碼 TXT → 公開預覽 HTML 原始碼 → 會員文章 SQL → WhatsApp → Top 30 公司分析）。三份 HTML／會員發布文件必須逐項顯示，不得只列完整 HTML 或只提供資料夾。新 run 的公開預覽與 SQL 由 runner 在 staging 從已驗證 HTML source 產生，納入 package manifest、Final Audit、Archive SHA 核對；不得在 Production 完成後另行手製補檔。
+完成回報其後固定列出：`正式圖像`（Social Card → Social 完整 Radar → Cover → SEO），再列出`文章及發布文件`（今日文章 Markdown → HTML 原始碼 TXT → WhatsApp → Top 30 公司分析 → 公開預覽 HTML 原始碼 → 會員文章 SQL）。三份 HTML／會員發布文件必須逐項顯示，不得只列完整 HTML 或只提供資料夾。新 run 的公開預覽與 SQL 由 runner 在 staging 從已驗證 HTML source 產生，納入 package manifest、Final Audit、Archive SHA 核對；不得在 Production 完成後另行手製補檔。
 
 Dashboard／Social Card／Social Radar SVG、Dashboard input、source／ranking CSV、cumulative watchlist、SMA200 audit、其餘 contracts、renderer logs及其他machine records留在日期根目錄。Package publishing artifacts不得在日期根目錄保留副本。舊完成日期不作post-publish搬移；新結構只由下一次Step 1完整run或下一個ScanDate產生。
 

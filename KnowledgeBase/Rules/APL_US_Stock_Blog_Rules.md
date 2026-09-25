@@ -18,9 +18,11 @@ Published outputs/Archive remain immutable. Historical same-date supplements alr
 
 Every successful Daily Production response must use three visible groups in this exact order and provide individual clickable absolute-path links rather than folder-only links:
 
+Before sending the response, open and compare it against `Assets/Delivery/deep-scan-delivery-reference.png`. This repository asset is the permanent visual checklist for the human-facing delivery. Check the three group labels, every item, link target, and display order against the image and the list below. The image controls presentation only; the published artifacts and their validation rules remain authoritative for file contents.
+
 1. `Table Cards`: `Executive Summary → Deep-Scan Dashboard → Top Gainers → Top Leaders → Sector Structure`.
 2. `正式圖像`: `Social Card → Social 完整 Radar → Cover → SEO`.
-3. `文章及發布文件`: `今日文章 Markdown → HTML 原始碼 TXT → 公開預覽 HTML 原始碼 → 會員文章 SQL → WhatsApp → Top 30 公司分析`.
+3. `文章及發布文件`: `今日文章 Markdown → HTML 原始碼 TXT → WhatsApp → Top 30 公司分析 → 公開預覽 HTML 原始碼 → 會員文章 SQL`.
 
 The complete HTML source, public preview and SQL are three distinct required deliveries. Listing one does not satisfy either of the other two. A correct package with an incomplete response is still an incomplete human delivery and must be corrected before handoff is reported complete.
 
@@ -92,16 +94,17 @@ The Production Package must share one issue-specific core market proposition wit
 
 For new managed packages from 2026-08-05 onward, WhatsApp must follow one natural mobile-reading chain: market event and core change → APL Deep-Scan／APL Momentum Leaders interpretation → investor watchpoints and falsification risk → issue-specific reading invitation. Visible labels such as `市場事件：` or `APL 觀點：` are optional; paragraphing and sentence shape must vary with the day's evidence. The message must contain an explicit APL viewpoint, observable next signals, and a research disclaimer. The 2026-08-04 Archive message remains immutable legacy output.
 
-For new Production from **2026-09-25 onward**, only the final two-link footer is fixed. Put the research disclaimer immediately before it; put no content after it. The preceding reading-invitation sentence must be rewritten for that issue and should explain what the full article resolves, not repeat generic membership copy. The footer is exactly:
+For new Production from **2026-09-26 onward**, only the final two CTA blocks are fixed. Put the research disclaimer before them; put no content after them. The preceding reading-invitation sentence must be rewritten for that issue and explain what the full article resolves, not repeat generic membership copy. Use plain URLs, not Markdown links. The footer is exactly:
 
 ```markdown
 📖 今日完整研究：
-[https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD](https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD)
+https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD
+
 🐧 APL 三日免費體驗｜工具・分析・課程
-[https://www.goinvestingnow.com/ExploreCourses](https://www.goinvestingnow.com/ExploreCourses)
+https://www.goinvestingnow.com/ExploreCourses
 ```
 
-Both occurrences of the article URL use the current ScanDate. No other product's `黃金分析` wording is copied into APL US STOCK. Completed 2026-09-24 outputs and Archive remain immutable; a separately prepared correction does not silently replace the published artifact or its SHA.
+Only the YYYY-MM-DD in the article URL changes with ScanDate; the two CTA labels, order, spacing and trial URL stay fixed. Do not use the gold-product label `今日完整黃金分析` in APL US STOCK. The completed 2026-09-25 package and Archive retain their historical Markdown-link footer and remain immutable; do not silently replace published bytes or SHA.
 
 For ScanDate **2026-09-04 onward**, the canonical article URL is `https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD`. The same exact-date URL must be used in WhatsApp and the Markdown-only `SEO and Sharing` section. Packages through 2026-09-03 retain the historical `apl-momentum-leaders-YYYY-MM-DD` slug and must not be rewritten.
 

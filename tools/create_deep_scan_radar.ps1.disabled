@@ -1,0 +1,236 @@
+﻿$ErrorActionPreference='Stop'
+Add-Type -AssemblyName System.Drawing
+
+$root='C:\Users\user\Documents\Codex\2026-06-23\files-mentioned-by-the-user-apl'
+$logoPath=Join-Path $root 'outputs\APL_Deep_Scan_Brand_Logo_Inline.png'
+$out16=Join-Path $root 'outputs\APL_Deep_Scan_Momentum_Leaders_Capital_Radar_Top30_2026-06-28_1600x900.png'
+$outSocial=Join-Path $root 'outputs\APL_Deep_Scan_Momentum_Leaders_Capital_Radar_Top30_2026-06-28_1080x1350.png'
+
+$data = @(
+ @{R=1;S='AGL';M=89.41;B=5;Sec='Healthcare'},@{R=2;S='ATEX';M=76.35;B=2;Sec='Industrial'},@{R=3;S='ORKA';M=66.86;B=0;Sec='Bio'},@{R=4;S='MU';M=66.76;B=5;Sec='Semi'},@{R=5;S='SNDK';M=66.38;B=5;Sec='Semi'},
+ @{R=6;S='MTRN';M=66.14;B=2;Sec='Industrial'},@{R=7;S='APPS';M=65.82;B=2;Sec='Software'},@{R=8;S='AIP';M=65.43;B=5;Sec='Semi'},@{R=9;S='ICHR';M=64.63;B=5;Sec='Semi'},@{R=10;S='ACMR';M=62.82;B=5;Sec='Semi'},
+ @{R=11;S='UCTT';M=62.52;B=2;Sec='Semi'},@{R=12;S='INTC';M=61.89;B=8;Sec='Semi'},@{R=13;S='AMD';M=61.54;B=10;Sec='AI'},@{R=14;S='OSCR';M=61.33;B=5;Sec='Healthcare'},@{R=15;S='EXTR';M=61.10;B=8;Sec='Networking'},
+ @{R=16;S='ALAB';M=60.56;B=8;Sec='AI'},@{R=17;S='SIMO';M=60.40;B=8;Sec='Semi'},@{R=18;S='NWPX';M=60.16;B=5;Sec='Industrial'},@{R=19;S='LQDA';M=60.13;B=2;Sec='Bio'},@{R=20;S='RVMD';M=59.57;B=5;Sec='Bio'},
+ @{R=21;S='COHU';M=59.50;B=8;Sec='Semi'},@{R=22;S='TWST';M=59.47;B=0;Sec='Bio'},@{R=23;S='TXG';M=58.69;B=2;Sec='Bio'},@{R=24;S='VSXY';M=58.43;B=2;Sec='Consumer'},@{R=25;S='VPG';M=57.96;B=3;Sec='Industrial'},
+ @{R=26;S='TH';M=57.93;B=5;Sec='Industrial'},@{R=27;S='DELL';M=57.67;B=5;Sec='AI'},@{R=28;S='FTNT';M=57.27;B=8;Sec='Networking'},@{R=29;S='VICR';M=56.95;B=8;Sec='Semi'},@{R=30;S='ALKS';M=56.88;B=2;Sec='Bio'}
+)
+
+function C($hex){ [System.Drawing.ColorTranslator]::FromHtml($hex) }
+$bg=C '#08131F'; $cyan=C '#00D8FF'; $white=C '#FFFFFF'; $gray=C '#8B93A6'; $green=C '#00D97B'; $orange=C '#FF9D00'; $red=C '#FF4E5E'; $blue=C '#00B8FF'
+$colors=@{ AI=(C '#00D8FF'); Semi=(C '#008BFF'); Healthcare=(C '#00D97B'); Bio=(C '#FF4E5E'); Networking=(C '#9A62FF'); Industrial=(C '#FF9D00'); Software=(C '#00B8FF'); Consumer=(C '#FFD147') }
+function Brush($c){ New-Object System.Drawing.SolidBrush $c }
+function PenC($c,$w=1){ New-Object System.Drawing.Pen $c,$w }
+function FontF($name,$size,$style='Regular'){ New-Object System.Drawing.Font($name,$size,[System.Drawing.FontStyle]::$style,[System.Drawing.GraphicsUnit]::Pixel) }
+function RR($x,$y,$w,$h,$r){ $p=New-Object System.Drawing.Drawing2D.GraphicsPath; $d=$r*2; $p.AddArc($x,$y,$d,$d,180,90); $p.AddArc($x+$w-$d,$y,$d,$d,270,90); $p.AddArc($x+$w-$d,$y+$h-$d,$d,$d,0,90); $p.AddArc($x,$y+$h-$d,$d,$d,90,90); $p.CloseFigure(); $p }
+function DrawRR($g,$x,$y,$w,$h,$r,$pen,$brush=$null){ $p=RR $x $y $w $h $r; if($brush){$g.FillPath($brush,$p)}; if($pen){$g.DrawPath($pen,$p)}; $p.Dispose() }
+function T($g,$text,$font,$brush,$x,$y){ $g.DrawString($text,$font,$brush,[single]$x,[single]$y) }
+function TC($g,$text,$font,$brush,$x,$y,$w,$h){ $sf=New-Object System.Drawing.StringFormat; $sf.Alignment='Center'; $sf.LineAlignment='Center'; $sf.FormatFlags=[System.Drawing.StringFormatFlags]::NoWrap; $sf.Trimming=[System.Drawing.StringTrimming]::None; $g.DrawString($text,$font,$brush,[System.Drawing.RectangleF]::new($x,$y,$w,$h),$sf); $sf.Dispose() }
+function TR($g,$text,$font,$brush,$x,$y,$w){ $sf=New-Object System.Drawing.StringFormat; $sf.Alignment='Far'; $g.DrawString($text,$font,$brush,[System.Drawing.RectangleF]::new($x,$y,$w,80),$sf); $sf.Dispose() }
+function SecColor($sec){ if($colors.ContainsKey($sec)){ $colors[$sec] } else { $gray } }
+function BuyColor($b){ if($b -ge 8){$cyan} elseif($b -ge 6){$green} elseif($b -ge 4){$blue} elseif($b -ge 2){[System.Drawing.Color]::FromArgb(150,120,155,180)} else {$red} }
+function BuyStars($b){ if($b -ge 8){'★★★★★'} elseif($b -ge 6){'★★★★☆'} elseif($b -ge 4){'★★★☆☆'} elseif($b -ge 2){'★★☆☆☆'} else {'★☆☆☆☆'} }
+
+function Setup($w,$h){
+ $bmp=New-Object System.Drawing.Bitmap $w,$h
+ $g=[System.Drawing.Graphics]::FromImage($bmp)
+ $g.SmoothingMode='AntiAlias'
+ $g.TextRenderingHint='ClearTypeGridFit'
+ $g.Clear($bg)
+ $grid=PenC ([System.Drawing.Color]::FromArgb(22,0,216,255)) 1
+ for($x=0;$x -lt $w;$x+=40){$g.DrawLine($grid,$x,0,$x,$h)}
+ for($y=0;$y -lt $h;$y+=40){$g.DrawLine($grid,0,$y,$w,$y)}
+ $g.FillRectangle((Brush ([System.Drawing.Color]::FromArgb(35,0,184,255))),[int]($w*.72),0,[int]($w*.28),$h)
+ @{Bmp=$bmp;G=$g}
+}
+function Logo($g,$x,$y,$w,$h){ if(Test-Path $logoPath){ $img=[System.Drawing.Image]::FromFile($logoPath); $g.DrawImage($img,$x,$y,$w,$h); $img.Dispose() } }
+function Panel($g,$x,$y,$w,$h,$title){ DrawRR $g $x $y $w $h 8 (PenC ([System.Drawing.Color]::FromArgb(120,0,216,255)) 1) (Brush ([System.Drawing.Color]::FromArgb(78,7,18,28))); T $g $title (FontF 'Segoe UI' 17 'Bold') (Brush $cyan) ($x+18) ($y+14) }
+function Radar($g,$cx,$cy,$rMax,$scale){
+ $penThin=PenC ([System.Drawing.Color]::FromArgb(115,0,216,255)) 1
+ $penDash=PenC ([System.Drawing.Color]::FromArgb(55,0,216,255)) 1; $penDash.DashStyle='Dash'
+ foreach($r in @(($rMax * 0.25),($rMax * 0.48),($rMax * 0.70),($rMax * 0.92))){ $g.DrawEllipse($penThin,[int]($cx-$r),[int]($cy-$r),[int]($r*2),[int]($r*2)) }
+ for($a=0;$a -lt 360;$a+=30){ $rad=[Math]::PI*$a/180; $g.DrawLine($penDash,$cx,$cy,[int]($cx+[Math]::Cos($rad)*$rMax),[int]($cy+[Math]::Sin($rad)*$rMax)) }
+ for($a=0;$a -lt 360;$a+=30){
+  $rad=[Math]::PI*($a-90)/180
+  $tx=$cx+[Math]::Cos($rad)*($rMax+18*$scale)
+  $ty=$cy+[Math]::Sin($rad)*($rMax+18*$scale)
+  TC $g ([string]$a) (FontF 'JetBrains Mono' ([int](11*$scale)) 'Bold') (Brush $cyan) ($tx-22*$scale) ($ty-9*$scale) (44*$scale) (18*$scale)
+ }
+ foreach($beamSpec in @(@(-42,82),@(-54,42),@(-66,22))){
+  $beam=New-Object System.Drawing.Drawing2D.GraphicsPath
+  $ang=$beamSpec[0]; $alpha=$beamSpec[1]
+  $a1=[Math]::PI*($ang-7)/180; $a2=[Math]::PI*($ang+7)/180
+  $beam.AddPolygon(@([System.Drawing.PointF]::new($cx,$cy),[System.Drawing.PointF]::new($cx+[Math]::Cos($a1)*$rMax,$cy+[Math]::Sin($a1)*$rMax),[System.Drawing.PointF]::new($cx+[Math]::Cos($a2)*$rMax,$cy+[Math]::Sin($a2)*$rMax)))
+  $g.FillPath((Brush ([System.Drawing.Color]::FromArgb($alpha,0,216,255))),$beam); $beam.Dispose()
+ }
+ $ang=-42
+ $g.DrawLine((PenC ([System.Drawing.Color]::FromArgb(235,0,216,255)) 4),$cx,$cy,[int]($cx+[Math]::Cos(([Math]::PI*$ang/180))*$rMax),[int]($cy+[Math]::Sin(([Math]::PI*$ang/180))*$rMax))
+ $g.DrawLine((PenC ([System.Drawing.Color]::FromArgb(80,255,255,255)) 1),$cx,$cy,[int]($cx+[Math]::Cos(([Math]::PI*$ang/180))*$rMax),[int]($cy+[Math]::Sin(([Math]::PI*$ang/180))*$rMax))
+ for($i=3;$i -ge 1;$i--){ $rr=52*$scale+$i*14; $g.FillEllipse((Brush ([System.Drawing.Color]::FromArgb((18*$i),0,216,255))),[int]($cx-$rr),[int]($cy-$rr),[int]($rr*2),[int]($rr*2)) }
+ TC $g 'LEADER LOCK' (FontF 'JetBrains Mono' ([int](12*$scale)) 'Bold') (Brush $cyan) ($cx-90*$scale) ($cy-67*$scale) (180*$scale) (20*$scale)
+ TC $g 'APL' (FontF 'Segoe UI' ([int](42*$scale)) 'Bold') (Brush $white) ($cx-95*$scale) ($cy-30*$scale) (190*$scale) (55*$scale)
+ TC $g 'Deep-Scan' (FontF 'Segoe UI' ([int](22*$scale)) 'Bold') (Brush $cyan) ($cx-95*$scale) ($cy+18*$scale) (190*$scale) (34*$scale)
+ TC $g 'LIVE SCAN' (FontF 'JetBrains Mono' ([int](11*$scale)) 'Bold') (Brush $cyan) ($cx-70*$scale) ($cy+50*$scale) (140*$scale) (18*$scale)
+}
+function Node($g,$item,$cx,$cy,$rad,$angDeg,$baseSize,$scale){
+ $ang=[Math]::PI*$angDeg/180; $x=$cx+[Math]::Cos($ang)*$rad; $y=$cy+[Math]::Sin($ang)*$rad
+ $bc=BuyColor $item.B; $sc=SecColor $item.Sec
+ $size=[int](($baseSize + (($item.M-56)/34)*32)*$scale)
+ if($item.B -ge 8){ for($i=3;$i -ge 1;$i--){ $alpha=28*$i; $rr=$size/2+$i*8*$scale; $g.FillEllipse((Brush ([System.Drawing.Color]::FromArgb($alpha,$bc.R,$bc.G,$bc.B))),[int]($x-$rr),[int]($y-$rr),[int]($rr*2),[int]($rr*2)) } }
+ $g.FillEllipse((Brush ([System.Drawing.Color]::FromArgb(118,7,18,28))),[int]($x-$size/2),[int]($y-$size/2),$size,$size)
+ $g.DrawEllipse((PenC $sc ([Math]::Max(2,[int](2*$scale)))),[int]($x-$size/2),[int]($y-$size/2),$size,$size)
+ $g.DrawEllipse((PenC ([System.Drawing.Color]::FromArgb(140,$bc.R,$bc.G,$bc.B)) 2),[int]($x-$size/2-4),[int]($y-$size/2-4),$size+8,$size+8)
+ TC $g ([string]$item.R) (FontF 'JetBrains Mono' ([int](11*$scale)) 'Bold') (Brush $cyan) ($x-20*$scale) ($y-$size/2+6*$scale) (40*$scale) (16*$scale)
+ $tickerFontSize = if($item.S.Length -ge 4){ [int](14*$scale) } else { [int](17*$scale) }
+ TC $g $item.S (FontF 'Segoe UI' $tickerFontSize 'Bold') (Brush $white) ($x-$size/2) ($y-8*$scale) $size (24*$scale)
+ TC $g ($item.M.ToString('0.00')) (FontF 'JetBrains Mono' ([int](10*$scale))) (Brush ([System.Drawing.Color]::FromArgb(220,210,230,240))) ($x-$size/2) ($y+18*$scale) $size (16*$scale)
+ $starText = BuyStars $item.B
+ TC $g $starText (FontF 'Segoe UI' ([int](8*$scale)) 'Bold') (Brush $bc) ($x-$size/2) ($y+$size/2-5*$scale) $size (13*$scale)
+ if($item.B -ge 8){ T $g 'LOCK' (FontF 'JetBrains Mono' ([int](8*$scale)) 'Bold') (Brush $cyan) ($x+$size/2-16*$scale) ($y+$size/2-8*$scale) }
+}
+function NodePoint($cx,$cy,$rad,$angDeg){ $ang=[Math]::PI*$angDeg/180; return [System.Drawing.PointF]::new(($cx+[Math]::Cos($ang)*$rad),($cy+[Math]::Sin($ang)*$rad)) }
+function DrawNetworkLine($g,$p1,$p2,$col,$alpha=42){
+ $pen=PenC ([System.Drawing.Color]::FromArgb($alpha,$col.R,$col.G,$col.B)) 2
+ $pen.DashStyle='Dash'
+ $g.DrawLine($pen,[int]$p1.X,[int]$p1.Y,[int]$p2.X,[int]$p2.Y)
+}
+function Bars($g,$x,$y,$items,$max){
+ $i=0; foreach($it in $items){ $label=$it[0]; $val=$it[1]; $col=$it[2]; $yy=$y+$i*35; T $g $label (FontF 'Segoe UI' 15) (Brush $white) $x $yy; $bw=[int](115*$val/$max); $g.FillRectangle((Brush ([System.Drawing.Color]::FromArgb(35,139,147,166))),$x+120,$yy+7,120,12); $g.FillRectangle((Brush $col),$x+120,$yy+7,$bw,12); TR $g ([string]$val) (FontF 'JetBrains Mono' 16 'Bold') (Brush $white) ($x+240) ($yy-2) 35; $i++ }
+}
+function Donut($g,$x,$y,$size,$parts){
+ $start=-90
+ foreach($p in $parts){
+  $sweep=[single](360*$p[1]/30)
+  $brush=Brush $p[2]
+  $g.FillPie($brush,$x,$y,$size,$size,$start,$sweep)
+  $start += $sweep
+ }
+ $inner=[int]($size*0.58)
+ $ix=$x+[int](($size-$inner)/2); $iy=$y+[int](($size-$inner)/2)
+ $g.FillEllipse((Brush $bg),$ix,$iy,$inner,$inner)
+ TC $g '30' (FontF 'JetBrains Mono' 28 'Bold') (Brush $white) $ix ($iy+14) $inner 30
+ TC $g 'TOTAL' (FontF 'Segoe UI' 10 'Bold') (Brush $gray) $ix ($iy+45) $inner 18
+}
+function ScoreRows($g,$x,$y,$w){
+ $rows=@(@('★★★★★  (8-10)','8',$cyan),@('★★★★☆  (6-7)','6',$green),@('★★★☆☆  (4-5)','10',$blue),@('★★☆☆☆  (2-3)','5',$orange),@('★☆☆☆☆  (0-1)','2',$red))
+ $i=0
+ foreach($r in $rows){
+  $yy=$y+$i*34
+  DrawRR $g $x $yy $w 29 4 (PenC ([System.Drawing.Color]::FromArgb(55,0,216,255)) 1) (Brush ([System.Drawing.Color]::FromArgb(42,7,18,28)))
+  T $g $r[0] (FontF 'Segoe UI' 13 'Bold') (Brush $r[2]) ($x+12) ($yy+6)
+  TR $g $r[1] (FontF 'JetBrains Mono' 16 'Bold') (Brush $white) ($x+$w-40) ($yy+4) 28
+  $i++
+ }
+}
+function SummaryRows($g,$x,$y,$w){
+ $rows=@(@('平均動能分數','61.07',$cyan),@('High Buyability','8',$cyan),@('Top Sector','Semi / AI',$blue),@('Market Theme','AI Infra',$green),@('Highest Rel Vol','VICR',$orange))
+ $i=0
+ foreach($r in $rows){
+  $yy=$y+$i*36
+  if($i -gt 0){ $g.DrawLine((PenC ([System.Drawing.Color]::FromArgb(32,139,147,166)) 1),$x,$yy-6,$x+$w,$yy-6) }
+  T $g $r[0] (FontF 'Microsoft JhengHei UI' 13) (Brush $white) $x $yy
+  TR $g $r[1] (FontF 'JetBrains Mono' 16 'Bold') (Brush $r[2]) ($x+$w-112) ($yy-2) 112
+  $i++
+ }
+}
+function Dashboard($g,$x,$y,$w,$h){
+ Panel $g $x $y $w $h 'DEEP-SCAN DASHBOARD'
+ T $g 'Momentum Leaders 領導股' (FontF 'Microsoft JhengHei UI' 17 'Bold') (Brush $cyan) ($x+18) ($y+55)
+ T $g 'TOP 30 概覽' (FontF 'Microsoft JhengHei UI' 17 'Bold') (Brush $cyan) ($x+18) ($y+84)
+ T $g '買入評級分佈' (FontF 'Microsoft JhengHei UI' 14 'Bold') (Brush $cyan) ($x+18) ($y+128)
+ Donut $g ($x+20) ($y+168) 120 @(@('5',8,$cyan),@('4',6,$green),@('3',10,$blue),@('2',5,$orange),@('1',2,$red))
+ ScoreRows $g ($x+150) ($y+153) ($w-170)
+ T $g '產業分佈' (FontF 'Microsoft JhengHei UI' 14 'Bold') (Brush $cyan) ($x+18) ($y+355)
+ $bars=@(@('半導體 / AI',13,$colors.Semi),@('醫療 / 生技',8,$colors.Healthcare),@('工業 / 基建',5,$colors.Industrial),@('網絡設備',2,$colors.Networking),@('消費平台',2,$colors.Consumer))
+ Bars $g ($x+18) ($y+386) $bars 13
+ T $g '市場掃描總結' (FontF 'Microsoft JhengHei UI' 14 'Bold') (Brush $cyan) ($x+18) ($y+$h-240)
+ SummaryRows $g ($x+18) ($y+$h-205) ($w-36)
+ T $g 'APL Momentum Leaders 領導股' (FontF 'Microsoft JhengHei UI' 11) (Brush $gray) ($x+18) ($y+$h-30)
+}
+function Legend($g,$x,$y,$w,$h){
+ Panel $g $x $y $w $h '雷達圖例'
+ T $g '◎ Top 5 核心鎖定' (FontF 'Microsoft JhengHei UI' 14) (Brush $white) ($x+18) ($y+52)
+ T $g '○ 觀察區 Rank 6-15' (FontF 'Microsoft JhengHei UI' 14) (Brush $white) ($x+18) ($y+82)
+ T $g '· 潛力追蹤區 Rank 16-30' (FontF 'Microsoft JhengHei UI' 14) (Brush $white) ($x+18) ($y+112)
+ $splitY=$y+136
+ $g.DrawLine((PenC ([System.Drawing.Color]::FromArgb(70,0,216,255)) 1),$x,$splitY,$x+$w,$splitY)
+ T $g 'BUYABILITY SCORE' (FontF 'Segoe UI' 14 'Bold') (Brush $cyan) ($x+18) ($splitY+14)
+ T $g '● ★★★★★  (8-10)  Strong' (FontF 'Segoe UI' 12) (Brush $cyan) ($x+18) ($splitY+46)
+ T $g '● ★★★★☆  (6-7)   Good' (FontF 'Segoe UI' 12) (Brush $green) ($x+18) ($splitY+72)
+ T $g '● ★★★☆☆  (4-5)   Neutral' (FontF 'Segoe UI' 12) (Brush $blue) ($x+18) ($splitY+98)
+ T $g '● ★★☆☆☆  (2-3)   Wait' (FontF 'Segoe UI' 12) (Brush $orange) ($x+18) ($splitY+124)
+ T $g '● ★☆☆☆☆  (0-1)   Too Extended' (FontF 'Segoe UI' 12) (Brush $red) ($x+18) ($splitY+150)
+}
+function Make16(){
+ $o=Setup 1600 900; $bmp=$o.Bmp; $g=$o.G
+ Logo $g 22 24 250 87
+ T $g '資金流向雷達圖' (FontF 'Microsoft JhengHei UI' 34 'Bold') (Brush $white) 22 112
+ T $g 'Momentum Leaders 資金流向雷達' (FontF 'Microsoft JhengHei UI' 18 'Bold') (Brush $cyan) 22 154
+ T $g 'SCAN STATUS  -  ACTIVE' (FontF 'JetBrains Mono' 13 'Bold') (Brush $cyan) 22 198
+ Panel $g 18 240 260 145 'DEEP-SCAN 任務'
+ T $g '掃描資金流向與動能強度，' (FontF 'Microsoft JhengHei UI' 13) (Brush $white) 36 292
+ T $g '辨認市場正在反覆押注的' (FontF 'Microsoft JhengHei UI' 13) (Brush $white) 36 322
+ T $g 'APL Momentum Leaders 領導股。' (FontF 'Microsoft JhengHei UI' 13) (Brush $white) 36 352
+ Legend $g 18 555 270 320
+ $cx=720; $cy=450; $r=390
+ Radar $g $cx $cy $r 1.0
+ TC $g '觀察區' (FontF 'Microsoft JhengHei UI' 17 'Bold') (Brush $white) ($cx-160) ($cy-$r+48) 320 24
+ TC $g 'RANK 6-15' (FontF 'JetBrains Mono' 12) (Brush $gray) ($cx-160) ($cy-$r+72) 320 20
+ TC $g '潛力追蹤區' (FontF 'Microsoft JhengHei UI' 17 'Bold') (Brush $white) ($cx-160) ($cy-$r+145) 320 24
+ TC $g 'RANK 16-30' (FontF 'JetBrains Mono' 12) (Brush $gray) ($cx-160) ($cy-$r+168) 320 20
+ $posTop=@{1=-90;2=125;3=55;4=180;5=0}
+ $radTop=@{1=128;2=178;3=178;4=168;5=168}
+ $watchAngles=@{6=-160;7=-130;8=-90;9=-50;10=-18;11=8;12=38;13=62;14=92;15=126}
+ $obsAngles=@{16=-170;17=-145;18=-118;19=-78;20=-60;21=-28;22=-6;23=14;24=34;25=54;26=76;27=92;28=112;29=130;30=158}
+ $points=@{}
+ foreach($it in $data){
+  if($it.R -le 5){ $points[$it.S]=NodePoint $cx $cy $radTop[$it.R] $posTop[$it.R] }
+  elseif($it.R -le 15){ $points[$it.S]=NodePoint $cx $cy 268 $watchAngles[$it.R] }
+  else { $points[$it.S]=NodePoint $cx $cy 358 $obsAngles[$it.R] }
+ }
+ foreach($pair in @(@('AMD','ALAB'),@('ALAB','AIP'),@('AIP','ICHR'),@('ICHR','UCTT'),@('MU','SNDK'),@('SIMO','SNDK'))){ if($points.ContainsKey($pair[0]) -and $points.ContainsKey($pair[1])){ DrawNetworkLine $g $points[$pair[0]] $points[$pair[1]] $cyan 55 } }
+ foreach($it in $data | Where-Object {$_.R -le 5}){ Node $g $it $cx $cy $radTop[$it.R] $posTop[$it.R] 86 1.08 }
+ $watch=$data | Where-Object {$_.R -ge 6 -and $_.R -le 15}; foreach($it in $watch){ Node $g $it $cx $cy 268 $watchAngles[$it.R] 58 .98 }
+ $obs=$data | Where-Object {$_.R -ge 16}; foreach($it in $obs){ Node $g $it $cx $cy 358 $obsAngles[$it.R] 40 .90 }
+ Dashboard $g 1210 24 360 845
+ Panel $g 325 815 830 62 '深海雷達觀點'
+ T $g 'Top 5 位於核心區；買入評級 8-10 以亮青色發光，代表進入 Leader Lock 監控狀態。' (FontF 'Microsoft JhengHei UI' 14) (Brush $white) 350 848
+ TC $g 'APL Deep-Scan System  -  Find Tomorrow''s Leaders' (FontF 'Segoe UI' 14) (Brush $cyan) 560 878 520 20
+ $bmp.Save($out16,[System.Drawing.Imaging.ImageFormat]::Png); $g.Dispose(); $bmp.Dispose()
+}
+function MakeSocial(){
+ $o=Setup 1080 1350; $bmp=$o.Bmp; $g=$o.G
+ Logo $g 35 34 250 87
+ TR $g '2026-06-28' (FontF 'JetBrains Mono' 18 'Bold') (Brush $gray) 835 54 180
+ T $g '資金流向雷達圖' (FontF 'Microsoft JhengHei UI' 32 'Bold') (Brush $white) 36 136
+ T $g 'APL Deep-Scan Radar｜Momentum Leaders TOP 30' (FontF 'Microsoft JhengHei UI' 17 'Bold') (Brush $cyan) 36 174
+ $cx=540; $cy=610; $r=430
+ Radar $g $cx $cy $r .85
+ $posTop=@{1=-90;2=125;3=55;4=180;5=0}
+ $radTop=@{1=128;2=184;3=184;4=174;5=174}
+ $watchAngles=@{6=-160;7=-130;8=-90;9=-50;10=-18;11=8;12=38;13=62;14=92;15=126}
+ $obsAngles=@{16=-170;17=-145;18=-118;19=-78;20=-60;21=-28;22=-6;23=14;24=34;25=54;26=76;27=92;28=112;29=130;30=158}
+ $points=@{}
+ foreach($it in $data){
+  if($it.R -le 5){ $points[$it.S]=NodePoint $cx $cy $radTop[$it.R] $posTop[$it.R] }
+  elseif($it.R -le 15){ $points[$it.S]=NodePoint $cx $cy 292 $watchAngles[$it.R] }
+  else { $points[$it.S]=NodePoint $cx $cy 400 $obsAngles[$it.R] }
+ }
+ foreach($pair in @(@('AMD','ALAB'),@('ALAB','AIP'),@('AIP','ICHR'),@('ICHR','UCTT'),@('MU','SNDK'),@('SIMO','SNDK'))){ if($points.ContainsKey($pair[0]) -and $points.ContainsKey($pair[1])){ DrawNetworkLine $g $points[$pair[0]] $points[$pair[1]] $cyan 48 } }
+ foreach($it in $data | Where-Object {$_.R -le 5}){ Node $g $it $cx $cy $radTop[$it.R] $posTop[$it.R] 86 .98 }
+ $watch=$data | Where-Object {$_.R -ge 6 -and $_.R -le 15}; foreach($it in $watch){ Node $g $it $cx $cy 292 $watchAngles[$it.R] 52 .88 }
+ $obs=$data | Where-Object {$_.R -ge 16}; foreach($it in $obs){ Node $g $it $cx $cy 400 $obsAngles[$it.R] 38 .76 }
+ TC $g '核心鎖定區' (FontF 'Microsoft JhengHei UI' 15 'Bold') (Brush $cyan) 390 300 300 20
+ Legend $g 40 1000 465 260
+ Panel $g 535 1030 505 220 '市場掃描總結'
+ $bars=@(@('半導體 / AI',13,$colors.Semi),@('醫療 / 生技',8,$colors.Healthcare),@('工業 / 基建',5,$colors.Industrial),@('網絡設備',2,$colors.Networking),@('消費平台',2,$colors.Consumer))
+ Bars $g 555 1085 $bars 13
+ T $g '買入評級鎖定' (FontF 'Microsoft JhengHei UI' 15) (Brush $white) 555 1260; TR $g '8' (FontF 'JetBrains Mono' 18 'Bold') (Brush $cyan) 925 1258 70
+ $footerY=1300; $g.DrawLine((PenC ([System.Drawing.Color]::FromArgb(42,0,216,255)) 1),40,$footerY,1040,$footerY)
+ T $g '[Deep-Scan]' (FontF 'Segoe UI' 12) (Brush $white) 45 1311
+ TR $g 'APL Research' (FontF 'Segoe UI' 12) (Brush $gray) 890 1311 140
+ $bmp.Save($outSocial,[System.Drawing.Imaging.ImageFormat]::Png); $g.Dispose(); $bmp.Dispose()
+}
+Make16
+MakeSocial
+Write-Output $out16
+Write-Output $outSocial

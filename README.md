@@ -1,5 +1,15 @@
 # APL US Stock Production System
 
+## 目前使用的入口
+
+- [生產流程規格](APL_US_Stock_Production_Workflow_Specification_v1.0.md)：Trigger A／B／C 的現行流程。
+- [正式規則與模板](KnowledgeBase/README.md)：長期規則以 `KnowledgeBase/Rules/` 為準。
+- [日常操作手冊](docs/PRODUCTION_RUNBOOK.md)與[跨電腦設定](docs/CROSS_PC_RELEASE_RUNBOOK.md)。
+- `Assets/`：正式品牌、字型及交付參考；`tools/`：現行程式。
+- `outputs/YYYY-MM-DD/`：正式每日產物；`Archive/`：封存；`work/`、`tmp/`：工作資料與暫存。
+- [歷史文件](docs/history/README.md)：早期設計、版本說明及變更歷史，供查閱，不作現行生產指令。
+
+
 Cross-PC setup and second-computer commands are documented in [Cross-PC Production Runbook](docs/CROSS_PC_RELEASE_RUNBOOK.md). Run `tools/validate_cross_pc_environment.ps1 -FullRegression` before supplying daily managed inputs; environment validation never starts Production.
 
 APL US Stock 是一套 Windows PowerShell 5.1 production pipeline，將既有 scoring／ranking、watchlist 與 SMA200 audit、renderer contract validation、Dashboard、Social Card、完整 Social Radar、Table Card、Cover／SEO overlay，以及 UTF-8 log／JSONL trace 串成可追蹤、fail-fast、no-overwrite 的每日流程。
