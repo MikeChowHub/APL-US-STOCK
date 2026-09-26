@@ -8,8 +8,8 @@ $Script=Join-Path $ProjectRoot 'tools\prepare_trigger_c_managed_inputs.ps1'
 $Runner=Join-Path $ProjectRoot 'tools\run_daily_production.ps1'
 $ScanDate='2040-02-07'
 $SupersedeDate='2040-02-08'
-$FixtureRoot=Join-Path $ProjectRoot ("tmp\trigger-c-builder-fixture-"+[guid]::NewGuid().ToString('N'))
-$BuilderRoot=Join-Path $ProjectRoot 'tmp\trigger-c-managed-input-builder'
+$FixtureRoot=Join-Path $ProjectRoot ("tmp\tc-"+[guid]::NewGuid().ToString('N').Substring(0,8))
+$BuilderRoot=Join-Path $ProjectRoot 'tmp\tc-inputs'
 $StagingDate=Join-Path $BuilderRoot "staging\$ScanDate"
 $ManagedDate=Join-Path $BuilderRoot "managed-inputs\$ScanDate"
 $SupersedeStagingDate=Join-Path $BuilderRoot "staging\$SupersedeDate"
@@ -246,7 +246,12 @@ try{
   Add-Result 'test-harness' $false $_.Exception.Message
 }finally{
   foreach($path in @($StagingDate,$ManagedDate,$SupersedeStagingDate,$SupersedeManagedDate,$RejectedStagingRoot,$FixtureRoot)){
-    if(Test-Path -LiteralPath $path){Remove-Item -LiteralPath $path -Recurse -Force}
+    try {
+      $full=[IO.Path]::GetFullPath($path)
+      $allowed=[IO.Path]::GetFullPath((Join-Path $ProjectRoot 'tmp')).TrimEnd('\')+'\'
+      if(-not $full.StartsWith($allowed,[StringComparison]::OrdinalIgnoreCase)){throw 'Cleanup path escaped repository tmp.'}
+      if(Test-Path -LiteralPath $full){Remove-Item -LiteralPath $full -Recurse -Force}
+    } catch { Add-Result 'fixture-cleanup' $false $_.Exception.Message }
   }
 }
 

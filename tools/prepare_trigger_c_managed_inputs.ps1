@@ -56,7 +56,7 @@ Assert-AplScanDate $ScanDate|Out-Null
 $gitRoot=(& git -C $ProjectRoot rev-parse --show-toplevel 2>$null)
 if($LASTEXITCODE-ne0-or[string]::IsNullOrWhiteSpace([string]$gitRoot)-or(Get-AplFullPath ([string]$gitRoot))-ne(Get-AplFullPath $ProjectRoot)){throw 'Project Root/Git Root mismatch.'}
 
-$regressionRoot=Get-AplFullPath (Join-Path $ProjectRoot 'tmp\trigger-c-managed-input-builder')
+$regressionRoot=Get-AplFullPath (Join-Path $ProjectRoot 'tmp\tc-inputs')
 $formalWorkRoot=Get-AplFullPath (Join-Path $ProjectRoot 'work')
 $stagingParent=if($RegressionTest){Join-Path $regressionRoot 'staging'}else{Join-Path $formalWorkRoot '.staging\trigger-c'}
 $managedParent=if($RegressionTest){Join-Path $regressionRoot 'managed-inputs'}else{Join-Path $formalWorkRoot 'managed-inputs'}
@@ -109,7 +109,7 @@ if($Mode-ceq'Initialize'-or$Mode-ceq'Supersede'){
   New-Item -ItemType Directory -Path $buildRoot|Out-Null
   $buildDate=Join-Path $buildRoot $ScanDate
   New-Item -ItemType Directory -Path $buildDate|Out-Null
-  $scoringRoot=if($RegressionTest){Join-Path $regressionRoot ('scoring-'+[guid]::NewGuid().ToString('N'))}else{Join-Path $ProjectRoot ('outputs\.staging\trigger-c-prep-'+[guid]::NewGuid().ToString('N'))}
+  $scoringRoot=if($RegressionTest){Join-Path $regressionRoot ('s-'+[guid]::NewGuid().ToString('N').Substring(0,16))}else{Join-Path $ProjectRoot ('outputs\.staging\tc-prep-'+[guid]::NewGuid().ToString('N').Substring(0,16))}
   try{
     $sourcePath=Join-Path $buildDate 'source.csv'
     $gainersPath=Join-Path $buildDate 'top-gainers.csv'

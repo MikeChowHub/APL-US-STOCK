@@ -10,6 +10,16 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\validate_cross_p
 
 The only successful environment result is `CROSS-PC ENVIRONMENT READY`. This command validates Git root, `main`, origin, required HEAD files, schemas, repository fonts, brand asset, resvg, renderer dimensions, zero font fallback, zero invalid geometry, Table Card semantics, Final Audit and Archive V2 fixtures. It does not start Production.
 
+## Audit modes and Windows path budget
+
+Use a checkout root of at most 64 characters (for example F:\GitHub\Deep-Scan). Windows PowerShell 5.1 file APIs cannot reliably process every long path, even with Windows long paths enabled. The audit rejects longer roots before fixtures. This is a supported checkout budget, not support for arbitrary output names.
+
+Before staging existing tracked release changes, run the command with -FullRegression -Candidate. Success reports CANDIDATE AUDIT PASS, lists the changed scope, and keeps EnvironmentReady=false. Required files must still exist in HEAD. After committing, rerun without -Candidate on a clean release scope. Only the full released-checkout audit can report CROSS-PC ENVIRONMENT READY.
+
+Without -FullRegression, success reports SMOKE CHECK PASS - FULL REGRESSION REQUIRED with EnvironmentReady=false. Native command failures and test stderr are captured as evidence. Full regression also runs production policy alignment. Font assets are enumerated from the font manifest; the saved delivery reference image is mandatory.
+
+The absolute-path scan and legacy outputs-logo check are targeted checks, not proof that all historical dependencies are excluded. Full regression must also pass from a fresh clone without local daily inputs or historical outputs.
+
 ## Managed inputs
 
 Do not manually construct `work/managed-inputs/<ScanDate>/`. Start the tracked Trigger C preparation workflow from the three approved intake files:

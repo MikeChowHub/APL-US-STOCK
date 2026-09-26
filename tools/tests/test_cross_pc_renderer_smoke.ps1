@@ -1,9 +1,9 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param()
 
 $ErrorActionPreference = 'Stop'
 $ProjectRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
-$TestRoot = Join-Path $ProjectRoot ('tmp\cross-pc-renderer-smoke-' + [guid]::NewGuid().ToString('N'))
+$TestRoot = Join-Path $ProjectRoot ('tmp\rs-' + [guid]::NewGuid().ToString('N').Substring(0,8))
 function Write-Utf8([string]$Path,[string]$Text){$parent=Split-Path -Parent $Path;if(!(Test-Path -LiteralPath $parent)){New-Item -ItemType Directory -Path $parent -Force|Out-Null};[IO.File]::WriteAllText($Path,$Text,[Text.Encoding]::UTF8)}
 function Assert-Png([string]$Path,[int]$Width,[int]$Height){Add-Type -AssemblyName System.Drawing;$image=$null;try{$image=[Drawing.Image]::FromFile($Path);if($image.Width-ne $Width-or$image.Height-ne $Height){throw "PNG dimensions mismatch: $Path"}}finally{if($image){$image.Dispose()}}}
 New-Item -ItemType Directory -Path $TestRoot -Force | Out-Null
