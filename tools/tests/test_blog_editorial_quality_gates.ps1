@@ -62,6 +62,19 @@ $longConclusion="本期證據回答了開頭問題：需求仍在，但市場已
 Expect-Pass 'long-conclusion-three-paragraphs-pass' {Assert-AplEditorialParagraphQuality -Section $longConclusion -Label 'Blog Deep-Scan Conclusion' -MinimumParagraphs 3 -MaximumSemicolonsPerParagraph 3;Assert-AplEditorialCausalLanguage -Text $longConclusion -Label 'Blog Deep-Scan Conclusion' -MinimumSignals 1}
 Expect-Fail 'short-conclusion-one-paragraph-fail' {Assert-AplEditorialParagraphQuality -Section '市場仍然選擇性上升，下一步繼續觀察。' -Label 'Blog Deep-Scan Conclusion' -MinimumParagraphs 3 -MaximumSemicolonsPerParagraph 3} 'at least 3 natural prose paragraphs'
 
+Expect-Pass 'report-evidence-led-recommendation' {Assert-AplResearchReportLanguage -Text 'DELL 位居動能排名首位，HPE 同樣保持強勢，本期重點關注企業硬件領導股。能源成本與估值壓力是主要風險，各公司基本面仍有差異。'}
+Expect-Pass 'report-useful-company-facts' {Assert-AplResearchReportLanguage -Text '公司收入增長20%，板塊中三間公司保持強勢，這支持本期關注方向。'}
+Expect-Pass 'report-demand-is-not-a-hedge' {Assert-AplResearchReportLanguage -Text '需求、盈利預期與催化劑是否同步，是研究問題。需求、收入與成本是否相符，可以解釋商業模式。'}
+Expect-Fail 'report-screening-counts' {Assert-AplResearchReportLanguage -Text '由525隻掃描股中有205隻通過門檻。'} 'internal screening metrics'
+Expect-Fail 'report-qualified-counts' {Assert-AplResearchReportLanguage -Text '今日205隻股票符合條件。'} 'internal screening metrics'
+Expect-Fail 'report-client-research-handoff' {Assert-AplResearchReportLanguage -Text '讀者應自行核對公司公告。'} 'delegates research'
+Expect-Fail 'report-repeated-deferral' {Assert-AplResearchReportLanguage -Text '仍待確認需求。企業盈利亦有待確認。'} 'repeatedly defers'
+
+Expect-Fail 'report-user-quoted-timing-caveat' {Assert-AplResearchReportLanguage -Text '那是報道時點觀察，並非本篇發布時的即時報價。'} 'quotation-timing'
+Expect-Fail 'report-rephrased-live-caveat' {Assert-AplResearchReportLanguage -Text '上述數字不是最新價格，請自行查證。'} 'delegates research|quotation-timing'
+Expect-Fail 'report-standalone-nonlive-caveat' {Assert-AplResearchReportLanguage -Text '非即時報價。'} 'quotation-timing'
+Expect-Pass 'report-direct-dated-fact' {Assert-AplResearchReportLanguage -Text '9月29日，美國10年期國債孳息率一度升穿5.27%，推高成長股估值壓力。'}
+
 $failures=@($results|Where-Object{$_.Status-ne'PASS'})
 Write-Host "Blog editorial quality gates: $($results.Count-$failures.Count) PASS, $($failures.Count) FAIL"
 if($failures.Count-gt0){$failures|Format-Table -AutoSize|Out-String|Write-Host;exit 1}

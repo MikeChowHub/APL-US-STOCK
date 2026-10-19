@@ -1,12 +1,58 @@
-﻿# APL US Stock Blog Rules
+﻿## HTML 共用視覺合約 — 2026-10-19 修訂
+
+自下一期 ScanDate 2026-10-20 起，完整 HTML 與公開預覽必須使用 `tools/client_article_html.ps1` 的同一製作方法。今期另交更正版，已發布與 Archive 原件保留。
+
+- 透明背景容器：width 100%、max-width 800px、置中；Arial / Microsoft JhengHei / sans-serif。
+- 正文 18px、行距 1.95、段落下距固定 23px；H3 25px、行距 1.5、章節前距 34px、下距 23px，附底部分隔線。
+- 首段摘要使用深色重點框；金色文字只標示該段一個核心研究判斷。其餘正文保持淺色。
+- 以當期 Top 30 及單日榜前五公司代碼為依據，文章中每家公司首次出現的代碼加粗一次，後續不重複加粗；股票代碼用淺色，不全部染金。
+- 不加入 H1；容器內第一個內容標題仍為 Executive Summary H3。此條取代過往要求檔案第一個標籤必須為裸 H3 的格式限制，八節正文及無來源連結合約不變。
+- 公開預覽沿用同一樣式，僅保留完整摘要、市場背景首段及第二段首句／分句加 ...。關閉樣式容器後，以唯一 `<div id="apl-member-content"></div>` 結束；不得洩漏其後會員內容。
+- Finalize 在來源驗證後、內容 Preflight 前套用樣式；Preflight、補充檔產生與 Final Audit 必須檢查樣式。Notification 只以正規化內容檢查標題，來源雜湊仍使用實際交付檔。
+- 不從歷史 work、更正版或對話記憶讀取製作邏輯。規則、共用工具及測試均在 Repository 內，跨電腦使用相同製作方法。
+
+# APL US Stock Blog Rules
+
+## 客戶文章不展示來源連結 — 2026-10-12 修訂
+
+今日更正版及往後客戶文章，不附新聞、公司公告或產品資料的來源超連結、URL、來源註腳或 Sources 清單。適用完整 Markdown 正文、完整 HTML、公開預覽及 WhatsApp 分析正文；HTML 不輸出 `<a href=...>` 來源標籤，也不留下「AP機場報道」「公司公告」等孤立引用文字。文章必要的事實、日期、期間及研究判斷保留，來源查核與來源路徑、URL、時間、SHA-256 留在內部新聞快照及編輯證據。Markdown 置頂 SEO and Sharing 的 Canonical URL、SEO 圖，以及 WhatsApp 固定文章／體驗 CTA 是交付用途，照常保留。此規則優先於下方保留正文來源連結的舊說明。已發布與 Archive 原件保留，修訂稿另存並交付。
+
+
+## 完整 HTML 無 H1 — 2026-10-12 修訂
+
+自下一期 ScanDate 2026-10-13 起，完整 `.html.txt` 與公開預覽均直接以 `<h3>Executive Summary｜執行摘要</h3>` 開頭，不得包含 `<h1>`，也不得在摘要之前加入標題、日期或導言。完整文章標題只留在 Markdown `#` 及 SEO Page title，兩者保持一致。完整 HTML 保留八節正文，來源記錄留於內部，以 Risk 結束；公開預覽及會員 SQL 其餘合約維持。此規則取代下方完整 HTML 必須含 H1／與 Markdown 標題相同的歷史說明。10 月 12 日已完成原稿及 Archive 保留，當期另交付無 H1 更正版。
+
+
+## 升幅統計時段 — 2026-10-06 修訂
+
+出稿前核對 CSV 升幅欄位。現行來源 `Price change %, 1 day` 為單日數據，文章標題須為 `Top Gainers — 1 Day｜單日升幅榜`，圖卡標題須為 `Top Gainers — 1 Day`；正文、百分比標籤及 WhatsApp 必須同樣採單日口徑。不得把觀察名單、匯出日期或累積掃描期間當成升幅計算期間。若來源改為七日數據，必須先同步更新欄位驗證與標題合約，再生產，不能用單日數值寫成七日升幅。此規則取代舊有固定七日標題；已封存原件保留，10月2日及5日另交付更正版。
+
+
+## Markdown SEO 置頂規則 — 2026-10-05 修訂起執行
+
+今日修訂版及往後新稿，完整 `## SEO and Sharing` 區塊置於 Markdown 檔案最上方，在 `#` 文章標題與 Executive Summary 之前；依次包含 Page title、Page description、Sharing summary、Canonical URL、SEO 圖。2026-10-06 修訂版及往後新稿，SEO 圖欄位必須提供同一期正式 SEO PNG 的可點擊 Markdown 連結，使用絕對路徑，含空格時以 `<...>` 包住；交付前確認圖片存在及日期一致。此連結是下方禁止圖片引用規則的唯一例外，只放於 SEO metadata，不嵌入文章正文。正文仍按八節順序，以 Risk 結束。SEO 只屬 Markdown，不加入完整 HTML 或公開預覽。此規則優先於下方 SEO 放在文末的歷史說明；已完成發布及封存的原版保留，更正以版本化修訂交付。
+
 
 This document defines stable writing rules for formal APL Momentum Leaders 領導股 Blog production.
+
+## 客戶動能研究報告規則 — 2026-09-29 修訂，下一期 ScanDate 2026-09-30 起執行
+
+本節優先於下方舊版九節架構、獨立結論及反覆確認訊號要求。歷史已發布產物保留原狀。
+
+- 報告目的：識別市場相對動能較強、值得推薦客戶重點關注的股票。編輯須完成研究，明確提出本期首選關注公司、動能證據、選擇理由及主要風險。可以肯定陳述已確認的排名、價格表現和來源支持的業務事實；研究判斷清楚表達，不保證未來回報，也不虛構消息與股價的因果。
+- 執行摘要直接回答「本期看好／重點關注哪些公司、原因是甚麼、對客戶有甚麼意義」。不報讀掃描母體、通過門檻數量、剔除數、Leader Lock、平均模型分數或內部操作流程。不把這些內容移到其他文章段落、WhatsApp 或 Executive Summary 卡片。既有量化 Dashboard 數據展示另按視覺合約管理。
+- 語氣以有證據的研究結論為主。禁止每節反覆寫「仍待確認」「要等需求變收入／盈利」「請讀者自行核對公司」「價格隨時會變」等通用退讓句，或以「排名只提供起點」收回全文判斷。資料不足的特定公司或因果應收窄主張、補研究或不推薦，不將研究責任交回客戶。
+- **直接陳述，時點核對留在內部：**正文、摘要、WhatsApp 及客戶圖卡不得出現「那是報道時點觀察，並非本篇發布時的即時報價」「非即時報價」「價格可能已變，請自行查證」等編輯過程或自我免責句，換句話說也不接受。資料核實、來源時間及截點記錄由編輯完成並留於內部。正文直接寫已核實事實，例如「美國10年期國債孳息率一度升穿5.27%，推高成長股估值壓力。」必要時正常標明日期、期間或「盤中／一度」，不得把歷史數字冒寫成即時數字。資料不足便先補足研究或刪除該主張，不要求客戶代做核對。此要求適用風險段落，不能把同類免責句搬到末段。
+- 結構固定為八節：Executive Summary → Market Context → Why APL Momentum Leaders Matter → Top Gainers → Momentum Leaders Analysis → Sector Analysis → Investment Implication → Risk。取消獨立 Deep-Scan Conclusion。Markdown 的 SEO and Sharing 依置頂規則放在文章標題之前；HTML 以 Risk 結束。
+- Risk 用一至兩段集中說明本期最重要、具體的風險及影響機制，最後一句收束本期判斷並提醒基本面差異。不另加三段結論、不重播全文、不用固定字數逼出重複懷疑。例：「本期能源與利率變化牽動部分強勢股，但各公司上升驅動並不相同，選股仍須兼顧個別基本面。」實際句子須按當期證據改寫。
+- 摘要及背景保留因果解釋，但不再強制每節寫未來確認條件。投資啟示說明本期推薦關注的優先次序與理由；僅對實質不確定處作一次適度交代，風險集中在末節。
+- 交付前人工審稿：能否讀完直接知道推薦關注誰及原因？有無內部數字？有無跨段重複等待盈利／收入驗證？結尾有無推翻前文或叫客戶代做研究？機械檢查只能攔截已知句式，不能代替此審稿。
 
 ## Public preview and member SQL delivery — effective 2026-09-10
 
 For future unpublished deliveries, retain the complete .html.txt article and add .public-preview.html.txt plus .article.sql using the same article filename stem. This supersedes the earlier single-HTML delivery wording.
 
-Public preview: copy h1, the full Executive Summary, Market Context heading and its first paragraph verbatim. In its second paragraph, keep only the text before the first clause/sentence punctuation, replace the punctuation and remaining text with ASCII ..., close </p>, and finish with exactly <div id="apl-member-content"></div>. Decimal points inside numbers are not cutoffs. Never split HTML tags/entities. Missing sections, paragraphs or punctuation require a specific failure, not a guessed excerpt.
+Public preview: for ScanDate before 2026-09-29, copy h1, the full Executive Summary, Market Context heading and its first paragraph verbatim. From ScanDate 2026-09-29 onward, omit the h1 and begin with <h3>Executive Summary｜執行摘要</h3>. In its second Market Context paragraph, keep only the text before the first clause/sentence punctuation, replace the punctuation and remaining text with ASCII ..., close </p>, and finish with exactly <div id="apl-member-content"></div>. Decimal points inside numbers are not cutoffs. Never split HTML tags/entities. Missing sections, paragraphs or punctuation require a specific failure, not a guessed excerpt. The full .html.txt retains its h1. Published outputs and Archive remain unchanged.
 
 SQL delivery template (user revision effective 2026-09-11): INSERT INTO articles (slug, required_product, content) SELECT '<slug>', 'deepscan', '<p>PASTE' WHERE NOT EXISTS (SELECT 1 FROM articles WHERE slug = '<slug>');. Derive both slug values from the final path segment of the same-date 詳細文章 URL. Keep content exactly '<p>PASTE'; the user inserts the article manually. Do not embed full HTML, preview HTML or an empty string in this SQL template. This explicitly supersedes the earlier full-HTML SQL delivery requirement. Validate both slug values, required_product='deepscan' and literal content='<p>PASTE'. This intentional manual-insertion marker applies only to the SQL delivery template, never to the actual article or Production content. Preserve UTF-8. Before any separate database import, the user must replace PASTE and correctly escape SQL single quotes; never execute the delivered template automatically.
 
@@ -94,7 +140,9 @@ The Production Package must share one issue-specific core market proposition wit
 
 For new managed packages from 2026-08-05 onward, WhatsApp must follow one natural mobile-reading chain: market event and core change → APL Deep-Scan／APL Momentum Leaders interpretation → investor watchpoints and falsification risk → issue-specific reading invitation. Visible labels such as `市場事件：` or `APL 觀點：` are optional; paragraphing and sentence shape must vary with the day's evidence. The message must contain an explicit APL viewpoint, observable next signals, and a research disclaimer. The 2026-08-04 Archive message remains immutable legacy output.
 
-For new Production from **2026-09-26 onward**, only the final two CTA blocks are fixed. Put the research disclaimer before them; put no content after them. The preceding reading-invitation sentence must be rewritten for that issue and explain what the full article resolves, not repeat generic membership copy. Use plain URLs, not Markdown links. The footer is exactly:
+WhatsApp 固定台頭（2026-10-03 起的新 Production 及其後交付修正版）：第一行必須是 `🌊APL Deep-Scan 美股深海雷達`，下一行留空再接正文。不得省略、改字、加 Markdown 粗體或另加日期副標題。交付前必須檢查台頭；既有已封存版本保留，修正版另存於 `work/publishing-revisions/<ScanDate>/` 並交付修正版連結。
+
+For new Production from **2026-09-26 onward**, the branded heading and final two CTA blocks are fixed; the analysis varies by issue. Put the research disclaimer before the CTA blocks; put no content after them. The preceding reading-invitation sentence must be rewritten for that issue and explain what the full article resolves, not repeat generic membership copy. Use plain URLs, not Markdown links. The footer is exactly:
 
 ```markdown
 📖 今日完整研究：
@@ -148,7 +196,7 @@ Why APL Momentum Leaders Matter｜為什麼要看領導股？
 ↓
 Deep-Scan Overview｜深度掃描概覽
 ↓
-Top Gainers — Past 7 Days｜最近七日升幅榜
+Top Gainers — 1 Day｜單日升幅榜
 ↓
 Momentum Leaders Analysis｜動能領導股分析
 ↓
@@ -178,7 +226,7 @@ Executive Summary｜執行摘要
 Market Context｜市場背景
 Why APL Momentum Leaders Matter｜為什麼要看領導股？
 Deep-Scan Overview｜深度掃描概覽
-Top Gainers — Past 7 Days｜最近七日升幅榜
+Top Gainers — 1 Day｜單日升幅榜
 Momentum Leaders Analysis｜動能領導股分析
 Sector Analysis｜板塊結構分析
 Investment Implication｜投資啟示
@@ -188,11 +236,11 @@ Call to Action｜延伸閱讀
 Disclaimer｜免責聲明
 ```
 
-The gloss is presentation text only; semantic roles, audit keys and renderer contracts remain unchanged. The `Top Gainers — Past 7 Days` Table Card title remains exact English with no suffix. Blog packages before 2026-08-05 retain the legacy English-only headings and are not rewritten. From 2026-08-10 through 2026-08-27, `Call to Action｜延伸閱讀` and `Disclaimer｜免責聲明` are mandatory in both Markdown and HTML. From 2026-08-28 onward, both sections are prohibited in the formal Blog; `Deep-Scan Conclusion｜深度掃描結論` is the final article section. The exact conclusion heading is `Deep-Scan Conclusion｜深度掃描結論`; shortened or misspelled forms such as `深度掃結論` must fail.
+The gloss is presentation text only; semantic roles, audit keys and renderer contracts remain unchanged. The `Top Gainers — 1 Day` Table Card title remains exact English with no suffix. Blog packages before 2026-08-05 retain the legacy English-only headings and are not rewritten. From 2026-08-10 through 2026-08-27, `Call to Action｜延伸閱讀` and `Disclaimer｜免責聲明` are mandatory in both Markdown and HTML. From 2026-08-28 onward, both sections are prohibited in the formal Blog; `Deep-Scan Conclusion｜深度掃描結論` is the final article section. The exact conclusion heading is `Deep-Scan Conclusion｜深度掃描結論`; shortened or misspelled forms such as `深度掃結論` must fail.
 
 ### SEO and Sharing metadata
 
-`## SEO and Sharing` is a required final Markdown-only section. From 2026-08-10 through 2026-08-27 it must follow `Call to Action｜延伸閱讀` and `Disclaimer｜免責聲明`; from 2026-08-28 onward it must immediately follow `Deep-Scan Conclusion｜深度掃描結論`, and include the current issue's `詳細文章：https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD`, `Page title：` matching the article title, `Page description：` summarising APL Momentum Leaders and the issue theme, and one concise sharing summary. This metadata must never be copied into the independent publish-ready HTML article source.
+`## SEO and Sharing` is required and, from the 2026-10-05 revision onward, is the first block before the article title. The following placement instructions describe historical packages only. From 2026-08-10 through 2026-08-27 it must follow `Call to Action｜延伸閱讀` and `Disclaimer｜免責聲明`; from 2026-08-28 onward it must immediately follow `Deep-Scan Conclusion｜深度掃描結論`, and include the current issue's `詳細文章：https://www.goinvestingnow.com/blog/apl-deep-scan-YYYY-MM-DD`, `Page title：` matching the article title, `Page description：` summarising APL Momentum Leaders and the issue theme, and one concise sharing summary. This metadata must never be copied into the independent publish-ready HTML article source.
 
 ### HTML source delivery rule
 
@@ -234,7 +282,7 @@ Why APL Momentum Leaders Matter｜為什麼要看領導股？
 Deep-Scan Overview｜深度掃描概覽
 → Does the quantitative result show that market leadership still exists?
 
-Top Gainers — Past 7 Days｜最近七日升幅榜
+Top Gainers — 1 Day｜單日升幅榜
 → Is short-term capital defensive, rotating, or pursuing risk?
 
 Momentum Leaders Analysis｜動能領導股分析
@@ -362,7 +410,7 @@ Editorial preparation must not:
 
 Executive Summary remains distinct from Market Context and must not replace it. From 2026-08-30 onward it is a fuller investment-weekly opening, but it states the conclusion and reader significance while Market Context supplies the causal market evidence and transmission mechanism.
 
-Trigger B data, ranking results, sector counts and Top Gainers — Past 7 Days results must not be presented as if they were source Market Context. Those inputs belong in their own Blog sections and may only be related back to the market background through editorial analysis.
+Trigger B data, ranking results, sector counts and Top Gainers — 1 Day results must not be presented as if they were source Market Context. Those inputs belong in their own Blog sections and may only be related back to the market background through editorial analysis.
 
 Blog Markdown and Blog HTML must remain content-equivalent for the final edited Market Context. WhatsApp is an independent social summary and is not required to retain the same evidence or structure.
 
@@ -394,7 +442,7 @@ Machine-readable evidence must be translated into reader-facing analysis before 
 - `Top Gainers` must use a small number of selected examples in balanced sentences, followed by the canonical scope／point-in-time note as its own paragraph. It must not serialize the input rows into one sentence.
 - `Momentum Leaders Analysis` and `Sector Analysis` must each contain at least two natural prose paragraphs. No paragraph may use more than three semicolons to simulate a table or CSV row list.
 - For ScanDate 2026-08-10 through 2026-08-27, Markdown and HTML must contain content-equivalent CTA and disclaimer sections. From 2026-08-28 onward, neither section may appear; the Conclusion must close the article.
-- `SEO and Sharing` remains Markdown-only and must be the final section. It must not appear in HTML.
+- `SEO and Sharing` remains Markdown-only and must be the first block before the article title from the 2026-10-05 revision onward. Earlier packages retain their historical placement. It must not appear in HTML.
 
 `tools/validate_managed_inputs.ps1` must fail closed on every condition above before Atomic Production starts. Character count, presence of headings and source-number matches are insufficient to override this gate.
 
@@ -457,16 +505,16 @@ Internal data source names must not appear in client-facing text.
 
 ---
 
-## 6. Top Gainers — Past 7 Days
+## 6. Top Gainers — 1 Day
 
-Use Top Gainers — Past 7 Days to explain short-term market temperature among the approved SPX／NDX／DJI constituent universe.
+Use Top Gainers — 1 Day to explain short-term market temperature among the approved SPX／NDX／DJI constituent universe.
 
 It must contrast short-term price leadership with the medium-term Momentum Leaders structure, then lead into where medium-term capital is actually moving. Do not describe it as an independent market story.
 
-`Top Gainers — Past 7 Days` remains the fixed canonical English title for the TopGainers Table Card. For Blog packages from 2026-08-05 onward, the Blog heading uses the bilingual presentation form `Top Gainers — Past 7 Days｜最近七日升幅榜`; legacy Blog packages before that date retain the English-only heading.
+`Top Gainers — 1 Day` remains the fixed canonical English title for the TopGainers Table Card. For Blog packages from 2026-08-05 onward, the Blog heading uses the bilingual presentation form `Top Gainers — 1 Day｜單日升幅榜`; legacy Blog packages before that date retain the English-only heading.
 
 ```html
-<h3>Top Gainers — Past 7 Days｜最近七日升幅榜</h3>
+<h3>Top Gainers — 1 Day｜單日升幅榜</h3>
 ```
 
 Do not append any other theme, commentary or date to this heading. Put issue-specific interpretation in the following `<p>` paragraph instead.
@@ -605,8 +653,8 @@ Always use:
 
 - `APL Momentum Leaders 領導股`
 - `APL Deep-Scan`
-- Blog heading: `Top Gainers — Past 7 Days｜最近七日升幅榜` from 2026-08-05 onward;
-- Table Card title: `Top Gainers — Past 7 Days` (exact English, immutable).
+- Blog heading: `Top Gainers — 1 Day｜單日升幅榜` from 2026-08-05 onward;
+- Table Card title: `Top Gainers — 1 Day` (exact English, immutable).
 
 The capitalization, dash, spacing and wording of the English Table Card title are fixed. A platform name is not a client-facing source label for this section; the required disclosure is the SPX／NDX／DJI constituent scope.
 
@@ -637,7 +685,7 @@ This file is the text-only editorial manuscript. It must contain only:
 - disclaimer;
 - publishing metadata.
 
-It must not embed or reference any image, including:
+Except for the same-date SEO PNG hyperlink in the top Markdown-only SEO metadata block (2026-10-06 revision onward), it must not embed or reference any image, including:
 
 - Hero Cover;
 - Dashboard;
@@ -657,7 +705,7 @@ background-image: ...
 direct image paths or URLs presented as article-body media references
 ```
 
-Cover, Dashboard, Table Cards, SEO image and other required visuals must continue to be generated as independent artifacts in the same-date Production Package. Each visual remains subject to its own validation, no-overwrite guard, artifact tracking, byte size, SHA-256 trace and publication requirements. Their presence in the package does not authorize a reference inside the Blog `.md` manuscript.
+Cover, Dashboard, Table Cards, SEO image and other required visuals must continue to be generated as independent artifacts in the same-date Production Package. Each visual remains subject to its own validation, no-overwrite guard, artifact tracking, byte size, SHA-256 trace and publication requirements. Only the SEO PNG may be linked in the Markdown SEO metadata; no visual may be embedded or referenced in the article body or HTML source.
 
 Publishing systems may associate or upload those independent artifacts outside the manuscript, but that platform action must not be serialized back into `APL_Momentum_Leaders_Market_Analysis_Blog_YYYY-MM-DD.md` or its companion HTML source.
 
@@ -797,7 +845,7 @@ Do not:
 - make investment recommendations;
 - predict stock prices;
 - overload the article with data before explaining meaning.
-- embed or reference any production image artifact inside the Blog Markdown manuscript;
+- embed or reference any production image artifact inside the Blog Markdown manuscript, except the same-date SEO PNG hyperlink in the top SEO metadata block;
 - store the publish-ready HTML source inside the `.md` manuscript;
 - generate a same-date `.html` duplicate beside the required `.html.txt` source;
 - append URL, Page title or Page description metadata paragraphs to the independent HTML source.

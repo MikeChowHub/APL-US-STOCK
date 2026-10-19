@@ -111,7 +111,7 @@ if($hasNamedCluster){
   $evidenceMetric=[string]$topLeaders.Count
   $evidenceCaption='TOP-RANKED LEADERS'
 }
-$headlineLines=if($managedHeadlineLines.Count-gt0){[string[]]$managedHeadlineLines}else{[string[]]@($marketTheme)}
+$headlineLines=@(if($managedHeadlineLines.Count-gt0){$managedHeadlineLines}else{$marketTheme})
 
 $svg=New-Object System.Collections.Generic.List[string]
 $logoData=LogoData $logoPath

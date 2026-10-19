@@ -1,5 +1,10 @@
 ﻿# APL US Stock Table Card Input Contract
 
+## 升幅統計時段 — 2026-10-06 修訂
+
+出稿前核對 CSV 升幅欄位。現行來源 `Price change %, 1 day` 為單日數據，文章標題須為 `Top Gainers — 1 Day｜單日升幅榜`，圖卡標題須為 `Top Gainers — 1 Day`；正文、百分比標籤及 WhatsApp 必須同樣採單日口徑。不得把觀察名單、匯出日期或累積掃描期間當成升幅計算期間。若來源改為七日數據，必須先同步更新欄位驗證與標題合約，再生產，不能用單日數值寫成七日升幅。此規則取代舊有固定七日標題；已封存原件保留，10月2日及5日另交付更正版。
+
+
 Version: APL Table Card Input v1.1
 
 This document defines the production input contract for APL Blog Table Cards.
@@ -62,7 +67,7 @@ Minimum valid input:
 {
   "SchemaVersion": "APL Table Card Input v1.1",
   "CardType": "TopGainers",
-  "Title": "Top Gainers — Past 7 Days",
+  "Title": "Top Gainers — 1 Day",
   "Rows": [
     {
       "symbol": "SYM",
@@ -74,7 +79,7 @@ Minimum valid input:
 }
 ```
 
-For `CardType: TopGainers`, `Title` must be exactly `Top Gainers — Past 7 Days`. This is a fixed cross-output title and validation must fail if wording, spacing, capitalization or a suffix differs.
+For `CardType: TopGainers`, `Title` must be exactly `Top Gainers — 1 Day`. This is a fixed cross-output title and validation must fail if wording, spacing, capitalization or a suffix differs.
 
 Required:
 

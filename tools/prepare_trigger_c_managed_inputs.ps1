@@ -202,6 +202,14 @@ if(Test-Path -LiteralPath $managedDate){throw "Managed input bundle already exis
 $state=Read-AplStrictJson $statePath $stagingDate
 if([string]$state.SchemaVersion-cne'APL Trigger C Preparation v1.0'-or[string]$state.ScanDate-cne$ScanDate-or[string]$state.Status-cne'AWAITING_EDITORIAL_AND_NATIVE'){throw 'Trigger C preparation state is not finalizable.'}
 foreach($record in @($state.SourceEvidence)){Assert-Record $record $stagingDate|Out-Null}
+if(Test-AplStyledArticleDate $ScanDate){
+  $htmlPath=Join-Path $stagingDate ([string]$state.WorkOrder.PublishingArtifacts.BlogHtmlSource)
+  $symbols=@(Get-AplArticleSymbols (Join-Path $stagingDate "trigger-b/$ScanDate/APL_Momentum_Score_Full_Ranking_$ScanDate.csv") (Join-Path $stagingDate 'top-gainers.csv'))
+  $raw=[IO.File]::ReadAllText($htmlPath,[Text.Encoding]::UTF8)
+  $styled=ConvertTo-AplStyledArticle -Html $raw -Symbols $symbols
+  Assert-AplStyledArticle -Html $styled -Symbols $symbols|Out-Null
+  Write-Utf8 $htmlPath $styled $stagingDate
+}
 $validatorArgs=@(
   '-InputCsv',(Join-Path $stagingDate 'source.csv'),
   '-TopGainersCsvPath',(Join-Path $stagingDate 'top-gainers.csv'),

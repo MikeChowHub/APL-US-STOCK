@@ -146,6 +146,11 @@ function Assert-AplWhatsAppSequence([string]$Text,[string]$ScanDate){
   $effectiveDate=[datetime]::ParseExact('2026-08-05','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   $scanDateValue=[datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   if($scanDateValue-lt$effectiveDate){return $true}
+  if($scanDateValue-ge[datetime]'2026-10-03'){
+    if($Text -cnotmatch '\A🌊APL Deep-Scan 美股深海雷達\r?\n\r?\n\S'){
+      throw 'WhatsApp must begin with the exact branded heading followed by a blank line and body text.'
+    }
+  }
   $deepScanSlugFrom=[datetime]::ParseExact('2026-09-04','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   $articleSlug=if($scanDateValue-ge$deepScanSlugFrom){'apl-deep-scan-'}else{'apl-momentum-leaders-'}
   $articleUrl='https://www.goinvestingnow.com/blog/'+$articleSlug+$ScanDate
@@ -188,6 +193,13 @@ function Assert-AplBlogOverviewPolicy([string]$ScanDate,[string]$Markdown,[strin
 function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[string]$WhatsAppPath,[string]$CompanyPath,[string]$MarketPath,[string]$TopGainersPath,[string]$MetaPath,[string]$AllowedRoot,[string]$ScanDate){
   $markdown=[IO.File]::ReadAllText($MarkdownPath,[Text.Encoding]::UTF8)
   $html=[IO.File]::ReadAllText($HtmlPath,[Text.Encoding]::UTF8)
+  if(Test-AplStyledArticleDate $ScanDate){
+    $styleMeta=Read-AplStrictJson $MetaPath $AllowedRoot
+    $styleRanking=Resolve-AplManagedMetaPath $MetaPath ([string]$styleMeta.fullRankingCsv) $AllowedRoot 'HTML style ranking'
+    $styleSymbols=@(Get-AplArticleSymbols $styleRanking $TopGainersPath)
+    Assert-AplStyledArticle -Html $html -Symbols $styleSymbols|Out-Null
+    $html=ConvertTo-AplArticleBody $html
+  }
   $whatsApp=[IO.File]::ReadAllText($WhatsAppPath,[Text.Encoding]::UTF8)
   $company=[IO.File]::ReadAllText($CompanyPath,[Text.Encoding]::UTF8)
   $market=[IO.File]::ReadAllText($MarketPath,[Text.Encoding]::UTF8)
@@ -200,6 +212,8 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
   $scanDateValue=[datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   $editorialQualityFrom=[datetime]::ParseExact('2026-08-10','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   $strictEditorialQuality=$scanDateValue-ge$editorialQualityFrom
+  $researchReport=$scanDateValue-ge[datetime]'2026-09-30'
+  Assert-AplClientArticleNoSourceLinks -Markdown $markdown -Html $html -ScanDate $ScanDate|Out-Null
   $weeklyOpeningFrom=[datetime]::ParseExact('2026-08-30','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   $requiresExpandedWeeklyOpening=$scanDateValue-ge$weeklyOpeningFrom
   $investmentImplicationFrom=[datetime]::ParseExact('2026-08-30','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
@@ -218,8 +232,8 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
   $requiresLongRiskConclusion=$scanDateValue-ge$longRiskConclusionFrom
   $ctaDisclaimerRemovalFrom=[datetime]::ParseExact('2026-08-28','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   $requiresCtaDisclaimer=$strictEditorialQuality-and$scanDateValue-lt$ctaDisclaimerRemovalFrom
-  $mandatory[[string]$headingMap.Risk]=if($requiresLongRiskConclusion){300}else{120}
-  $mandatory[[string]$headingMap.DeepScanConclusion]=if($requiresLongRiskConclusion){300}else{120}
+  $mandatory[[string]$headingMap.Risk]=if($researchReport){80}elseif($requiresLongRiskConclusion){300}else{120}
+  if(-not$researchReport){$mandatory[[string]$headingMap.DeepScanConclusion]=if($requiresLongRiskConclusion){300}else{120}}
   if($requiresCtaDisclaimer){
     $mandatory[[string]$headingMap.CallToAction]=60
     $mandatory[[string]$headingMap.Disclaimer]=40
@@ -231,6 +245,7 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
       if([Array]::IndexOf([string[]]$mdHeadings,$removedHeading)-ge0-or[Array]::IndexOf([string[]]$htmlHeadings,$removedHeading)-ge0){throw "Blog section is prohibited from 2026-08-28 onward: $removedHeading"}
     }
   }
+  if($researchReport -and ($mdHeadings -contains [string]$headingMap.DeepScanConclusion -or $htmlHeadings -contains [string]$headingMap.DeepScanConclusion)){throw 'Independent Deep-Scan Conclusion is prohibited; close in Risk.'}
   $previousMd=-1;$previousHtml=-1
   $sections=[ordered]@{}
   foreach($heading in $mandatory.Keys){
@@ -247,8 +262,14 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
     for($i=0;$i-lt$mdTokens.Count;$i++){if([string]$mdTokens[$i]-cne[string]$htmlTokens[$i]){throw "Blog Markdown/HTML content mismatch in section: $heading"}}
     $sections[$heading]=[pscustomobject]@{MarkdownLength=$mdPlain.Length;HtmlLength=$htmlPlain.Length;Tokens=$mdTokens.Count}
   }
-  $mdTitle=[regex]::Match($markdown,'(?m)^#\s+(.+?)\s*$').Groups[1].Value.Trim();$htmlTitle=ConvertTo-AplPlainText ([regex]::Match($html,'(?is)<h1>\s*(.*?)\s*</h1>').Groups[1].Value)
-  if([string]::IsNullOrWhiteSpace($mdTitle)-or$mdTitle-cne$htmlTitle){throw 'Blog Markdown/HTML title mismatch.'}
+  $mdTitle=[regex]::Match($markdown,'(?m)^#\s+(.+?)\s*$').Groups[1].Value.Trim()
+  if([string]::IsNullOrWhiteSpace($mdTitle)){throw 'Blog Markdown title is missing.'}
+  if($scanDateValue-ge[datetime]'2026-10-13'){
+    if($html-match'(?is)<h1\b'-or$html-cnotmatch'(?s)^\s*<h3>Executive Summary｜執行摘要</h3>'){throw 'Full HTML must start with Executive Summary h3 and contain no h1 title.'}
+  }else{
+    $htmlTitle=ConvertTo-AplPlainText ([regex]::Match($html,'(?is)<h1>\s*(.*?)\s*</h1>').Groups[1].Value)
+    if($mdTitle-cne$htmlTitle){throw 'Blog Markdown/HTML title mismatch.'}
+  }
   $titlePolicy=$artifactContract.EditorialReadiness.TitlePolicy
   if($null-ne$titlePolicy){
     $requiredPrefix=([string]$titlePolicy.RequiredPrefix).Trim();$effectiveFrom=([string]$titlePolicy.EffectiveFrom).Trim()
@@ -266,21 +287,23 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
     $clientSections=New-Object System.Collections.Generic.List[string]
     foreach($heading in $mandatory.Keys){[void]$clientSections.Add((Get-AplMarkdownSection $markdown ([string]$heading)))}
     Assert-AplClientFacingEditorialLanguage -Text ($clientSections.ToArray()-join"`n") -Label 'Formal Blog'|Out-Null
+    if($researchReport){Assert-AplResearchReportLanguage -Text (($clientSections.ToArray()-join"`n")+"`n"+$whatsApp) | Out-Null}
 
     if($requiresExpandedWeeklyOpening){
       $executiveSection=Get-AplMarkdownSection $markdown ([string]$headingMap.ExecutiveSummary)
       $executiveParagraphs=@(Assert-AplEditorialParagraphQuality -Section $executiveSection -Label 'Blog Executive Summary' -MinimumParagraphs 3 -MaximumSemicolonsPerParagraph 3)
       Assert-AplEditorialCausalLanguage -Text ($executiveParagraphs-join' ') -Label 'Blog Executive Summary' -MinimumSignals 2|Out-Null
-      Assert-AplWeeklyOpeningLayers -Text $executiveSection -Label 'Blog Executive Summary'|Out-Null
+      if(-not$researchReport){Assert-AplWeeklyOpeningLayers -Text $executiveSection -Label 'Blog Executive Summary'|Out-Null}
       $marketParagraphs=@(Assert-AplEditorialParagraphQuality -Section $marketSection -Label 'Blog Market Context' -MinimumParagraphs 3 -MaximumSemicolonsPerParagraph 3)
       Assert-AplEditorialCausalLanguage -Text ($marketParagraphs-join' ') -Label 'Blog Market Context' -MinimumSignals 3|Out-Null
-      Assert-AplWeeklyOpeningLayers -Text $marketSection -Label 'Blog Market Context'|Out-Null
+      if(-not$researchReport){Assert-AplWeeklyOpeningLayers -Text $marketSection -Label 'Blog Market Context'|Out-Null}
     }else{
       $marketParagraphs=@(Assert-AplEditorialParagraphQuality -Section $marketSection -Label 'Blog Market Context' -MinimumParagraphs 2 -MaximumSemicolonsPerParagraph 3)
       Assert-AplEditorialCausalLanguage -Text ($marketParagraphs-join' ') -Label 'Blog Market Context' -MinimumSignals 2|Out-Null
     }
 
     $topGainersSection=Get-AplMarkdownSection $markdown ([string]$headingMap.TopGainers)
+    if($scanDateValue-ge[datetime]'2026-10-06' -and $topGainersSection-match'(?i)七日|7\s*days?|seven\s*days?'){throw 'Single-day Top Gainers section must not describe seven-day returns.'}
     $topGainersParagraphs=@(Assert-AplEditorialParagraphQuality -Section $topGainersSection -Label 'Blog Top Gainers' -MinimumParagraphs 2 -MaximumSemicolonsPerParagraph 3)
     if(@($topGainersParagraphs|Where-Object{$_-match'(?i)^Scope:\s*SPX／NDX／DJI constituents\.'}).Count-ne1){throw 'Blog Top Gainers must contain one separate canonical SPX／NDX／DJI scope paragraph.'}
 
@@ -304,7 +327,10 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
       }
     }
 
-    if($requiresLongRiskConclusion){
+    if($researchReport){
+      $riskParagraphs=@(Assert-AplEditorialParagraphQuality -Section (Get-AplMarkdownSection $markdown ([string]$headingMap.Risk)) -Label 'Blog Risk' -MinimumParagraphs 1 -MaximumSemicolonsPerParagraph 3)
+      if($riskParagraphs.Count-gt2){throw 'Research report Risk must contain one or two focused paragraphs.'}
+    }elseif($requiresLongRiskConclusion){
       $riskSection=Get-AplMarkdownSection $markdown ([string]$headingMap.Risk)
       $riskParagraphs=@(Assert-AplEditorialParagraphQuality -Section $riskSection -Label 'Blog Risk' -MinimumParagraphs 3 -MaximumSemicolonsPerParagraph 3)
       Assert-AplEditorialCausalLanguage -Text ($riskParagraphs-join' ') -Label 'Blog Risk' -MinimumSignals 2|Out-Null
@@ -322,9 +348,15 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
     }
 
     $seoIndex=[Array]::IndexOf([string[]]$mdHeadings,'SEO and Sharing')
-    $articleEndHeading=if($requiresCtaDisclaimer){[string]$headingMap.Disclaimer}else{[string]$headingMap.DeepScanConclusion}
+    $articleEndHeading=if($researchReport){[string]$headingMap.Risk}elseif($requiresCtaDisclaimer){[string]$headingMap.Disclaimer}else{[string]$headingMap.DeepScanConclusion}
     $articleEndIndex=[Array]::IndexOf([string[]]$mdHeadings,$articleEndHeading)
-    if($seoIndex-ne($mdHeadings.Count-1)-or$seoIndex-le$articleEndIndex){throw "SEO and Sharing must be the final Markdown-only section after $articleEndHeading."}
+    $seoFirst=$seoIndex-eq0-and$markdown.TrimStart().StartsWith('## SEO and Sharing')
+    $legacySeoLast=$seoIndex-eq($mdHeadings.Count-1)-and$seoIndex-gt$articleEndIndex
+    if($scanDateValue-ge[datetime]'2026-10-06'){
+      if(-not$seoFirst){throw 'SEO and Sharing must be the first Markdown block before the article title.'}
+    }elseif($scanDateValue-eq[datetime]'2026-10-05'){
+      if(-not$seoFirst-and-not$legacySeoLast){throw 'SEO and Sharing must be first; the completed 2026-10-05 original retains legacy final placement.'}
+    }elseif(-not$legacySeoLast){throw "SEO and Sharing must be the final Markdown-only section after $articleEndHeading for historical packages."}
     if([Array]::IndexOf([string[]]$htmlHeadings,'SEO and Sharing')-ge0-or$html-match'(?i)Page title：|Page description：|Sharing summary：'){throw 'SEO and Sharing metadata must not appear in the publish-ready HTML article.'}
   }
   $executivePlain=ConvertTo-AplPlainText (Get-AplMarkdownSection $markdown ([string]$headingMap.ExecutiveSummary))
@@ -357,9 +389,10 @@ function Assert-AplEditorialContent([string]$MarkdownPath,[string]$HtmlPath,[str
   foreach($symbol in $topSymbols){if($topSection-cnotmatch("(?<![A-Z0-9.])"+[regex]::Escape($symbol)+"(?![A-Z0-9.])")){throw "Blog Top Gainers section missing source leader: $symbol"}}
   foreach($scopeCode in @('SPX','NDX','DJI')){if($topSection-cnotmatch("(?<![A-Z0-9])"+$scopeCode+"(?![A-Z0-9])")){throw "Blog Top Gainers section missing required constituent scope: $scopeCode."}}
 
-  $conclusion=ConvertTo-AplPlainText (Get-AplMarkdownSection $markdown ([string]$headingMap.DeepScanConclusion))
+  $closingHeading=if($researchReport){[string]$headingMap.Risk}else{[string]$headingMap.DeepScanConclusion}
+  $conclusion=ConvertTo-AplPlainText (Get-AplMarkdownSection $markdown $closingHeading)
   $keywords=@($sourceMarketHeadings|ForEach-Object{$_-split'[：，、／/\s]+'}|Where-Object{$_.Length-ge2-and$_-notin@('市場','背景','風險','重新','開始')})
-  if($keywords.Count-gt0-and@($keywords|Where-Object{$conclusion.Contains($_)}).Count-lt1){throw 'Deep-Scan Conclusion does not respond to the Market Context proposition.'}
+  if($keywords.Count-gt0-and@($keywords|Where-Object{$conclusion.Contains($_)}).Count-lt1){throw 'Article closing does not respond to the Market Context proposition.'}
   if((ConvertTo-AplPlainText $whatsApp).Length-lt250){throw 'WhatsApp artifact is an empty or summary shell.'}
   $firstScreen=(ConvertTo-AplPlainText $whatsApp);if($firstScreen.Length-gt400){$firstScreen=$firstScreen.Substring(0,400)}
   if($keywords.Count-gt0-and@($keywords|Where-Object{$firstScreen.Contains($_)}).Count-lt1){throw 'WhatsApp first screen does not state the main market change.'}
@@ -413,6 +446,7 @@ function Assert-AplTableCardSourceIntegrity($Cards,$Meta,[string]$MetaPath,[stri
   $topCsv=Read-AplDelimitedCsv $TopGainersPath
   $descriptionIndex=Get-AplUniqueCsvColumnIndex $topCsv 'Description'
   $changeIndex=Get-AplUniqueCsvColumnIndex $topCsv 'Price change %, 1 day'
+  if([datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)-ge[datetime]'2026-10-06' -and [string]$Cards['TopGainers'].Json.Title-cne(Get-AplCanonicalTopGainersTitle)){throw 'Single-day CSV requires Top Gainers — 1 Day card title.'}
   $gainerRows=@($Cards['TopGainers'].Json.Rows)
   if($gainerRows.Count-lt1-or$gainerRows.Count-gt$topCsv.Rows.Count){throw 'TopGainers card row count is invalid.'}
   for($i=0;$i-lt$gainerRows.Count;$i++){
@@ -544,6 +578,7 @@ foreach($type in $requiredTypes){$records=@($manifest.Cards|Where-Object{[string
 $triggerBMeta=Read-AplStrictJson $TriggerBMetaPath $allowedRoot
 if([string]$triggerBMeta.scanDate-cne$ScanDate){throw 'Trigger B metadata ScanDate mismatch.'}
 if($csv.Rows.Count-ne[int]$triggerBMeta.universe){throw "Cumulative screener row count does not match Trigger B metadata universe. Csv=$($csv.Rows.Count); Meta=$($triggerBMeta.universe)."}
+if([datetime]$ScanDate-ge[datetime]'2026-09-30'){Assert-AplResearchReportLanguage -Text ($tableCardSources['ExecutiveSummary'].Json.Rows|ConvertTo-Json -Depth 6)|Out-Null}
 $tableCardIntegrity=Assert-AplTableCardSourceIntegrity $tableCardSources $triggerBMeta $TriggerBMetaPath $TopGainersCsvPath $allowedRoot
 $brief=Read-AplStrictJson $CoverBriefPath $allowedRoot
 foreach($name in @('version','scanDate','composition','imageGenerationBrief','overlay')){if($null-eq$brief.PSObject.Properties[$name]){throw "Cover brief missing $name."}}

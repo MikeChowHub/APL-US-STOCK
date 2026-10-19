@@ -1,5 +1,10 @@
 ﻿# APL US Stock Table Card Template
 
+## 升幅統計時段 — 2026-10-06 修訂
+
+出稿前核對 CSV 升幅欄位。現行來源 `Price change %, 1 day` 為單日數據，文章標題須為 `Top Gainers — 1 Day｜單日升幅榜`，圖卡標題須為 `Top Gainers — 1 Day`；正文、百分比標籤及 WhatsApp 必須同樣採單日口徑。不得把觀察名單、匯出日期或累積掃描期間當成升幅計算期間。若來源改為七日數據，必須先同步更新欄位驗證與標題合約，再生產，不能用單日數值寫成七日升幅。此規則取代舊有固定七日標題；已封存原件保留，10月2日及5日另交付更正版。
+
+
 This template defines Blog Research Information Cards.
 
 Table Cards are not CSV screenshots.
@@ -193,7 +198,7 @@ Show recent 7-day market temperature using the approved SPX／NDX／DJI constitu
 
 ### Fixed Elements
 
-- title: `Top Gainers — Past 7 Days` — fixed canonical English title; exact wording, capitalization, dash and spacing required;
+- title: `Top Gainers — 1 Day` — fixed canonical English title; exact wording, capitalization, dash and spacing required;
 - source note;
 - leading sectors / companies;
 - market implication.

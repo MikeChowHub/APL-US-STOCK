@@ -211,7 +211,11 @@ function Get-AplTableCardPresentation([object]$Json, [string]$CardType, [switch]
 }
 
 function Get-AplCanonicalTopGainersTitle {
-  return ('Top Gainers ' + [char]0x2014 + ' Past 7 Days')
+  param([string]$ScanDate = '')
+  if($ScanDate -and [datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture) -lt [datetime]'2026-10-06'){
+    return ('Top Gainers ' + [char]0x2014 + ' Past 7 Days')
+  }
+  return ('Top Gainers ' + [char]0x2014 + ' 1 Day')
 }
 
 function Get-AplBlogHeadingMap {
@@ -219,14 +223,14 @@ function Get-AplBlogHeadingMap {
   $scanDateValue = [datetime]::ParseExact($ScanDate, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
   $bilingualFrom = [datetime]::ParseExact('2026-08-05', 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
   $bilingual = $scanDateValue -ge $bilingualFrom
-  $englishTopGainers = Get-AplCanonicalTopGainersTitle
+  $englishTopGainers = Get-AplCanonicalTopGainersTitle -ScanDate $ScanDate
   if ($bilingual) {
     return [ordered]@{
       ExecutiveSummary = 'Executive Summary' + [char]0xFF5C + [char]0x57F7 + [char]0x884C + [char]0x6458 + [char]0x8981
       MarketContext = 'Market Context' + [char]0xFF5C + [char]0x5E02 + [char]0x5834 + [char]0x80CC + [char]0x666F
       WhyAPL = 'Why APL Momentum Leaders Matter' + [char]0xFF5C + [char]0x70BA + [char]0x4EC0 + [char]0x9EBC + [char]0x8981 + [char]0x770B + [char]0x9818 + [char]0x5C0E + [char]0x80A1 + [char]0xFF1F
       DeepScanOverview = 'Deep-Scan Overview' + [char]0xFF5C + [char]0x6DF1 + [char]0x5EA6 + [char]0x6383 + [char]0x63CF + [char]0x6982 + [char]0x89BD
-      TopGainers = $englishTopGainers + [char]0xFF5C + [char]0x6700 + [char]0x8FD1 + [char]0x4E03 + [char]0x65E5 + [char]0x5347 + [char]0x5E45 + [char]0x699C
+      TopGainers = if($scanDateValue -ge [datetime]'2026-10-06'){ $englishTopGainers + '｜單日升幅榜' }else{ $englishTopGainers + [char]0xFF5C + [char]0x6700 + [char]0x8FD1 + [char]0x4E03 + [char]0x65E5 + [char]0x5347 + [char]0x5E45 + [char]0x699C }
       MomentumLeaders = 'Momentum Leaders Analysis' + [char]0xFF5C + [char]0x52D5 + [char]0x80FD + [char]0x9818 + [char]0x5C0E + [char]0x80A1 + [char]0x5206 + [char]0x6790
       SectorAnalysis = 'Sector Analysis' + [char]0xFF5C + [char]0x677F + [char]0x584A + [char]0x7D50 + [char]0x69CB + [char]0x5206 + [char]0x6790
       InvestmentImplication = 'Investment Implication' + [char]0xFF5C + [char]0x6295 + [char]0x8CC7 + [char]0x555F + [char]0x793A
@@ -279,6 +283,19 @@ function Assert-AplClientFacingEditorialLanguage {
   $forbidden = '(?i)\b(?:Trigger\s*B|managed\s+inputs?|universe|qualified|leaderLock|removedBelowSma200Count|finalWatchlistCount|averageMomentum|averageBuyability|fullRankingCsv|runtime\s+contract|renderer|validator|pipeline)\b|受管(?:輸入|來源|排名|\s*Trigger)|正式\s*Production'
   $match = [regex]::Match($Text, $forbidden)
   if ($match.Success) { throw "$Label exposes internal Production terminology: $($match.Value)" }
+  return $true
+}
+
+function Assert-AplResearchReportLanguage {
+  param([Parameter(Mandatory=$true)][string]$Text)
+  $internal='掃描\s*[\d,]+\s*(?:隻|檔|間|家)|[\d,]+\s*(?:隻|檔|間|家)?[^。\r\n]{0,14}(?:通過門檻|符合條件|合資格|掃描股)|平均(?:動能|買入評分|模型分數)|Leader\s*Lock'
+  if($Text-match$internal){throw 'Research report exposes internal screening metrics.'}
+  $handoff='(?:讀者|客戶|投資者).{0,12}自行.{0,8}(?:核對|研究|查證)|(?:請|應|須|需要)自行(?:核對|研究|查證)|價格(?:隨時|可隨時|會隨時).{0,5}(?:改變|變動)'
+  if($Text-match$handoff){throw 'Research report delegates research to the client or uses generic price caveats.'}
+  $quoteCaveat='(?:並非|不是|非|不代表).{0,20}(?:即時|實時|最新)(?:報價|價格)|報道時點(?:的)?觀察|(?:報價|價格).{0,12}(?:僅供參考|以即時為準|可能已變)|(?:請|應|須|需要).{0,12}(?:自行|最新).{0,8}(?:核對|查證)|(?i:not (?:a |the )?(?:live|real-time) (?:quote|price))'
+  if($Text-match$quoteCaveat){throw 'Research report contains quotation-timing or verification boilerplate.'}
+  $hedges=@([regex]::Matches($Text,'仍待確認|有待確認|(?:等待|要等|仍需|還需|須再|需要|要(?=核對|檢查|檢驗|確認|觀察))(?:核對|檢查|檢驗|確認)?[^。\r\n]{0,30}(?:需求|收入|盈利|現金流)[^。\r\n]{0,20}(?:能否|會否|是否|轉化|兌現)'))
+  if($hedges.Count-ge2){throw 'Research report repeatedly defers its conclusion to future business confirmation.'}
   return $true
 }
 
@@ -381,7 +398,7 @@ function Assert-AplTableCardContract($Json, [string]$ExpectedCardType = '', [swi
   if (-not [string]::IsNullOrWhiteSpace($ExpectedCardType) -and [string]$Json.CardType -ne $ExpectedCardType) { throw "$label CardType '$($Json.CardType)' does not match expected '$ExpectedCardType'." }
   $effectiveCardType = [string]$Json.CardType
   $canonicalTopGainersTitle = Get-AplCanonicalTopGainersTitle
-  if ($effectiveCardType -eq 'TopGainers' -and [string]$Json.Title -cne $canonicalTopGainersTitle) { throw "$label Title for TopGainers must match the canonical title exactly." }
+  if ($effectiveCardType -eq 'TopGainers' -and [string]$Json.Title -cne $canonicalTopGainersTitle -and [string]$Json.Title -cne (Get-AplCanonicalTopGainersTitle -ScanDate '2026-10-05')) { throw "$label Title for TopGainers must match the canonical title exactly." }
   if ($Json.Rows -isnot [array]) { throw "$label Rows must be a JSON array." }
   $rows = @($Json.Rows)
   if ($rows.Count -lt 1 -or $rows.Count -gt 8) { throw "$label Rows must contain 1-8 rows." }
@@ -393,6 +410,9 @@ function Assert-AplTableCardContract($Json, [string]$ExpectedCardType = '', [swi
     Assert-AplObjectProperties $Json.Meta @('Date','Source','MarketTheme','ProductionNote') @() "$label Meta"
     foreach ($name in @('Date','Source','MarketTheme','ProductionNote')) { Assert-AplStringProperty $Json.Meta $name "$label Meta" }
     if ($null -ne $Json.Meta.PSObject.Properties['Date'] -and [string]$Json.Meta.Date -notmatch '^\d{4}-\d{2}-\d{2}$') { throw "$label Meta.Date must use YYYY-MM-DD." }
+  }
+  if($effectiveCardType -eq 'TopGainers' -and $null -ne $Json.Meta -and $Json.Meta.Date -and [datetime]::ParseExact([string]$Json.Meta.Date,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture) -ge [datetime]'2026-10-06'){
+    if([string]$Json.Title -cne (Get-AplCanonicalTopGainersTitle)){throw 'New single-day TopGainers cards must use Top Gainers — 1 Day.'}
   }
   $presentation = Get-AplTableCardPresentation $Json $effectiveCardType -RequireChineseDirection:$RequireChineseDirection -RequireChineseExecutiveSummary:$RequireChineseExecutiveSummary
   return [pscustomobject]@{ SchemaVersion=[string]$Json.SchemaVersion; CardType=$effectiveCardType; Rows=$rows.Count; Columns=@($presentation.Columns).Count; Presentation=$presentation }
@@ -577,4 +597,17 @@ function Get-AplSectorVisual($Presentation, [string]$Sector) {
   $normalized = Get-AplNormalizedSector $Presentation $Sector
   if (-not $Presentation.Entries.ContainsKey($normalized)) { $normalized = 'Others' }
   return $Presentation.Entries[$normalized]
+}
+
+
+. (Join-Path $PSScriptRoot 'client_article_html.ps1')
+
+function Assert-AplClientArticleNoSourceLinks([string]$Markdown,[string]$Html,[string]$ScanDate){
+  if($ScanDate-clt'2026-10-13'){return $true}
+  # SEO metadata belongs before the article title; inspect only the actual body.
+  $body=[regex]::Match($Markdown,'(?ms)^#\s+[^\r\n]+\r?\n(.*)$').Groups[1].Value
+  if($Html-match'(?is)<a\b|(?:https?://|www\.)'-or$body-match'(?is)<a\b|(?:https?://|www\.)|\[[^\]]+\]\s*\(|(?m)^\s*\[\^?[^\]]+\]:|(?m)^#{1,6}\s+(?:Sources|References|來源|參考資料)\s*$'){
+    throw 'Client article body must not contain source links or a source list; retain citations in internal evidence.'
+  }
+  return $true
 }

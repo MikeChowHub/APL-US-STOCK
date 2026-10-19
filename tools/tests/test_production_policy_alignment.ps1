@@ -61,11 +61,16 @@ try{
   try{Get-AplCoreMarketThesis "$thesisLabel$thesis`r`n$thesisLabel$thesis" 'fixture'|Out-Null;Add-Result 'duplicate-core-thesis-fail' $false 'not rejected'}catch{Add-Result 'duplicate-core-thesis-fail' $true}
   try{$aligned=Assert-AplCoreMarketThesisAlignment $thesis "  $thesis  ";Add-Result 'cross-platform-thesis-match-pass' ($aligned-ceq$thesis)}catch{Add-Result 'cross-platform-thesis-match-pass' $false $_.Exception.Message}
   try{Assert-AplCoreMarketThesisAlignment $thesis 'A different Cover Brief proposition that does not match the managed source.'|Out-Null;Add-Result 'cross-platform-thesis-mismatch-fail' $false 'not rejected'}catch{Add-Result 'cross-platform-thesis-mismatch-fail' $true}
-  $whatsappPass='**APL Deep-Scan 美股深海雷達**`n**能源風險緩和但 AI 回報進入驗證期 | 2040-01-02**`nhttps://www.goinvestingnow.com/blog/apl-deep-scan-2040-01-02`n`n能源風險緩和，指數反彈，但市場仍然選擇性配置。`n`n📊 **APL Deep-Scan 觀察近期美股領導結構**，領導股仍需盈利與成交確認。`n`n• 投資者應關注能源成本、AI 現金流及領導廣度。`n• 下一步觀察成交參與能否擴散。`n`n🐧 APL Deep-Scan 持續追蹤市場變化。`n`n研究摘要，不構成投資建議。'
+  $whatsappPass="🌊APL Deep-Scan 美股深海雷達`n`n"+'https://www.goinvestingnow.com/blog/apl-deep-scan-2040-01-02`n`n能源風險緩和，指數反彈，但市場仍然選擇性配置。`n`n📊 **APL Deep-Scan 觀察近期美股領導結構**，領導股仍需盈利與成交確認。`n`n• 投資者應關注能源成本、AI 現金流及領導廣度。`n• 下一步觀察成交參與能否擴散。`n`n🐧 APL Deep-Scan 持續追蹤市場變化。`n`n研究摘要，不構成投資建議。'
   $issueUrl='https://www.goinvestingnow.com/blog/apl-deep-scan-2040-01-02'
   $trialUrl='https://www.goinvestingnow.com/ExploreCourses'
   $whatsappPass += "`n`n今日文章會分析哪些領導股的需求值得繼續驗證。`n`n📖 今日完整研究：`n$issueUrl`n`n🐧 APL 三日免費體驗｜工具・分析・課程`n$trialUrl"
   try{Assert-AplWhatsAppSequence $whatsappPass '2040-01-02'|Out-Null;Add-Result 'whatsapp-sequence-pass' $true}catch{Add-Result 'whatsapp-sequence-pass' $false $_.Exception.Message}
+  $missingHeading=$whatsappPass.Substring("🌊APL Deep-Scan 美股深海雷達`n`n".Length)
+  try{Assert-AplWhatsAppSequence $missingHeading '2040-01-02'|Out-Null;Add-Result 'whatsapp-heading-missing-fail' $false 'not rejected'}catch{Add-Result 'whatsapp-heading-missing-fail' $true}
+  try{Assert-AplWhatsAppSequence ($whatsappPass.Replace('🌊APL','🌊 APL')) '2040-01-02'|Out-Null;Add-Result 'whatsapp-heading-altered-fail' $false 'not rejected'}catch{Add-Result 'whatsapp-heading-altered-fail' $true}
+  try{Assert-AplWhatsAppSequence ($whatsappPass.Replace("美股深海雷達`n`n","美股深海雷達`n")) '2040-01-02'|Out-Null;Add-Result 'whatsapp-heading-blank-line-fail' $false 'not rejected'}catch{Add-Result 'whatsapp-heading-blank-line-fail' $true}
+  try{Assert-AplWhatsAppSequence ($missingHeading.Replace('2040-01-02','2026-10-02')) '2026-10-02'|Out-Null;Add-Result 'whatsapp-historical-heading-policy-pass' $true}catch{Add-Result 'whatsapp-historical-heading-policy-pass' $false $_.Exception.Message}
   $linkedFooter="📖 今日完整研究：`n[$issueUrl]($issueUrl)`n🐧 APL 三日免費體驗｜工具・分析・課程`n[$trialUrl]($trialUrl)"
   try{Assert-AplWhatsAppSequence ($whatsappPass -replace '(?s)📖 今日完整研究：.*$',$linkedFooter) '2040-01-02'|Out-Null;Add-Result 'future-markdown-link-footer-fail' $false 'not rejected'}catch{Add-Result 'future-markdown-link-footer-fail' $true}
   try{Assert-AplWhatsAppSequence ($whatsappPass.Replace('今日完整研究','今日完整黃金分析')) '2040-01-02'|Out-Null;Add-Result 'future-gold-analysis-label-fail' $false 'not rejected'}catch{Add-Result 'future-gold-analysis-label-fail' $true}

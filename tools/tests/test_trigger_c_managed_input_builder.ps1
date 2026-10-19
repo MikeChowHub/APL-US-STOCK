@@ -153,13 +153,19 @@ try{
   $sectionMinimum[[string]$headingMap.InvestmentImplication]=650
   $sectionMinimum[[string]$headingMap.Risk]=300
   $sectionMinimum[[string]$headingMap.DeepScanConclusion]=300
+  if([datetime]$ScanDate-ge[datetime]'2026-09-30'){
+    $sections.Remove([string]$headingMap.DeepScanConclusion)
+    $sectionMinimum.Remove([string]$headingMap.DeepScanConclusion)
+    $sectionMinimum[[string]$headingMap.Risk]=80
+    $sections[[string]$headingMap.Risk]='能源利率重估會提高企業成本與估值壓力，這是本期選擇性領導的主要風險。需求穩定的公司仍可維持相對優勢，但不同業務的成本轉嫁能力及資金需要不同，因此本期重點關注具持續動能的領導公司，同時兼顧個別基本面差異。'
+  }
   $supportingSentence='這項證據必須與上一節的判斷連接，才能辨認資金選擇是否具有持續性，並為下一個分析問題建立可驗證的方向。'
   foreach($heading in $sectionMinimum.Keys){while(([string]$sections[$heading]).Length-lt([int]$sectionMinimum[$heading]+20)){$sections[$heading]=([string]$sections[$heading]+' '+$supportingSentence)}}
   $title="APL Deep-Scan｜美股深海雷達: 市場領導分析 | $ScanDate"
   $markdown=New-Object Collections.Generic.List[string]
   $html=New-Object Collections.Generic.List[string]
   $markdown.Add("# $title");$markdown.Add('')
-  $html.Add("<h1>$title</h1>")
+  if([datetime]$ScanDate-lt[datetime]'2026-10-13'){$html.Add("<h1>$title</h1>")}
   foreach($heading in $sections.Keys){
     $markdown.Add("## $heading");$markdown.Add('')
     $paragraphs=@(([string]$sections[$heading])-split'(?:\r?\n){2,}')

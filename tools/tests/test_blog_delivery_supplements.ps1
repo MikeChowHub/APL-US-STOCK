@@ -5,7 +5,7 @@ $ErrorActionPreference='Stop'
 $ProjectRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
 $ScriptPath=Join-Path $ProjectRoot 'tools\create_blog_delivery_supplements.ps1'
 $Root=Join-Path $ProjectRoot 'tmp\blog-delivery-supplements'
-$ScanDate='2099-09-22'
+$ScanDate='2026-10-19'
 $results=New-Object System.Collections.Generic.List[object]
 
 function Write-Utf8([string]$Path,[string]$Text){$parent=Split-Path -Parent $Path;if(!(Test-Path $parent)){New-Item -ItemType Directory -Path $parent -Force|Out-Null};[IO.File]::WriteAllText($Path,$Text,(New-Object Text.UTF8Encoding($true)))}
@@ -23,14 +23,16 @@ function Invoke-Case([string]$Name,[string]$Html,[int]$ExpectedExit){
 
 if(Test-Path $Root){Remove-Item -LiteralPath $Root -Recurse -Force};New-Item -ItemType Directory -Path $Root -Force|Out-Null
 try{
-  $valid='<h1>APL Deep-Scan｜美股深海雷達: 測試 | 2099-09-22</h1><h3>Executive Summary｜執行摘要</h3><p>完整摘要第一段。</p><p>完整摘要第二段。</p><h3>Market Context｜市場背景</h3><p>市場背景第一段完整保留。</p><p>第二段第一句保留。第二句只限會員。</p><h3>Risk｜風險</h3><p>風險。</p>'
+  $valid='<h3>Executive Summary｜執行摘要</h3><p>完整摘要第一段。</p><p>完整摘要第二段。</p><h3>Market Context｜市場背景</h3><p>市場背景第一段完整保留。</p><p>第二段第一句保留。第二句只限會員。</p><h3>Risk｜風險</h3><p>風險。</p>'
+  Invoke-Case 'h1-title-rejected' ('<h1>Unwanted title</h1>'+$valid) 1 | Out-Null
+  Invoke-Case 'wrong-opening-rejected' ('<p>Unwanted intro</p>'+$valid) 1 | Out-Null
   $positive=Invoke-Case 'valid-delivery' $valid 0
   if($positive.Exit -eq 0){
     $preview=[IO.File]::ReadAllText($positive.Preview,[Text.Encoding]::UTF8)
     $sql=[IO.File]::ReadAllText($positive.Sql,[Text.Encoding]::UTF8)
-    $previewPass = ($preview -match '<div id="apl-member-content"></div>') -and ($preview -match '第二段第一句保留\.\.\.') -and ($preview -notmatch '第二句只限會員')
+    $previewPass = ($preview -match '<div id="apl-member-content"></div>') -and ($preview -match '第二段第一句保留\.\.\.') -and ($preview -notmatch '第二句只限會員') -and ($preview -match '^<h3>Executive Summary｜執行摘要</h3>') -and ($preview -notmatch '(?i)<h1\b')
     Add-Result 'preview-boundary' $previewPass
-    $sqlPass = ($sql -match "SELECT 'apl-deep-scan-2099-09-22', 'deepscan', '<p>PASTE'") -and (@([regex]::Matches($sql,'apl-deep-scan-2099-09-22')).Count -eq 2)
+    $sqlPass = ($sql -match "SELECT 'apl-deep-scan-2026-10-19', 'deepscan', '<p>PASTE'") -and (@([regex]::Matches($sql,'apl-deep-scan-2026-10-19')).Count -eq 2)
     Add-Result 'sql-exact-slug' $sqlPass
   }
   Invoke-Case 'missing-executive' ($valid-replace'(?s)<h3>Executive Summary.*?(?=<h3>Market Context)','') 1|Out-Null

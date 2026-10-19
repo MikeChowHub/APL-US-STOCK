@@ -7,6 +7,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'client_article_html.ps1')
 
 function Write-AplUtf8Atomic([string]$Path,[string]$Content) {
   $parent = Split-Path -Parent $Path
@@ -55,19 +56,24 @@ if (-not [datetime]::TryParseExact($ScanDate,'yyyy-MM-dd',[Globalization.Culture
 }
 if (-not (Test-Path -LiteralPath $HtmlSourcePath -PathType Leaf)) { throw "HTML source is missing: $HtmlSourcePath" }
 $html = [IO.File]::ReadAllText((Resolve-Path -LiteralPath $HtmlSourcePath),[Text.Encoding]::UTF8)
+if($dateValue-ge[datetime]'2026-10-13'-and$html-match'(?is)<a\b|https?://|www\.'){throw 'Client full HTML must not contain source links.'}
+$styleSymbols=@()
+if(Test-AplStyledArticleDate $ScanDate){
+  Assert-AplStyledArticle -Html $html|Out-Null
+  $styleSymbols=@([regex]::Matches($html,'<strong style="font-weight:700;color:#f3f1e8;">([A-Z][A-Z0-9.]*)</strong>')|ForEach-Object{$_.Groups[1].Value}|Sort-Object -Unique)
+  $html=ConvertTo-AplArticleBody $html
+}
 $h1 = [regex]::Match($html,'(?is)<h1>.*?</h1>')
 $executive = [regex]::Match($html,'(?is)<h3>\s*Executive Summary｜執行摘要\s*</h3>(.*?)(?=<h3>)')
 $market = [regex]::Match($html,'(?is)<h3>\s*Market Context｜市場背景\s*</h3>(.*?)(?=<h3>)')
-if (-not $h1.Success) { throw 'HTML source is missing one h1 title.' }
+if($dateValue-ge[datetime]'2026-10-13'){if($html-match'(?is)<h1\b'-or$html-cnotmatch'(?s)^\s*<h3>Executive Summary｜執行摘要</h3>'){throw 'Full HTML must start with Executive Summary h3 and contain no h1 title.'}} elseif(-not $h1.Success){throw 'HTML source is missing one h1 title.'}
 if (-not $executive.Success) { throw 'HTML source is missing the Executive Summary section.' }
 if (-not $market.Success) { throw 'HTML source is missing the Market Context section.' }
 $marketParagraphs = @([regex]::Matches($market.Groups[1].Value,'(?is)<p>(.*?)</p>'))
 if ($marketParagraphs.Count -lt 2) { throw 'Market Context must contain at least two paragraphs for public preview creation.' }
 $firstMarketParagraph = $marketParagraphs[0].Value.Trim()
 $secondMarketClause = Get-AplFirstClause $marketParagraphs[1].Groups[1].Value
-$preview = @(
-  $h1.Value.Trim(),
-  '',
+$previewParts = @(
   '<h3>Executive Summary｜執行摘要</h3>',
   $executive.Groups[1].Value.Trim(),
   '',
@@ -76,8 +82,14 @@ $preview = @(
   "<p>$secondMarketClause</p>",
   '',
   '<div id="apl-member-content"></div>'
-) -join [Environment]::NewLine
+)
+if ($dateValue -lt [datetime]'2026-09-29') { $previewParts = @($h1.Value.Trim(), '') + $previewParts }
+$preview = $previewParts -join [Environment]::NewLine
 
+if(Test-AplStyledArticleDate $ScanDate){
+  $preview=ConvertTo-AplStyledArticle -Html $preview -Symbols $styleSymbols
+  Assert-AplStyledArticle -Html $preview -Symbols $styleSymbols|Out-Null
+}
 $slug = "apl-deep-scan-$ScanDate"
 $sql = @(
   'INSERT INTO articles (slug, required_product, content)',

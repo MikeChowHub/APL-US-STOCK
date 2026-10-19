@@ -172,7 +172,24 @@ try {
   $previewText = [IO.File]::ReadAllText($previewPath,[Text.Encoding]::UTF8)
   $memberSqlText = [IO.File]::ReadAllText($memberSqlPath,[Text.Encoding]::UTF8)
   if (@([regex]::Matches($previewText,'(?is)<div\s+id=["'']apl-member-content["'']\s*>\s*</div>')).Count -ne 1) { throw 'Public preview must contain exactly one empty apl-member-content boundary.' }
-  if ($previewText -cnotmatch '(?is)<h1>.+?</h1>' -or $previewText -cnotmatch '(?is)<h3>\s*Executive Summary｜執行摘要\s*</h3>' -or $previewText -cnotmatch '(?is)<h3>\s*Market Context｜市場背景\s*</h3>') { throw 'Public preview is missing its title or required opening sections.' }
+  if(Test-AplStyledArticleDate $ScanDate){
+    Assert-AplStyledArticle -Html $previewText|Out-Null
+    $previewText=ConvertTo-AplArticleBody $previewText
+  }
+  $previewScanDate = [datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+  if($previewScanDate-ge[datetime]'2026-10-13'){
+    $html=[IO.File]::ReadAllText((Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_${ScanDate}.html.txt"),[Text.Encoding]::UTF8)
+    if(Test-AplStyledArticleDate $ScanDate){
+      Assert-AplStyledArticle -Html $html|Out-Null
+      $html=ConvertTo-AplArticleBody $html
+    }
+    if($html-match'(?is)<a\b|https?://|www\.'-or$previewText-match'(?is)<a\b|https?://|www\.'){throw 'Client HTML must not contain source links.'}
+    if($html-match'(?is)<h1\b'-or$html-cnotmatch'(?s)^\s*<h3>Executive Summary｜執行摘要</h3>'){throw 'Full HTML must start with Executive Summary h3 and contain no h1 title.'}
+  }
+  if ($previewScanDate -ge [datetime]'2026-09-29') {
+    if ($previewText -match '(?is)<h1\b' -or $previewText -cnotmatch '(?s)^\s*<h3>Executive Summary｜執行摘要</h3>') { throw 'Public preview must start with Executive Summary and contain no h1 title.' }
+  } elseif ($previewText -cnotmatch '(?is)<h1>.+?</h1>') { throw 'Historical public preview is missing its h1 title.' }
+  if ($previewText -cnotmatch '(?is)<h3>\s*Executive Summary｜執行摘要\s*</h3>' -or $previewText -cnotmatch '(?is)<h3>\s*Market Context｜市場背景\s*</h3>') { throw 'Public preview is missing required opening sections.' }
   if ($previewText.IndexOf('<div id="apl-member-content"></div>',[StringComparison]::Ordinal) -lt $previewText.IndexOf('<h3>Market Context｜市場背景</h3>',[StringComparison]::Ordinal)) { throw 'Public preview member boundary is out of order.' }
   $slug = "apl-deep-scan-$ScanDate"
   $expectedSql = @(
@@ -203,7 +220,8 @@ try {
   $ctaDisclaimerRemovalFrom=[datetime]::ParseExact('2026-08-28','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   $investmentImplicationFrom=[datetime]::ParseExact('2026-08-30','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
   if($scanDateValue-ge$investmentImplicationFrom){$mandatorySections+=@([string]$headingMap.InvestmentImplication)}
-  $mandatorySections+=@([string]$headingMap.Risk,[string]$headingMap.DeepScanConclusion)
+  $mandatorySections+=@([string]$headingMap.Risk)
+  if($scanDateValue-lt[datetime]'2026-09-30'){$mandatorySections+=@([string]$headingMap.DeepScanConclusion)}
   if($scanDateValue-ge$editorialQualityFrom-and$scanDateValue-lt$ctaDisclaimerRemovalFrom){$mandatorySections+=@([string]$headingMap.CallToAction,[string]$headingMap.Disclaimer)}
   if(@($editorialAudit.MandatorySections).Count-ne$mandatorySections.Count){throw 'Editorial Completion Audit mandatory section count mismatch.'}
   for($i=0;$i-lt$mandatorySections.Count;$i++){if([string]$editorialAudit.MandatorySections[$i]-cne$mandatorySections[$i]){throw 'Editorial Completion Audit mandatory section order mismatch.'}}
