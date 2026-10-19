@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
   [Parameter(Mandatory = $true)]
   [string]$DailyScreenerCsv,
@@ -71,10 +71,22 @@ if ([string]$manifest.SchemaVersion -cne 'APL Cumulative Watchlist Manifest v1.0
 }
 if ([string]$manifest.File -cne 'APL_Quant_Cumulative_Watchlist.txt') { throw 'Watchlist manifest File is invalid.' }
 $baselineDateValue = Assert-AplScanDate ([string]$manifest.AsOfDate)
-if ($baselineDateValue -ge $scanDateValue) { throw 'Watchlist manifest AsOfDate must be earlier than the Daily Screener ScanDate.' }
+if ($baselineDateValue -gt $scanDateValue) { throw 'Watchlist manifest AsOfDate must not be later than the Daily Screener ScanDate.' }
 if ([string]$manifest.SHA256 -cnotmatch '^[0-9A-F]{64}$') { throw 'Watchlist manifest SHA256 format is invalid.' }
 if ([string]$manifest.SHA256 -cne $canonicalHashBefore) { throw 'Canonical watchlist SHA256 does not match manifest.' }
 if ([long]$manifest.Bytes -ne $canonicalBytesBefore) { throw 'Canonical watchlist bytes do not match manifest.' }
+$updatedUtcValue = [DateTimeOffset]::MinValue
+if ($manifest.UpdatedUtc -is [datetime]) {
+  $updatedUtcText = $manifest.UpdatedUtc.ToString('o', [Globalization.CultureInfo]::InvariantCulture)
+} else {
+  $updatedUtcText = [string]$manifest.UpdatedUtc
+}
+if ($updatedUtcText -cnotmatch '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$' -or -not [DateTimeOffset]::TryParse(
+  $updatedUtcText,
+  [Globalization.CultureInfo]::InvariantCulture,
+  [Globalization.DateTimeStyles]::None,
+  [ref]$updatedUtcValue
+)) { throw 'Watchlist manifest UpdatedUtc must be a valid offset-aware ISO-8601 timestamp.' }
 
 $baselineText = [System.IO.File]::ReadAllText($canonicalPath, [System.Text.Encoding]::UTF8).Trim()
 if ([string]::IsNullOrWhiteSpace($baselineText)) { throw 'Canonical watchlist is empty.' }
@@ -152,20 +164,56 @@ foreach ($symbol in $baselineSymbols) {
 $previewText = ($mergedSymbols.ToArray() -join ',') + "`r`n"
 $previewBytes = Get-PreviewBytes $previewText
 $previewSha256 = Get-ByteArraySha256 $previewBytes
+if ($baselineDateValue -eq $scanDateValue -and $previewSha256 -cne $canonicalHashBefore) {
+  throw 'Same-date Trigger A reruns are allowed only when the merged watchlist exactly matches the promoted canonical baseline.'
+}
 
 $outputPath = $null
 $outputAlreadyExisted = $false
 $writesPerformed = $false
+$canonicalUpdated = $false
+$manifestUpdated = $false
 if ($Mode -ceq 'write-output') {
   $triggerAOutputsRoot = Join-Path $outputsRoot 'trigger-a'
-  $outputDateRoot = Join-Path $triggerAOutputsRoot $scanDate
+  $outputDateRoot = $triggerAOutputsRoot
   Assert-AplNoReparsePath -Path $outputDateRoot -AllowedRoot $outputsRoot | Out-Null
   if (-not (Test-Path -LiteralPath $outputDateRoot)) {
     New-Item -ItemType Directory -Path $outputDateRoot -Force | Out-Null
   }
   $triggerAOutputsRoot = Assert-AplNoReparsePath -Path $triggerAOutputsRoot -AllowedRoot $outputsRoot -RequireDirectory
-  $outputDateRoot = Assert-AplNoReparsePath -Path $outputDateRoot -AllowedRoot $triggerAOutputsRoot -RequireDirectory
-  $outputPath = Assert-AplNoReparsePath -Path (Join-Path $outputDateRoot ("APL_Quant_Cumulative_Watchlist_{0}.txt" -f $scanDate)) -AllowedRoot $outputDateRoot
+  $outputDateRoot = Assert-AplNoReparsePath -Path $outputDateRoot -AllowedRoot $outputsRoot -RequireDirectory
+  $outputPath = Assert-AplNoReparsePath -Path (Join-Path $outputDateRoot ('APL_Quant_Cumulative_Watchlist_{0}.txt' -f $scanDate)) -AllowedRoot $outputDateRoot
+  $previousOutputPath = Assert-AplNoReparsePath -Path (Join-Path $outputDateRoot ('APL_Quant_Cumulative_Watchlist_{0}.txt' -f [string]$manifest.AsOfDate)) -AllowedRoot $outputDateRoot
+
+  # Roll yesterday's verified delivery into Archive before publishing a new date.
+  # The canonical manifest supplies the date; outputs never supply the baseline.
+  if (Test-Path -LiteralPath $previousOutputPath) {
+    $previousOutputHash = (Get-FileHash -LiteralPath $previousOutputPath -Algorithm SHA256).Hash.ToUpperInvariant()
+    if ($baselineDateValue -lt $scanDateValue) {
+      if ($previousOutputHash -cne $canonicalHashBefore) {
+        throw 'Latest Trigger A delivery does not match the verified canonical baseline; preserve it for review.'
+      }
+      $historyRoot = Join-Path $triggerAOutputsRoot 'Archive'
+      $historyDateRoot = Join-Path $historyRoot ([string]$manifest.AsOfDate)
+      Assert-AplNoReparsePath -Path $historyDateRoot -AllowedRoot $triggerAOutputsRoot | Out-Null
+      if (-not (Test-Path -LiteralPath $historyDateRoot)) {
+        New-Item -ItemType Directory -Path $historyDateRoot -Force | Out-Null
+      }
+      $historyDateRoot = Assert-AplNoReparsePath -Path $historyDateRoot -AllowedRoot $triggerAOutputsRoot -RequireDirectory
+      $historyPath = Join-Path $historyDateRoot (Split-Path $previousOutputPath -Leaf)
+      if (Test-Path -LiteralPath $historyPath) {
+        $historyPath = Assert-AplNoReparsePath -Path $historyPath -AllowedRoot $historyDateRoot -RequireFile
+        if ((Get-FileHash -LiteralPath $historyPath -Algorithm SHA256).Hash.ToUpperInvariant() -cne $previousOutputHash) {
+          throw 'Trigger A Archive conflict; existing and latest files are preserved.'
+        }
+        $historyPath = Join-Path $historyDateRoot ('APL_Quant_Cumulative_Watchlist.retained-{0}.txt' -f [guid]::NewGuid().ToString('N'))
+      }
+      Move-Item -LiteralPath $previousOutputPath -Destination $historyPath
+      if ((Get-FileHash -LiteralPath $historyPath -Algorithm SHA256).Hash.ToUpperInvariant() -cne $previousOutputHash) {
+        throw 'Archived previous Trigger A delivery failed SHA256 verification.'
+      }
+    }
+  }
 
   if (Test-Path -LiteralPath $outputPath) {
     $outputPath = Assert-AplNoReparsePath -Path $outputPath -AllowedRoot $outputDateRoot -RequireFile
@@ -192,17 +240,121 @@ if ($Mode -ceq 'write-output') {
     $outputSha256 = (Get-FileHash -LiteralPath $outputPath -Algorithm SHA256).Hash.ToUpperInvariant()
     if ($outputSha256 -cne $previewSha256) { throw 'Trigger A final output SHA256 verification failed.' }
   }
+
+  # Verified same-day reruns must preserve the canonical manifest and its timestamp.
+  if ($baselineDateValue -lt $scanDateValue) {
+  $transactionId = [guid]::NewGuid().ToString('N')
+  $stagedCanonicalPath = Join-Path $watchlistRoot ('.APL_Quant_Cumulative_Watchlist.{0}.stage' -f $transactionId)
+  $stagedManifestPath = Join-Path $watchlistRoot ('.watchlist-manifest.{0}.stage' -f $transactionId)
+  $canonicalBackupPath = Join-Path $watchlistRoot ('.APL_Quant_Cumulative_Watchlist.{0}.backup' -f $transactionId)
+  $manifestBackupPath = Join-Path $watchlistRoot ('.watchlist-manifest.{0}.backup' -f $transactionId)
+  $canonicalRollbackPath = Join-Path $watchlistRoot ('.APL_Quant_Cumulative_Watchlist.{0}.rollback' -f $transactionId)
+  $manifestRollbackPath = Join-Path $watchlistRoot ('.watchlist-manifest.{0}.rollback' -f $transactionId)
+  $canonicalReplaced = $false
+  $manifestReplaced = $false
+  $promotionCommitted = $false
+  $rollbackSucceeded = $true
+  $canonicalOriginalAttributes = [System.IO.File]::GetAttributes($canonicalPath)
+  try {
+    [System.IO.File]::WriteAllBytes($stagedCanonicalPath, $previewBytes)
+    $stagedCanonicalPath = Assert-AplNoReparsePath -Path $stagedCanonicalPath -AllowedRoot $watchlistRoot -RequireFile
+    $stagedCanonicalHash = (Get-FileHash -LiteralPath $stagedCanonicalPath -Algorithm SHA256).Hash.ToUpperInvariant()
+    if ($stagedCanonicalHash -cne $previewSha256) { throw 'Staged canonical watchlist SHA256 verification failed.' }
+
+    $updatedManifest = [ordered]@{
+      SchemaVersion = [string]$manifest.SchemaVersion
+      AsOfDate = $scanDate
+      File = 'APL_Quant_Cumulative_Watchlist.txt'
+      SymbolCount = $mergedSymbols.Count
+      Bytes = $previewBytes.Length
+      SHA256 = $previewSha256
+      SourceArchivePath = [string]$manifest.SourceArchivePath
+      UpdatedUtc = [DateTimeOffset]::UtcNow.ToString('o', [Globalization.CultureInfo]::InvariantCulture)
+    }
+    $manifestJson = ($updatedManifest | ConvertTo-Json -Depth 5) + "`n"
+    $manifestEncoding = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllBytes($stagedManifestPath, $manifestEncoding.GetBytes($manifestJson))
+    $stagedManifestPath = Assert-AplNoReparsePath -Path $stagedManifestPath -AllowedRoot $watchlistRoot -RequireFile
+    $stagedManifest = Read-AplStrictJson $stagedManifestPath $watchlistRoot
+    if ([string]$stagedManifest.SHA256 -cne $previewSha256 -or
+        [long]$stagedManifest.Bytes -ne $previewBytes.Length -or
+        [int]$stagedManifest.SymbolCount -ne $mergedSymbols.Count -or
+        [string]$stagedManifest.AsOfDate -cne $scanDate) {
+      throw 'Staged watchlist manifest does not match the canonical candidate.'
+    }
+
+    if (($canonicalOriginalAttributes -band [System.IO.FileAttributes]::ReadOnly) -ne 0) {
+      [System.IO.File]::SetAttributes($canonicalPath, ($canonicalOriginalAttributes -band (-bnot [System.IO.FileAttributes]::ReadOnly)))
+    }
+    [System.IO.File]::Replace($stagedCanonicalPath, $canonicalPath, $canonicalBackupPath, $true)
+    $canonicalReplaced = $true
+    [System.IO.File]::SetAttributes($canonicalPath, $canonicalOriginalAttributes)
+    [System.IO.File]::Replace($stagedManifestPath, $manifestPath, $manifestBackupPath, $true)
+    $manifestReplaced = $true
+
+    $promotedCanonicalHash = (Get-FileHash -LiteralPath $canonicalPath -Algorithm SHA256).Hash.ToUpperInvariant()
+    $promotedManifest = Read-AplStrictJson $manifestPath $watchlistRoot
+    if ($promotedCanonicalHash -cne $previewSha256 -or
+        [string]$promotedManifest.SHA256 -cne $promotedCanonicalHash -or
+        [long]$promotedManifest.Bytes -ne (Get-Item -LiteralPath $canonicalPath).Length -or
+        [int]$promotedManifest.SymbolCount -ne $mergedSymbols.Count -or
+        [string]$promotedManifest.AsOfDate -cne $scanDate) {
+      throw 'Promoted canonical watchlist and manifest failed final integrity verification.'
+    }
+    $promotionCommitted = $true
+    $canonicalUpdated = ($canonicalHashBefore -cne $promotedCanonicalHash)
+    $manifestUpdated = ($manifestHashBefore -cne (Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash)
+  } catch {
+    $promotionError = $_
+    $rollbackErrors = New-Object System.Collections.Generic.List[string]
+    if ($manifestReplaced -and (Test-Path -LiteralPath $manifestBackupPath)) {
+      try { [System.IO.File]::Replace($manifestBackupPath, $manifestPath, $manifestRollbackPath, $true) }
+      catch { $rollbackSucceeded = $false; [void]$rollbackErrors.Add("Manifest rollback failed: $($_.Exception.Message)") }
+    }
+    if ($canonicalReplaced -and (Test-Path -LiteralPath $canonicalBackupPath)) {
+      try {
+        $currentCanonicalAttributes = [System.IO.File]::GetAttributes($canonicalPath)
+        [System.IO.File]::SetAttributes($canonicalPath, ($currentCanonicalAttributes -band (-bnot [System.IO.FileAttributes]::ReadOnly)))
+        [System.IO.File]::Replace($canonicalBackupPath, $canonicalPath, $canonicalRollbackPath, $true)
+      } catch {
+        $rollbackSucceeded = $false
+        [void]$rollbackErrors.Add("Canonical watchlist rollback failed: $($_.Exception.Message)")
+      } finally {
+        try { if (Test-Path -LiteralPath $canonicalPath) { [System.IO.File]::SetAttributes($canonicalPath, $canonicalOriginalAttributes) } }
+        catch { $rollbackSucceeded = $false; [void]$rollbackErrors.Add("Canonical watchlist attribute restore failed: $($_.Exception.Message)") }
+      }
+    } elseif (Test-Path -LiteralPath $canonicalPath) {
+      try { [System.IO.File]::SetAttributes($canonicalPath, $canonicalOriginalAttributes) }
+      catch { $rollbackSucceeded = $false; [void]$rollbackErrors.Add("Canonical watchlist attribute restore failed: $($_.Exception.Message)") }
+    }
+    if ($rollbackErrors.Count -gt 0) {
+      throw ("Trigger A promotion failed: {0}. {1} Recovery files were preserved in {2}." -f $promotionError.Exception.Message, ($rollbackErrors -join ' '), $watchlistRoot)
+    }
+    throw $promotionError
+  } finally {
+    foreach ($temporaryFile in @($stagedCanonicalPath,$stagedManifestPath)) {
+      if ($temporaryFile -and (Test-Path -LiteralPath $temporaryFile)) { Remove-Item -LiteralPath $temporaryFile -Force }
+    }
+    if ($promotionCommitted -or $rollbackSucceeded) {
+      foreach ($temporaryFile in @($canonicalBackupPath,$manifestBackupPath,$canonicalRollbackPath,$manifestRollbackPath)) {
+        if (Test-Path -LiteralPath $temporaryFile) { Remove-Item -LiteralPath $temporaryFile -Force }
+      }
+    }
+  }
+  }
 }
 
-$canonicalHashAfter = (Get-FileHash -LiteralPath $canonicalPath -Algorithm SHA256).Hash
-$canonicalBytesAfter = (Get-Item -LiteralPath $canonicalPath).Length
-$manifestHashAfter = (Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash
-$manifestBytesAfter = (Get-Item -LiteralPath $manifestPath).Length
-if ($canonicalHashBefore -cne $canonicalHashAfter -or $canonicalBytesBefore -ne $canonicalBytesAfter) {
-  throw 'Canonical watchlist changed during dry-run.'
-}
-if ($manifestHashBefore -cne $manifestHashAfter -or $manifestBytesBefore -ne $manifestBytesAfter) {
-  throw 'Watchlist manifest changed during dry-run.'
+if ($Mode -ceq 'dry-run') {
+  $canonicalHashAfter = (Get-FileHash -LiteralPath $canonicalPath -Algorithm SHA256).Hash
+  $canonicalBytesAfter = (Get-Item -LiteralPath $canonicalPath).Length
+  $manifestHashAfter = (Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash
+  $manifestBytesAfter = (Get-Item -LiteralPath $manifestPath).Length
+  if ($canonicalHashBefore -cne $canonicalHashAfter -or $canonicalBytesBefore -ne $canonicalBytesAfter) {
+    throw 'Canonical watchlist changed during dry-run.'
+  }
+  if ($manifestHashBefore -cne $manifestHashAfter -or $manifestBytesBefore -ne $manifestBytesAfter) {
+    throw 'Watchlist manifest changed during dry-run.'
+  }
 }
 
 if ($Mode -ceq 'dry-run') {
@@ -247,7 +399,7 @@ if ($Mode -ceq 'dry-run') {
     OutputWatchlist = $outputPath
     OutputAlreadyExisted = $outputAlreadyExisted
     WritesPerformed = $writesPerformed
-    CanonicalUpdated = $false
-    ManifestUpdated = $false
+    CanonicalUpdated = $canonicalUpdated
+    ManifestUpdated = $manifestUpdated
   }
 }

@@ -1,4 +1,25 @@
-﻿# APL US Stock Trigger Rules
+# APL US Stock Trigger Rules
+
+## 每日 TradingView → Trigger A → Trigger C — 2026-10-07 起
+
+- 每日 Asia/Shanghai 下午 14:00，由本對話排程執行。
+- 連接或開啟 `https://www.tradingview.com/screener/wQ6xGU5d/`，確認為 `APL Breakout Screener`，重新整理頁面。
+- 開啟篩選器名稱選單，按 `Download results as CSV`，確認本次下載的當日 CSV。下載通知逾時時先檢查本次實際下載檔案，不能以舊檔代替。
+- 複製至 `work/trigger-a-inputs/YYYY-MM-DD/`，確認來源與副本 SHA-256 一致；依 `docs/TRIGGER_A_EXECUTION_SPECIFICATION.md` 先 dry-run，PASS 後 write-output。
+- 交付 `outputs/trigger-a/APL_Quant_Cumulative_Watchlist_YYYY-MM-DD.txt`，回報新增數、累積數及下載連結。登入、下載或驗證受阻時明確回報，不聲稱成功。
+- Trigger A PASS 後，在 `work/macro-requests/` 建立唯一名稱 `Macro6-<GUID>.request`，由使用者電腦已設定的 Quick Macros File／Added 觸發器執行 Macro6，完成 TradingView 名單上傳步驟；檔案建立不代表上傳成功，仍須核對本次已驗證 TXT 與網站名單。確認匯入名單為 `APL_Quant_Cumulative_Watchlist_YYYY-MM-DD`，日期使用當天 Asia/Shanghai 日期，並核對股票集合與本次輸出一致；上傳失敗不得沿用舊名單繼續。
+- 到 `https://www.tradingview.com/screener/TCDepfA0/`，確認為 `APL Breakout Screener Cumulative`；Macro6 執行完成後必須等待 60 秒（一分鐘），再重新載入整個累積榜網頁以更新 Watchlist 選單，然後才開啟選單確認及選擇當日名單。60 秒從巨集執行完成時計起，不從觸發檔建立時計起；若完成狀態不明，先核對本機操作或向使用者確認，不把建立觸發檔當作完成。不能只打開舊選單就判斷名單缺失。若登入失效則先完成登入。在 Filters 的 Watchlist 精確選擇剛匯入的當日 `APL_Quant_Cumulative_Watchlist_YYYY-MM-DD`（例如 2026-10-07 選 `APL_Quant_Cumulative_Watchlist_2026-10-07`）；日期每日隨當天更新，不得選無日期或前一天名單。有 OK 則確認，若選擇後自動關閉則確認篩選已生效；再 Refresh，Download results as CSV。以實際 UI 名稱為準，不把語音轉錄的「APL Content Common Native Watchlist」當成另一份名單。若匯入產生同名副本，須確認所選名單含本次股票；不能只憑名稱猜測。
+- 到 `https://www.tradingview.com/screener/YMSPlCDy/`，確認為 `Top Gainers`，Refresh，再 Download results as CSV。
+- 每日輸入應有三份真實下載 CSV：`APL Breakout Screener_YYYY-MM-DD*.csv`、`APL Breakout Screener Cumulative_YYYY-MM-DD*.csv`、`Top Gainers_YYYY-MM-DD*.csv`；TXT 另作上傳名單。保留原始下載檔，核對各自日期、欄位、內容及下載時間，複製到當日 managed intake 並驗證 SHA-256。三份未齊或累積名單未確認時，回報缺項，不標示整套完成。
+- 三份 CSV 收齊後，唯讀檢查 `F:/GitHub/APL/Global Trending Topics/KnowledgeBase/Outputs`，依有效日期資料夾選取不晚於 ScanDate 的最新一期 `canonical.md`，作新聞熱話來源。記錄來源日期、路徑及 SHA-256，複製為 Deep-Scan 當日 intake 的版本化快照並核對雜湊；不修改新聞專案，不建立兄弟專案執行依賴。若最新一期非當日，內部證據及交付狀態明示來源日期；缺失或不明確則回報，不捏造。
+- 本排程獲授權在當日 Cumulative CSV、Top Gainers CSV 及新聞快照齊備後執行 Trigger C，取代舊有每日流程只執行 Trigger A 的限制。Trigger A 本身的累積模式及禁止評分規則維持；必要 Trigger B 由 Trigger C 正式準備流程執行。
+- 依現行 `prepare_trigger_c_managed_inputs.ps1` Initialize → 本期編輯及原生素材 → Finalize，完成 Managed Input Preflight、Atomic Production、Final Production Audit 及 Archive 全部驗證。只有 `DailyProductionComplete=true` 且 `DailyProductionPublishable=true` 才回報正式報告完成；每次交付前檢查已保存的交付參考圖並交齊發布素材連結，另附三份 CSV 及累積 TXT。
+- 不交易、不對外發布、不 Git 提交推送。同日重跑及衝突依現行工具保護處理；排程步驟失敗時保留已完成檔案，回報缺項，不聲稱整套完成。
+
+## 升幅統計時段 — 2026-10-06 修訂
+
+出稿前核對 CSV 升幅欄位。現行來源 `Price change %, 1 day` 為單日數據，文章標題須為 `Top Gainers — 1 Day｜單日升幅榜`，圖卡標題須為 `Top Gainers — 1 Day`；正文、百分比標籤及 WhatsApp 必須同樣採單日口徑。不得把觀察名單、匯出日期或累積掃描期間當成升幅計算期間。若來源改為七日數據，必須先同步更新欄位驗證與標題合約，再生產，不能用單日數值寫成七日升幅。此規則取代舊有固定七日標題；已封存原件保留，10月2日及5日另交付更正版。
+
 
 This document defines the trigger system for APL US Stock production.
 
@@ -52,7 +73,7 @@ Output Updated Cumulative Watchlist
 ### Allowed Output
 
 ```text
-outputs/trigger-a/YYYY-MM-DD/APL_Quant_Cumulative_Watchlist_YYYY-MM-DD.txt
+outputs/trigger-a/APL_Quant_Cumulative_Watchlist_YYYY-MM-DD.txt
 ```
 
 ### Intake and execution order
@@ -157,7 +178,7 @@ Trigger C requires all of the following:
 ```text
 APL Breakout Screener Cumulative
 +
-Top Gainers — Past 7 Days
+Top Gainers — 1 Day
 +
 Market Context
 ```
@@ -204,3 +225,8 @@ Top Gainers alone must not trigger scoring, Watchlist update, Dashboard, Blog, o
 
 Market Context alone must not trigger scoring, Watchlist update, Dashboard, Blog, or Social package.
 ```
+
+
+### Trigger A 根目錄交付及日期檔名 — 2026-10-07
+
+交付檔名為 `APL_Quant_Cumulative_Watchlist_YYYY-MM-DD.txt`，以檔名顯示日期；最新檔直接放在 `outputs/trigger-a/`；舊日期資料夾放入 `outputs/trigger-a/Archive/YYYY-MM-DD/`。歷史帶日期檔及其追溯記錄保留；最新交付與 TradingView 上傳均使用根目錄的當日日期檔。

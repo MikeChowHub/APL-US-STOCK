@@ -129,41 +129,22 @@ try{
   Write-Json (Join-Path $StagingDate 'table-card-manifest.json') ([ordered]@{SchemaVersion='APL Table Card Manifest v1.1';ScanDate=$ScanDate;Cards=$cards})
 
   $meta=Get-Content -LiteralPath (Join-Path $triggerRoot "APL_Momentum_Leaders_Meta_$ScanDate.json") -Raw -Encoding UTF8|ConvertFrom-Json
-  $overviewValues="本期掃描 $($meta.universe) 檔公司，其中 $($meta.qualified) 檔符合基本條件，最終保留 $($meta.leaders) 檔領導股；強勢鎖定群組有 $($meta.leaderLock) 檔，另有 $($meta.removedBelowSma200Count) 檔因低於長期趨勢被剔除，觀察名單最後為 $($meta.finalWatchlistCount) 檔。領導股平均動能為 $($meta.averageMomentum)，平均可買性為 $($meta.averageBuyability)。"
   $sections=[ordered]@{
-    ([string]$headingMap.ExecutiveSummary)="本期最大變化是能源與利率門檻提高後，市場仍未全面失去領導力，但資金更重視盈利能見度、現金流及資本效率。這項轉變很重要，因為指數表面的穩定已不足以代表每家公司仍享有相同估值支持，投資週報需要先把核心結論定位為選擇性領導而非全面風險偏好。`r`n`r`n資金流向盈利路徑較清晰、需求較能驗證及資產負債表較穩健的企業，並由單純追逐敘事輪動至檢查實際商業回報。這代表配置標準正在收緊，短線價格強勢只有在中期排名、群組廣度與企業證據共同承接時，才足以構成較可靠的領導訊號。`r`n`r`n下一步要觀察成交參與、盈利指引與群組廣度能否確認這種領導結構。若資金重新收窄至少數公司，或需求未能轉化為收入與現金流，核心命題便需要下修；因此後文會依次比較短線升幅、中期領導與產業擴散。`r`n`r`n這個開場結論只界定本期研究方向，不預先假設任何板塊必然勝出；後續證據若不支持資金擴散，便要保留修正判斷的空間。"
-    ([string]$headingMap.MarketContext)="能源與利率重新定價令企業成本與估值折現率同步受壓，因此市場不再只追逐表面增長，而是比較盈利兌現、自由現金流及管理層資本配置。這項結構變化意味投資者要求更清晰的經濟回報，亦令高估值但尚未證明商業模式的公司更容易受到壓力。`r`n`r`n指數仍可由少數大型公司支撐，但個股表現與產業參與開始分化，反映資金配置正在由平均風險偏好轉向選擇具需求能見度的領導公司。當資本成本較高，收入增長、盈利質量與資產負債表之間的差異會更快反映在相對強弱，因此大市升跌不足以描述真正的資金流向。`r`n`r`n後續需要觀察企業指引、成交廣度及債息是否確認這條資金流向。若盈利與市場參與同步擴散，選擇性領導有機會形成更健康結構；若升勢只剩少數名字，則仍屬核心敘事交易，所以必須進一步使用 APL Momentum Leaders 檢驗量化領導是否存在。`r`n`r`n這條傳導鏈把宏觀壓力、企業盈利與市場領導連接起來，並說明為何後續分析要由短期價格證據逐步走向中期商業與板塊結構。"
-    ([string]$headingMap.WhyAPL)='當主要指數同時包含受壓與受惠公司，只看平均升跌會掩蓋資金真正選擇。領導股排名把相對強度、趨勢及參與度放在同一框架，讓分析可以判斷資金是否正建立新的中期方向。'
-    ([string]$headingMap.DeepScanOverview)=($overviewValues+' 整體數據顯示領導力仍然存在，但並非所有公司同步上升。數量與平均分數只用來判斷結構是否成立，下一步仍要比較短線升幅榜與中期排名是否指向相同風險取態。')
-    $blogTopGainersHeading="SPX、NDX及DJI成分股的短線資料顯示T001、T002及T003位於升幅前列，反映資金願意追逐具催化因素的公司。短線價格領導提供即時風險偏好證據，但單周升幅不能單獨證明中期趨勢，因此需要與Momentum Leaders排名對照。`r`n`r`nScope: SPX／NDX／DJI constituents. The ranking, prices and changes are point-in-time market data and may change with the market."
-    ([string]$headingMap.MomentumLeaders)="中期排名顯示領導公司同時保持相對強勢與較完整趨勢，資金不是無差別追價，而是集中於盈利路徑較清晰及資本效率較高的企業，因此短線升幅只能作為第一層證據。`r`n`r`n進一步比較商業模式後，可以看到資金選擇具有共同的盈利與需求條件。這項結果承接短線證據，並帶出個股強勢能否形成產業群組。"
-    ([string]$headingMap.SectorAnalysis)="由個股推進至群組後，可見選擇性領導並非單一偶然事件。代表公司在相近市場條件下維持強勢，說明資金正以盈利品質與催化因素組成新的結構。`r`n`r`n群組之間仍有參與度差異，因此不能把個股強勢直接等同全面板塊突破。下一步需要確認成交與市場廣度是否支持這條主線。"
-    ([string]$headingMap.InvestmentImplication)="對投資者而言，當前環境意味選股標準需要由熱門主題提升至可持續經濟利益。市場仍願意承擔成長風險，但配置取態應先理解企業能否把需求轉化為收入、盈利與現金流，而不是把任何相對強勢都視為相同質量的機會。`r`n`r`n第一層啟示來自主導資本開支方向。當企業投資仍集中於數碼基建與營運效率，具清晰客戶需求、合同能見度及交付能力的公司較容易把產業趨勢轉化為商業回報，因此資金會優先檢查基本面兌現。`r`n`r`n第二層啟示是領導結構能否由少數公司向相關服務與應用擴散。若數據管理、企業服務及必要性支出同步改善，市場廣度便反映資金流向不再只依賴單一敘事；若升勢仍集中於少數名字，則只代表核心主題交易。`r`n`r`n從 APL Momentum Leaders 的角度看，跨板塊動量框架可以用來觀察需求、盈利預期與催化劑是否同步改善，而不必預先假設領導者必然來自某一產業。當排名中的公司同時具相對強度與基本面支持，領導訊號才更有持續性。`r`n`r`n同時，投資者仍要把企業增長放回宏觀估值環境理解。若能源、利率或融資成本上升，高估值與未產生現金流的公司會先承受壓力，因此資產負債表、盈利能力與自由現金流是下一階段的重要分水嶺。`r`n`r`n整體投資啟示偏向選擇性參與而非全面追價。後續應觀察資金能否由單一主題擴散至多個盈利改善群組；若市場廣度與商業證據同步確認，領導結構便會加強，若領導重新收窄，下一節的風險條件就會成為主要檢驗訊號。"
-    ([string]$headingMap.Risk)="核心命題可能被能源成本回落、利率預期逆轉或盈利不及預期推翻，因此第一步要檢查企業收入與現金流是否支持相對強勢。若商業證據失效，短線價格便不足以證明中期領導。`r`n`r`n第二個反證是成交參與與群組廣度消失。若領導公司失去相對強度並跌回主要趨勢下方，市場便可能重新回到指數主導，而不是選擇性領導。`r`n`r`n第三個風險來自外部成本與估值門檻。若能源、利率或融資壓力再次上升，盈利尚未兌現的公司會首先受壓；然而若合同、需求與成交同步改善，核心命題才可維持。"
-    ([string]$headingMap.DeepScanConclusion)="能源利率重估確實提高市場定價門檻，但量化結果仍顯示選擇性領導存在。因此開頭問題的答案不是全面避險，而是資金轉向盈利能見度較高的公司。`r`n`r`n短線升幅與中期領導只有逐步重合，才代表新結構具有持續性。這項判斷亦要由企業需求、成本控制與現金流共同支持，不能只依賴單日價格。`r`n`r`n下一個確認訊號是成交參與與群組廣度能否持續。若兩者同步擴散，核心命題會加強；若領導重新收窄或主要公司失去趨勢，便應下修判斷。"
+    ([string]$headingMap.ExecutiveSummary)="能源與利率門檻上升，市場資金集中於具清晰盈利路徑、現金流及資本效率的企業。本期主要關注T001與T002，分別代表企業設備交付和醫療檢測需求。兩家公司維持相對強勢，而所屬業務直接連接客戶營運支出，因此是這次選擇性領導的研究重點。`r`n`r`n企業設備需求支持T001的交付方向，醫療檢測使用支持T002的服務收入，兩條主線具有不同的成本結構。這代表市場並未只圍繞單一熱門題材配置，資金同時選擇營運效率與必要性服務，並以可辨認的客戶需求支持公司地位。`r`n`r`n本期研究判斷是保留對領導公司的明確關注，並把能源、利率與個別企業風險納入同一框架。價格強勢提供資金選擇的證據，業務結構說明公司如何承接市場需求；兩者結合後，便能把本期的主要方向集中於T001與T002，而不是把所有上升公司視為同等機會。"
+    ([string]$headingMap.MarketContext)="能源與利率重新定價令企業成本與估值折現率同步受壓，因此市場資金由廣泛追價轉向具盈利能見度的公司。能源成本提高運輸、設備及日常營運開支，利率則改變資金成本與遠期盈利的估值，兩股力量共同提高投資門檻。這條傳導鏈直接影響企業的成本轉嫁能力、資產負債表和資本配置，也令不同商業模式之間的回報差異更加清晰。`r`n`r`n指數表現不能完整反映個股差異，因為受壓與受惠企業可以同時存在。設備更新及營運效率支出支持部分企業服務，醫療檢測則由使用需求與支付覆蓋推動，兩者均具有清晰的業務連接。這說明資金輪動具體反映客戶支出方向，而非只依賴宏觀升跌標籤；本期T001與T002的相對強勢，因此具備獨立研究價值。`r`n`r`n高資本成本環境偏向支持資產負債表穩健、交付能力完整和收入來源清晰的公司，同時壓縮依賴持續外部融資的企業估值。市場因而形成選擇性領導，而不是所有板塊一起擴張。這項變化連接宏觀成本、企業需求及股票相對強弱，亦解釋本期把企業設備和醫療服務放在前列的理由。設備交付和服務使用對應不同客戶支出，收入組成與毛利結構亦不同，這些差異讓資金配置具備清晰的研究依據。"
+    ([string]$headingMap.WhyAPL)='當主要指數同時包含受壓與受惠公司，只看平均升跌會掩蓋資金真正選擇。APL Momentum Leaders把相對強度、趨勢及市場參與放在同一框架，讓領導股研究集中於資金正在承接的企業。這個比較方式把短期價格變化與持續領導地位接起來，同時保留不同商業模式的差異，為本期選股提供一致的研究尺度。'
+    $blogTopGainersHeading="SPX、NDX及DJI成分股的單日資料顯示，T001、T002及T003位於升幅前列，反映資金集中於具具體需求支持的公司。T001的設備服務、T002的醫療檢測和T003的企業軟件分別連接不同客戶支出，單日價格變化呈現市場當期的配置方向，而持續領導地位則由下節的中期排名提供比較。`r`n`r`nScope: SPX／NDX／DJI constituents."
+    ([string]$headingMap.MomentumLeaders)="中期排名顯示T001與T002同時保持相對強勢與完整趨勢，資金集中於設備交付和檢測服務，因此本期主要關注兩家公司的需求定位。T003提供軟件收入的延伸比較，三家公司分別承接企業效率和必要性服務支出，形成具體的領導結構。`r`n`r`n這個結果說明領導力跨越不同商業模式，設備收入取決於交付節奏，檢測服務取決於使用與支付，軟件則連接續約與客戶擴張。比較這些差異後，T001與T002仍是本期清晰的主要方向，T003則補充企業服務的研究範圍。"
+    ([string]$headingMap.SectorAnalysis)="由個股推進至群組後，可見選擇性領導涵蓋設備、醫療及軟件服務。代表公司在相近市場條件下維持強勢，說明資金以具體需求和業務定位組成新的配置結構。`r`n`r`n群組之間的收入來源及成本轉嫁能力不同，因此板塊比較應保留商業模式差異。設備交付、檢測使用及軟件續約共同呈現必要性支出的多條路徑，支持本期對市場領導結構的判斷。"
+    ([string]$headingMap.InvestmentImplication)="對投資者而言，當前環境提高了選股標準，也令本期T001與T002的研究方向更清晰。設備交付和醫療檢測均連到具體客戶需求，因此資金配置具有可辨認的商業基礎。兩家公司所屬業務不同，能夠呈現效率提升與必要性服務的獨立需求，這是本期選擇性參與的主要理由。`r`n`r`n企業資本開支在高成本環境下更重視營運效率，所以具交付能力和服務支援的設備企業具有明確位置。T001的研究價值在於承接這類需求，而價格與中期排名共同反映市場對其定位。設備支出有交付節奏與客戶集中風險，這些因素決定公司承受宏觀壓力的方式，也提供同業比較的實際尺度。`r`n`r`n醫療檢測的需求結構則由臨床使用、檢測服務及支付條件構成，與設備資本開支不同。T002提供必要性服務的研究方向，因此本期同時關注醫療服務和企業效率。檢測使用帶來業務機會，而支付覆蓋與成本管理構成主要風險；這種收入與風險配對能更具體地說明公司地位。`r`n`r`nAPL Momentum Leaders顯示的相對強勢，把企業需求與市場資金連接起來。這代表排名具備選股上的比較價值，能夠協助辨認資金集中方向，同時讓商業模式差異維持清晰。T003的企業軟件服務則補充續約與客戶擴張的路徑，讓本期研究覆蓋設備、醫療及應用支出。`r`n`r`n能源、利率及融資成本仍會影響企業估值，但影響程度取決於公司現金流、負債和成本轉嫁能力。因此本期配置判斷集中於收入來源清晰且維持相對強勢的公司，並把外部成本與個別業務風險放在同一比較框架。這個方式保留成長機會，也讓風險來源具體可辨。`r`n`r`n整體投資啟示是重點關注T001與T002，並以T003延伸企業服務方向。若能源與利率壓力加大，估值敏感度和資金需要便是主要風險訊號；設備、檢測及軟件的需求連接則繼續構成本期研究依據。市場領導力存在於具體公司，這項判斷將資金流向、商業定位與風險結合，提供清晰的投資研究方向。"
+    ([string]$headingMap.Risk)='能源利率重估提高企業成本與估值壓力，設備交付、醫療支付及軟件續約則構成個別業務風險。本期主要關注T001與T002，並以T003作企業服務延伸；市場環境推動資金選擇，但不同公司的受惠程度仍取決於業務定位及基本面差異。'
   }
-  $sectionMinimum=[ordered]@{}
-  $sectionMinimum[[string]$headingMap.ExecutiveSummary]=300
-  $sectionMinimum[[string]$headingMap.MarketContext]=420
-  $sectionMinimum[[string]$headingMap.WhyAPL]=120
-  if([datetime]$ScanDate-lt[datetime]'2026-09-08'){$sectionMinimum[[string]$headingMap.DeepScanOverview]=120}else{$sections.Remove([string]$headingMap.DeepScanOverview)}
-  $sectionMinimum[[string]$headingMap.TopGainers]=150
-  $sectionMinimum[[string]$headingMap.MomentumLeaders]=180
-  $sectionMinimum[[string]$headingMap.SectorAnalysis]=120
-  $sectionMinimum[[string]$headingMap.InvestmentImplication]=650
-  $sectionMinimum[[string]$headingMap.Risk]=300
-  $sectionMinimum[[string]$headingMap.DeepScanConclusion]=300
-  if([datetime]$ScanDate-ge[datetime]'2026-09-30'){
-    $sections.Remove([string]$headingMap.DeepScanConclusion)
-    $sectionMinimum.Remove([string]$headingMap.DeepScanConclusion)
-    $sectionMinimum[[string]$headingMap.Risk]=80
-    $sections[[string]$headingMap.Risk]='能源利率重估會提高企業成本與估值壓力，這是本期選擇性領導的主要風險。需求穩定的公司仍可維持相對優勢，但不同業務的成本轉嫁能力及資金需要不同，因此本期重點關注具持續動能的領導公司，同時兼顧個別基本面差異。'
-  }
-  $supportingSentence='這項證據必須與上一節的判斷連接，才能辨認資金選擇是否具有持續性，並為下一個分析問題建立可驗證的方向。'
-  foreach($heading in $sectionMinimum.Keys){while(([string]$sections[$heading]).Length-lt([int]$sectionMinimum[$heading]+20)){$sections[$heading]=([string]$sections[$heading]+' '+$supportingSentence)}}
   $title="APL Deep-Scan｜美股深海雷達: 市場領導分析 | $ScanDate"
   $markdown=New-Object Collections.Generic.List[string]
   $html=New-Object Collections.Generic.List[string]
+  $issueUrl="https://www.goinvestingnow.com/blog/apl-deep-scan-$ScanDate";$trialUrl='https://www.goinvestingnow.com/ExploreCourses'
+  $seoImagePath=(Join-Path $ProjectRoot "outputs/$ScanDate/production-package/APL_Momentum_Leaders_Blog_SEO_${ScanDate}_1280x720.png").Replace('\','/')
+  $markdown.Add('## SEO and Sharing');$markdown.Add('');$markdown.Add("Page title：$title");$markdown.Add('');$markdown.Add('Page description：能源與利率提高選股門檻，T001與T002領航設備交付及醫療檢測需求。');$markdown.Add('');$markdown.Add('Sharing summary：本期主要關注T001與T002，並以T003延伸企業服務方向。');$markdown.Add('');$markdown.Add("Canonical URL：$issueUrl");$markdown.Add('');$markdown.Add("SEO 圖：[SEO 圖](<$seoImagePath>)");$markdown.Add('')
   $markdown.Add("# $title");$markdown.Add('')
   if([datetime]$ScanDate-lt[datetime]'2026-10-13'){$html.Add("<h1>$title</h1>")}
   foreach($heading in $sections.Keys){
@@ -175,12 +156,11 @@ try{
       $html.Add("<p>$($paragraphs[$paragraphIndex])</p>")
     }
   }
-  $markdown.Add('## SEO and Sharing');$markdown.Add('');$markdown.Add("詳細文章：https://www.goinvestingnow.com/blog/apl-deep-scan-$ScanDate");$markdown.Add('');$markdown.Add("Page title：$title");$markdown.Add('');$markdown.Add('Page description：APL Momentum Leaders追蹤市場領導結構、盈利能見度與資本效率。');$markdown.Add('');$markdown.Add('Sharing summary：市場選股門檻提高，資金轉向具盈利與現金流證據的領導公司。');$markdown.Add('')
   $package=Join-Path $StagingDate 'publishing\production-package'
   Write-Utf8 (Join-Path $package "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md") ($markdown-join[Environment]::NewLine)
   Write-Utf8 (Join-Path $package "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.html.txt") ($html-join[Environment]::NewLine)
   $issueUrl="https://www.goinvestingnow.com/blog/apl-deep-scan-$ScanDate";$trialUrl='https://www.goinvestingnow.com/ExploreCourses'
-  Write-Utf8 (Join-Path $package "WhatsApp_$ScanDate.md") ("**APL Deep-Scan 美股深海雷達**`n**能源與利率門檻提高 | $ScanDate**`n`n能源利率重估提高估值與盈利門檻，市場資金由全面追逐轉向選擇性配置。`n`nAPL Deep-Scan 觀察近期美股領導結構，領導股仍需盈利與成交確認。投資者應關注能源成本及企業現金流，下一步觀察領導廣度能否擴散。`n`n今日文章會分析這些需求線索能否轉成持續收入。`n`n研究摘要，不構成投資建議。`n`n📖 今日完整研究：`n$issueUrl`n`n🐧 APL 三日免費體驗｜工具・分析・課程`n$trialUrl")
+  Write-Utf8 (Join-Path $package "WhatsApp_$ScanDate.md") ("🌊APL Deep-Scan 美股深海雷達`n`n能源利率重估提高估值與企業成本門檻，市場資金集中於具體需求及盈利定位較清晰的公司。本期APL Deep-Scan主要關注T001與T002，分別代表企業設備交付與醫療檢測服務。`n`nT001承接企業營運效率需求，T002連接檢測使用及支付覆蓋，兩家公司維持相對強勢，也呈現不同的收入來源。T003提供企業軟件服務的延伸比較，讓本期研究兼顧設備、醫療與應用支出。投資者可由這三條方向理解資金配置與商業定位。`n`n主要風險包括能源與利率壓力、設備交付節奏、醫療支付條件及客戶續約。這些風險對不同公司的影響各異，因此本期保留對T001與T002的主要關注，同時比較各自基本面。完整文章載有公司理據與板塊分析。`n`n研究摘要，不構成投資建議。`n`n📖 今日完整研究：`n$issueUrl`n`n🐧 APL 三日免費體驗｜工具・分析・課程`n$trialUrl")
   $companyLines=New-Object Collections.Generic.List[string]
   $companyLines.Add('# Top 30 Company Business Analysis')
   foreach($row in @($ranking|Select-Object -First 30)){$companyLines.Add("## $($row.Symbol) $($row.Name)");$companyLines.Add('公司核心業務涵蓋企業營運、市場服務及客戶解決方案，收入增長需要由產品需求、執行能力、成本控制與現金流共同支持。本期排名只代表相對市場領導，仍需持續檢查商業模式、盈利能見度與主要風險。')}

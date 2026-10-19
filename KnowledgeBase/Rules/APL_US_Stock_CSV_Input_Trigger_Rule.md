@@ -1,4 +1,4 @@
-# APL US Stock CSV Input Trigger Rule
+﻿# APL US Stock CSV Input Trigger Rule
 
 This Rule defines how Codex must classify an uploaded CSV and route it into the existing APL US Stock Production Workflow.
 
@@ -72,7 +72,7 @@ APL Breakout Screener Cumulative_YYYY-MM-DD_<suffix>.csv
 |---|---|---|---|
 | `APL Breakout Screener_YYYY-MM-DD.csv` or accepted suffixed form | Daily Breakout Screener | Enter Trigger A — Watchlist Update Mode | No SMA200 removal, scoring, ranking, Top 30, Dashboard, Social Card, Blog, Cover, SEO, or Table Cards |
 | `APL Breakout Screener Cumulative_YYYY-MM-DD.csv` or accepted suffixed form | Cumulative Breakout Screener | Enter Trigger B — Deep-Scan Research Mode | No formal Blog package unless all Trigger C inputs are present |
-| Cumulative Breakout Screener + recent 7-day Top Gainers + Market Context | Complete Trigger C input set | Enter Trigger C — APL Momentum Leaders Blog Production Mode | No bypass of Trigger B validation or production guards |
+| Cumulative Breakout Screener + single-day Top Gainers + Market Context | Complete Trigger C input set | Enter Trigger C — APL Momentum Leaders Blog Production Mode | No bypass of Trigger B validation or production guards |
 | Top Gainers only | Supporting input only | Record and validate the input; wait for the remaining Trigger C inputs | No scoring, Watchlist update, Dashboard, Blog, or Social package |
 | Market Context only | Supporting input only | Record and validate the input; wait for the remaining Trigger C inputs | No scoring, Watchlist update, Dashboard, Blog, or Social package |
 | Unknown CSV filename | Unclassified input | Inspect non-destructively, then ask a focused classification question | Do not infer Trigger A, B, or C |
@@ -98,7 +98,7 @@ Repository intake copy
 The dry-run must pass before any output write. The only Trigger A output is written to:
 
 ```text
-outputs/trigger-a/YYYY-MM-DD/APL_Quant_Cumulative_Watchlist_YYYY-MM-DD.txt
+outputs/trigger-a/APL_Quant_Cumulative_Watchlist_YYYY-MM-DD.txt
 ```
 
 Trigger A must never create `outputs/YYYY-MM-DD/`, which is reserved for the complete atomic Production package. The intake copy is an input fixture, not a rule source, and must not be used to bypass the canonical repository-managed watchlist baseline.
@@ -137,7 +137,7 @@ Codex must use the existing implementation. It must not recreate or modify scori
 
 ## 7. Trigger C Cover workflow
 
-When Cumulative Breakout Screener, recent 7-day Top Gainers and Market Context are all present, Codex must not treat `CoverBackgroundPath` or `SeoBackgroundPath` as a background-design task for the user. The default action is:
+When Cumulative Breakout Screener, single-day Top Gainers and Market Context are all present, Codex must not treat `CoverBackgroundPath` or `SeoBackgroundPath` as a background-design task for the user. The default action is:
 
 1. derive the formal Cover Brief from the approved market narrative and research conclusion;
 2. validate the Cover Brief against `tools/cover_image_brief.schema.json`;

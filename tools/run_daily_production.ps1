@@ -664,4 +664,11 @@ try {
   exit 1
 }
 
-[pscustomobject]@{ RunId=$runId; Status=$status; DailyProductionComplete=($status -eq 'PASS'); DailyProductionPublishable=($status -eq 'PASS'); AuthoritativeState=$dailyStatePath; ProjectRoot=$ProjectRoot; OutputRoot=$publishRoot; DateOutput=$finalDateOut; FinalProductionAudit=$finalAuditPath; ArchiveDestination=$archiveDestination; ArchiveManifest=$archiveManifestPath; ArchiveIndex=$archiveIndexPath; PipelineLog=$pipelineLog; PipelineTrace=$tracePath; ArtifactCount=$publishedArtifacts.Count }
+# Optional metadata-only notification; production has already reached PASS.
+try {
+  . (Join-Path $PSScriptRoot 'article-ready-notification.ps1')
+  $articleReadyEvent = Invoke-AplArticleReadyHandoff -Project DeepScan -ScanDate $ScanDate -ProjectRoot $ProjectRoot -CompletionStatePath $dailyStatePath -RegressionTest:$RegressionTest
+  Write-Output ('ARTICLE_READY_NOTIFICATION ' + ($articleReadyEvent | ConvertTo-Json -Compress -Depth 6))
+} catch { $articleReadyEvent=[pscustomobject]@{EventId=$null;EventPath=$null;DeliveryActionRequired=$false;DeliveryStatus='PENDING';DeliveryReason='HANDOFF_ERROR'}; Write-Output ('ARTICLE_READY_HANDOFF '+($articleReadyEvent|ConvertTo-Json -Compress)) }
+
+[pscustomobject]@{ RunId=$runId; Status=$status; DailyProductionComplete=($status -eq 'PASS'); DailyProductionPublishable=($status -eq 'PASS'); AuthoritativeState=$dailyStatePath; ProjectRoot=$ProjectRoot; OutputRoot=$publishRoot; DateOutput=$finalDateOut; FinalProductionAudit=$finalAuditPath; ArchiveDestination=$archiveDestination; ArchiveManifest=$archiveManifestPath; ArchiveIndex=$archiveIndexPath; PipelineLog=$pipelineLog; PipelineTrace=$tracePath; ArtifactCount=$publishedArtifacts.Count; EventId=$articleReadyEvent.EventId; EventPath=$articleReadyEvent.EventPath; DeliveryActionRequired=$articleReadyEvent.DeliveryActionRequired; DeliveryStatus=$articleReadyEvent.DeliveryStatus; DeliveryReason=$articleReadyEvent.DeliveryReason }

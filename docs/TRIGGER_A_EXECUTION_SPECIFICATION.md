@@ -57,7 +57,7 @@ Assets/ReferenceData/Watchlists/watchlist-manifest.json
 Before merge, the implementation must validate at least:
 
 - `SchemaVersion` is supported;
-- `AsOfDate` is a strict real calendar date earlier than `ScanDate`;
+- `AsOfDate` is a strict real calendar date no later than `ScanDate`; when it equals `ScanDate`, the merged candidate must exactly match the verified canonical bytes so an identical same-day rerun is idempotent;
 - `File` resolves exactly to `APL_Quant_Cumulative_Watchlist.txt` inside the Watchlists directory;
 - `SymbolCount` equals the parsed baseline count;
 - `Bytes` equals the baseline file size;
@@ -119,21 +119,21 @@ Trigger A must not perform or invoke:
 
 ## 5. Output
 
-### 5.1 Dated execution result
+### 5.1 Latest delivery and historical Archive
 
 The daily result is:
 
 ```text
-outputs/trigger-a/<ScanDate>/APL_Quant_Cumulative_Watchlist_<ScanDate>.txt
+outputs/trigger-a/APL_Quant_Cumulative_Watchlist_YYYY-MM-DD.txt
 ```
 
-The implementation must use no-overwrite behavior. An existing dated output may only be treated as an idempotent rerun after exact bytes and SHA-256 comparison; conflicting content must fail.
+The latest delivery lives directly under outputs/trigger-a. Before publishing a later date, verify the existing latest bytes against the canonical baseline and move that delivery into outputs/trigger-a/Archive/<BaselineAsOfDate>/. Same-day reruns require exact bytes and SHA-256 equality. Conflicting content fails without overwriting either file; preserve duplicate archive files under unique retained names. Historical dated folders belong under this local Archive. Never use these outputs as the runtime baseline.
 
 `outputs/` is an output destination only. A later Trigger A run must never read it as the previous baseline.
 
 ### 5.2 Canonical baseline promotion
 
-After the dated result passes count, format, bytes, SHA-256, preservation, and deduplication checks, the same verified bytes become the next repository-managed canonical baseline:
+After the latest result passes count, format, bytes, SHA-256, preservation, and deduplication checks, the same verified bytes become the next repository-managed canonical baseline:
 
 ```text
 Assets/ReferenceData/Watchlists/APL_Quant_Cumulative_Watchlist.txt
@@ -155,6 +155,8 @@ The adjacent `watchlist-manifest.json` must be updated to describe the promoted 
 - `UpdatedUtc`: finalization time in UTC ISO-8601 format.
 
 Manifest publication occurs only after the canonical candidate bytes have passed verification. Completion is valid only when re-reading the final baseline and manifest reproduces matching file, count, bytes, and SHA-256 values.
+
+For an identical same-day rerun after promotion, retain the canonical watchlist bytes and verify that the latest output is byte-identical. A same-day input that would change the promoted canonical watchlist must fail rather than silently accumulate a conflicting second daily export.
 
 ## 6. Cross-PC requirements
 

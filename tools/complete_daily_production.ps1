@@ -22,7 +22,7 @@ $scanDateValue=[datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.Cult
 $editorialQualityFrom=[datetime]::ParseExact('2026-08-10','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
 $ctaDisclaimerRemovalFrom=[datetime]::ParseExact('2026-08-28','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
 $investmentImplicationFrom=[datetime]::ParseExact('2026-08-30','yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
-$expectedEditorialSectionCount=if($scanDateValue-ge[datetime]'2026-09-08'){9}elseif($scanDateValue-ge$investmentImplicationFrom){10}elseif($scanDateValue-ge$editorialQualityFrom-and$scanDateValue-lt$ctaDisclaimerRemovalFrom){11}else{9}
+$expectedEditorialSectionCount=if($scanDateValue-ge[datetime]'2026-09-30'){8}elseif($scanDateValue-ge[datetime]'2026-09-08'){9}elseif($scanDateValue-ge$investmentImplicationFrom){10}elseif($scanDateValue-ge$editorialQualityFrom-and$scanDateValue-lt$ctaDisclaimerRemovalFrom){11}else{9}
 $allowedRoot = if ($RegressionTest) { Join-Path $ProjectRoot 'tmp' } else { $ProjectRoot }
 $FinalAuditPath = Assert-AplNoReparsePath -Path $FinalAuditPath -AllowedRoot $allowedRoot -RequireFile
 $ArchiveManifestPath = Assert-AplNoReparsePath -Path $ArchiveManifestPath -AllowedRoot $allowedRoot -RequireFile
@@ -34,10 +34,24 @@ $PipelineLog = Assert-AplNoReparsePath -Path $PipelineLog -AllowedRoot $allowedR
 $PipelineTrace = Assert-AplNoReparsePath -Path $PipelineTrace -AllowedRoot $allowedRoot -RequireFile
 $StatePath = Assert-AplNoReparsePath -Path $StatePath -AllowedRoot $allowedRoot
 
+function Get-CompletionHandoff {
+  try {
+    . (Join-Path $PSScriptRoot 'article-ready-notification.ps1')
+    Invoke-AplArticleReadyHandoff -Project DeepScan -ScanDate $ScanDate -ProjectRoot $ProjectRoot -CompletionStatePath $StatePath -RegressionTest:$RegressionTest
+  } catch { [pscustomobject]@{EventId=$null;EventPath=$null;DeliveryActionRequired=$false;DeliveryStatus='PENDING';DeliveryReason='HANDOFF_ERROR'} }
+}
+function Write-CompletionOutcome([bool]$Reused) {
+  $outcome=[ordered]@{Status='PASS';DailyProductionComplete=$true;DailyProductionPublishable=$true;Reused=$Reused;StatePath=$StatePath}
+  $handoff=Get-CompletionHandoff
+  foreach($property in $handoff.PSObject.Properties){$outcome[$property.Name]=$property.Value}
+  Write-Output ('ARTICLE_READY_HANDOFF '+($handoff|ConvertTo-Json -Compress -Depth 6))
+  [pscustomobject]$outcome
+}
+
 if (Test-Path -LiteralPath $StatePath -PathType Leaf) {
   $existing = Read-AplStrictJson $StatePath $allowedRoot
   if ([string]$existing.SchemaVersion -cne 'APL Daily Production State v1.0' -or [string]$existing.ScanDate -cne $ScanDate -or [string]$existing.Status -cne 'PASS' -or $existing.DailyProductionComplete -ne $true -or $existing.DailyProductionPublishable -ne $true) { throw 'Existing daily production state is invalid.' }
-  [pscustomobject]@{ Status='PASS'; DailyProductionComplete=$true; DailyProductionPublishable=$true; Reused=$true; StatePath=$StatePath }
+  Write-CompletionOutcome $true
   exit 0
 }
 
@@ -70,4 +84,4 @@ $state = [ordered]@{
   PipelineTrace = $PipelineTrace
 }
 Write-AplUtf8Atomic $StatePath ($state | ConvertTo-Json -Depth 6) $allowedRoot | Out-Null
-[pscustomobject]@{ Status='PASS'; DailyProductionComplete=$true; DailyProductionPublishable=$true; Reused=$false; StatePath=$StatePath }
+Write-CompletionOutcome $false

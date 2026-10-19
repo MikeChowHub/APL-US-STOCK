@@ -23,3 +23,6 @@ desktop.ini
 # Local/legacy non-production tools
 tools/_chinese_test.ps1
 tools/create_deep_scan_radar.ps1
+
+# Machine-local notification activation; never shared through Git
+tools/article-ready-notification.local.json

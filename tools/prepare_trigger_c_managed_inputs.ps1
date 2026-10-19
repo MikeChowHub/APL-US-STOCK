@@ -204,6 +204,7 @@ if([string]$state.SchemaVersion-cne'APL Trigger C Preparation v1.0'-or[string]$s
 foreach($record in @($state.SourceEvidence)){Assert-Record $record $stagingDate|Out-Null}
 if(Test-AplStyledArticleDate $ScanDate){
   $htmlPath=Join-Path $stagingDate ([string]$state.WorkOrder.PublishingArtifacts.BlogHtmlSource)
+  $htmlPath=Assert-AplNoReparsePath -Path $htmlPath -AllowedRoot $stagingDate -RequireFile
   $symbols=@(Get-AplArticleSymbols (Join-Path $stagingDate "trigger-b/$ScanDate/APL_Momentum_Score_Full_Ranking_$ScanDate.csv") (Join-Path $stagingDate 'top-gainers.csv'))
   $raw=[IO.File]::ReadAllText($htmlPath,[Text.Encoding]::UTF8)
   $styled=ConvertTo-AplStyledArticle -Html $raw -Symbols $symbols

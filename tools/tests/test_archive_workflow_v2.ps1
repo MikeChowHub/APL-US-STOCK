@@ -50,11 +50,20 @@ function New-ProductionFixture([string]$Root) {
   Write-Text (Join-Path $packageRoot "APL_Momentum_Leaders_Blog_Cover_${ScanDate}_1080x1350.png") 'cover'
   Write-Text (Join-Path $packageRoot "APL_Momentum_Leaders_Blog_SEO_${ScanDate}_1280x720.png") 'seo'
   Write-Text (Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md") '# Formal Blog'
-  Write-Text (Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.html.txt") '<h1>Formal Blog</h1>'
-  Write-Text (Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.public-preview.html.txt") '<h3>Executive Summary｜執行摘要</h3><p>摘要內容。</p><h3>Market Context｜市場背景</h3><p>市場背景。</p><p>第二段...</p><div id="apl-member-content"></div>'
-  $slug="apl-deep-scan-$ScanDate"
-  $memberSql=@('INSERT INTO articles (slug, required_product, content)',"SELECT '$slug', 'deepscan', '<p>PASTE'",'WHERE NOT EXISTS (',"  SELECT 1 FROM articles WHERE slug = '$slug'",');')-join[Environment]::NewLine
-  Write-Text (Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.article.sql") $memberSql
+  $htmlPath = Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.html.txt"
+  $fixtureHtml = @(
+    '<h3>Executive Summary｜執行摘要</h3>',
+    '<p>本期重點關注 TEST，企業安全需求支持研究方向。</p>',
+    '<h3>Market Context｜市場背景</h3>',
+    '<p>市場資金流向企業安全服務，成本變動影響產業配置。</p>',
+    '<p>利率走勢影響估值承受力。此句保留在會員全文。</p>',
+    '<h3>Risk｜風險</h3>',
+    '<p>企業預算與競爭是主要風險，TEST 的安全服務需求支持本期判斷。</p>'
+  ) -join [Environment]::NewLine
+  Write-Text $htmlPath (ConvertTo-AplStyledArticle -Html $fixtureHtml -Symbols @('TEST'))
+  & (Join-Path $ProjectRoot 'tools\create_blog_delivery_supplements.ps1') -HtmlSourcePath $htmlPath -ScanDate $ScanDate `
+    -PublicPreviewPath (Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.public-preview.html.txt") `
+    -MemberSqlPath (Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.article.sql") | Out-Null
   Write-Text (Join-Path $packageRoot "table-card-log\APL_Momentum_Leaders_Top_30_Company_Business_Analysis_$ScanDate.md") '# Company analysis'
   $editorialArtifacts=@(
     @('blog-markdown',(Join-Path $packageRoot "APL_Momentum_Leaders_Market_Analysis_Blog_$ScanDate.md")),
@@ -80,7 +89,7 @@ function New-ProductionFixture([string]$Root) {
   $semanticFixtures = @{
     ExecutiveSummary = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"ExecutiveSummary","Title":"Executive","Rows":[{"observation":"市場結構仍然集中","meaning":"資金配置保持選擇性，領導層未全面擴散"},{"observation":"資金流向需要確認","meaning":"成交參與若未擴散，現有領導結構仍須接受檢驗"},{"observation":"能源與 AI 回報是關鍵變數","meaning":"兩者將決定短線反彈能否轉化為中期領導"}]}'
     TopLeaders = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"TopLeaders","Title":"Leaders","Rows":[{"rank":"#1","symbol":"TEST","companyName":"Test Company","coreBusiness":"Test business","mainDriver":"企業客戶訂單與交付需求","compositeScore":100}]}'
-    TopGainers = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"TopGainers","Title":"Top Gainers — Past 7 Days","Rows":[{"symbol":"TEST","companyName":"Test Company","sectorTheme":"Technology","changePct":"+10.00%"}]}'
+    TopGainers = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"TopGainers","Title":"Top Gainers — 1 Day","Rows":[{"symbol":"TEST","companyName":"Test Company","sectorTheme":"Technology","changePct":"+10.00%"}]}'
     SectorStructure = '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"SectorStructure","Title":"Structure","Rows":[{"theme":"Technology","count":1,"direction":"科技基礎設施保持選擇性領導","representativeSymbols":"TEST"}]}'
   }
   $cards = New-Object System.Collections.Generic.List[object]
