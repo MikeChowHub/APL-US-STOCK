@@ -56,7 +56,7 @@ The four required cards are companion publishing assets, not four alternate summ
 
 | CardType | Single reasoning responsibility |
 |---|---|
-| `ExecutiveSummary` | Select the issue's three to five highest-priority observations and explain why they matter |
+| `ExecutiveSummary` | In three to five rows, connect the concrete market background to its investment meaning and the issue's selected companies |
 | `TopLeaders` | Show representative medium-term company leadership from the current Trigger B ranking |
 | `TopGainers` | Show representative short-term price leadership from the current Top Gainers source |
 | `SectorStructure` | Determine whether current Top 30 representatives form meaningful groups |
@@ -130,20 +130,29 @@ Meaning
 
 ### ExecutiveSummary writing example
 
-Use a short Chinese observation that gives the figure a reader-facing meaning, followed by a Chinese explanation:
+依 Visual Rules 的 2026-10-27 修訂，通常使用四行，先交代市場變化及意義，再交代本期公司選擇。下例只示範寫法；往後必須按當期綁定新聞及公司研究重寫：
 
 ```text
-Observation：數據現狀：全市場 604 檔，經篩選後合格者 314 檔，最終 Top 30 僅佔 9.5%，顯示資金集中度極高。
-Meaning：這個集中度表示指數反彈未等於全面擴散，後續要看領導股能否由少數個股擴展至更多產業群組。
+Observation：AI業績周聚焦資本投入與企業預算
+Meaning：區分基建投資與持續使用的企業服務
+
+Observation：AI代理供應鏈風險凸顯權限治理需要
+Meaning：平台防護、開發與身份管理成為研究重點
+
+Observation：CRWD與GTLB為本期主要關注
+Meaning：分別對應企業防護與軟件開發交付
+
+Observation：NTRA延伸精準檢測方向
+Meaning：臨床需求提供不同於IT支出的業務來源
 ```
 
-Do not start the observation with raw labels such as `Universe`, `qualified`, `average Momentum` or `final watchlist`. Explain `Leader Lock` and `Buyability` in `Meaning` when those terms are material to the issue.
+不得報讀 Universe、qualified、平均模型分數、final watchlist 或 Leader Lock；不可用漏斗數字推定資金集中或淨流入。每行以客戶需要理解的背景、影響及選擇為主。交付前核對三個問題：市場變化是否具體？對選股的意義是否清楚？主要關注公司是否有研究支持？
 
 ### Example Content Logic
 
 ```text
-Observation: Healthcare / Bio dominates Momentum Leaders
-Meaning: capital is rotating beyond a single AI trade
+Observation：主要關注公司涵蓋企業防護與精準檢測
+Meaning：客戶預算及臨床支付形成不同需求來源
 ```
 
 ---

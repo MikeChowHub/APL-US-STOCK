@@ -72,6 +72,8 @@ The package manifest is generated only after renderers and publishing import fin
 
 All four required cards use `APL Table Card Input v1.1`. Rows are keyed objects rather than positional arrays. The shared validator/renderer mapping is authoritative and Final Production Audit revalidates each input path and SHA before Archive.
 
+自 2026-10-27 摘要卡更正版及往後新稿起，`ExecutiveSummary` 必須依 Visual Rules 的「市場背景與選股連結」要求，於三至五行內呈現具體市場背景、傳導意義與本期主要關注公司，通常採四行。編輯準備時先完成市場背景及影響，再選公司與需求延伸；交付前核對與綁定 Market Context 及文章一致，缺少背景或只有榜單重述須退回修正。這是必要人工語義審稿；現有機械驗證通過不代表已完成該項審稿。歷史正式輸出及 Archive 不回寫，更正版另存。
+
 For `TopLeaders`, `rank` and `compositeScore` already state position and quantitative strength. `mainDriver` must instead give a concise, company-specific business demand or operating variable that a reader can investigate (for example customer usage and renewals, test utilisation and reimbursement, orders and delivery, or product adoption and licensing). It is an evidence/verification lens, not an invented confirmed catalyst or return forecast. Repeating rank, score, relative-strength status, or the same generic phrase for several companies fails the semantic gate. `coreBusiness` says what the company does; `mainDriver` says what demand or commercial conversion matters now. The card may not publish if any required driver lacks that distinction.
 
 ## Production completion response

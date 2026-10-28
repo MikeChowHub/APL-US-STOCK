@@ -321,12 +321,21 @@ It is not a Dashboard, not a full research export, and not a cover.
 
 Each required Table Card has one non-interchangeable role:
 
-- `ExecutiveSummary`: three to five issue-specific priority observations and their implications;
+- `ExecutiveSummary`: three to five issue-specific priority observations linking the market background, its investment meaning and the selected companies;
 - `TopLeaders`: representative medium-term leaders bound to the current Trigger B ranking;
 - `TopGainers`: short-term price leadership bound to the current Top Gainers source;
 - `SectorStructure`: the group structure formed by current Top 30 representatives.
 
 The cards may share evidence where analytically necessary, but they must not repeat the same rows or conclusion without adding a different role-specific meaning.
+
+### Executive Summary 市場背景與選股連結 — 2026-10-27 修訂
+
+- 摘要卡必須獨立回答「市場發生甚麼 → 對選股有甚麼意義 → 本期主要關注誰」。不能只有公司名單、排名或其他榜單摘要。
+- 保持三至五行，通常四行：一至兩行交代本期最重要的市場變化及傳導意義，其後交代主要關注公司與必要的獨立需求延伸。市場背景與影響可合併為同一行，不強制固定措辭或主題。
+- 每行仍用 `observation`／`meaning`：前者說明具體事件、變化或研究選擇，後者說明對企業需求、成本、估值、風險或關注次序的影響。新聞須來自本期已綁定的 Market Context，日期及已發生／預期狀態正確；不把新聞關聯寫成已確認訂單或股價因果。
+- 不重複 Top Gainers 或 Top Leaders 卡的整行內容；單日榜如無額外決策價值，可從摘要卡省略，優先保留市場背景。不得加入掃描母體、通過門檻、剔除數、Leader Lock 或平均模型分數。
+- 製作及交付前人工核對：背景是否具體、影響是否清楚、公司選擇是否回答背景、內容是否與文章一致。欠缺任何一項須修正後才交付，不能只以 renderer／機械 PASS 代替語義審稿。
+- 已完成的正式輸出與 Archive 保留；當期更正版另存版本化路徑，不覆蓋原件。往後新稿依本節及同步更新的 Table Card Template 製作。
 
 ---
 
