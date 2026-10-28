@@ -4,6 +4,8 @@ This document defines how the cumulative TradingView Watchlist is updated and cl
 
 The Watchlist is a long-term cumulative research asset. It must not be accidentally reduced by incomplete daily data.
 
+Since the user's standing authorization of 2026-10-29, each Trigger A agent workflow must fetch and synchronize the latest Git baseline before accumulation, then commit/push the verified canonical watchlist and manifest after local PASS. Follow `docs/TRIGGER_A_EXECUTION_SPECIFICATION.md` section 7. A current daily CSV cannot recover symbols discovered only on another computer during previous days; `outputs/`, Archive and TradingView are not substitutes for the synchronized canonical pair.
+
 ## Core Principle
 
 ```text

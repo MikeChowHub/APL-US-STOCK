@@ -114,7 +114,7 @@ Trigger A must not perform or invoke:
 - outputs discovery or use of `outputs/` as input;
 - `work/` discovery as a fallback input source;
 - renderer, Dashboard, Social, Table Card, Cover, SEO, Blog, or Production workflows;
-- implicit Git stage, commit, tag, or push;
+- Git mutations outside the explicitly authorized baseline synchronization in section 7; tags and force-push remain forbidden;
 - silent symbol repair, silent row dropping, or partial-success publication.
 
 ## 5. Output
@@ -174,3 +174,33 @@ Therefore:
 - negative tests must cover missing or invalid CSV symbols, malformed manifest, wrong bytes or SHA-256, duplicate baseline symbols, reparse-point escape, output conflict, and attempted baseline-symbol deletion.
 
 Cross-PC readiness is PASS only when a clean checkout contains every required runtime file and the isolated test suite completes without reading `outputs/` or `Archive/`.
+
+## 7. Mandatory Git synchronization — user authorization 2026-10-29
+
+The execution agent must perform this outer workflow for every Trigger A, including uploaded CSVs, scheduled runs and manual script runs. The local `run_trigger_a.ps1` remains deterministic and offline. Local `WRITE_OUTPUT_PASS` alone is not cross-PC synchronization completion.
+
+### 7.1 Before accumulation
+
+1. Verify the exact Deep-Scan Git root, current branch, its upstream and configured origin. Do not operate the parent or sibling repositories or invent a remote. The established production branch is `main` tracking `origin/main`.
+2. Run `git fetch origin` successfully. A cached remote-tracking ref is not proof of current remote state. If offline or authentication fails, preserve inputs and stop before new accumulation; report the synchronization blocker.
+3. Inspect `git status --short`, staged paths and `git rev-list --left-right --count HEAD...origin/main`. When HEAD is behind only, use `git merge --ff-only origin/main` after checking that incoming paths do not overwrite local edits. When equal, proceed. Unrelated local edits need not block if Git can safely fast-forward without touching them; never stash or discard them automatically.
+4. If the canonical pair contains a previous locally verified but unpublished result, publish that pair using 7.2 before starting another date. If local and remote history diverge, or remote changes overlap local edits, retain both versions and reconcile explicitly. Do not run accumulation on a knowingly stale baseline, select a winner by date alone, or force a fast-forward. A local-ahead branch must be inspected for unrelated/unapproved commits before any push.
+5. After synchronization, validate the checked-out canonical pair using section 2. Record the fetched remote commit and baseline date/count/hash in the local run evidence. The daily CSV cannot reconstruct all intermediate discoveries from another PC.
+
+### 7.2 After local integrity PASS
+
+1. Verify the promoted canonical pair and latest dated TXT against each other: date, symbol count, bytes and SHA-256. Verify every prior canonical symbol is retained. Never publish a partial or conflicting pair.
+2. Fetch again and check history for concurrent remote changes. If remote advanced during processing, preserve the local result and report synchronization pending; inspect and reconcile the competing cumulative sets without losing symbols before continuing. Do not blindly retry a rejected push or bypass same-day rerun protection.
+3. The standing automatic commit scope is exactly these two paths:
+
+   ```text
+   Assets/ReferenceData/Watchlists/APL_Quant_Cumulative_Watchlist.txt
+   Assets/ReferenceData/Watchlists/watchlist-manifest.json
+   ```
+
+   Inspect the staged index before committing. Do not include other staged/dirty files or earlier unrelated local commits. Use a scoped commit (for example `git commit --only -m "chore: sync Trigger A baseline YYYY-MM-DD" -- <the two paths>`); inspect the actual resulting commit paths. If both paths already match the verified remote state, do not create an empty commit. Workflow/rule changes require the separate user authorization that requested them; they are not part of recurring baseline commits.
+4. Push normally to the verified upstream (`git push origin HEAD:main` on the established branch). Never force-push, reset, tag, upload daily CSVs/outputs/work, or expose credentials. A rejected push leaves the valid local commit and output intact with `GitSyncStatus=PENDING`; report the reason and retry only after resolving the actual blocker.
+5. After push, fetch again and verify the published commit is reachable from the current remote branch. Inspect both canonical files from that commit in a fresh checkout honoring `.gitattributes`, or equivalent checkout-filter-aware verification, and verify manifest date, count, bytes and SHA-256. Git's stored text blob may use LF while the checked-out watchlist requires CRLF; do not compare a raw blob hash to the manifest's checked-out-file hash. Remote history moving again must not be misreported as the local commit being absent; verify ancestry and the remote's latest canonical pair.
+6. Keep local evidence of local PASS, baseline date/count/hash, published commit and remote readback result. Report local production and Git synchronization separately. Claim cross-PC synchronization PASS only when both succeed. Other PCs must fetch/fast-forward before their next Trigger A; an already-open stale checkout does not update itself.
+
+This standing authorization supersedes older blanket no-Git language in Trigger A and daily schedules only for the canonical pair above. It does not authorize automatic commits of articles, renderer assets, unrelated edits, or changes to any other project.

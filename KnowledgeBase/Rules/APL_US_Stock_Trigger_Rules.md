@@ -14,7 +14,18 @@
 - 三份 CSV 收齊後，唯讀檢查 `F:/GitHub/APL/Global Trending Topics/KnowledgeBase/Outputs`，依有效日期資料夾選取不晚於 ScanDate 的最新一期 `canonical.md`，作新聞熱話來源。記錄來源日期、路徑及 SHA-256，複製為 Deep-Scan 當日 intake 的版本化快照並核對雜湊；不修改新聞專案，不建立兄弟專案執行依賴。若最新一期非當日，內部證據及交付狀態明示來源日期；缺失或不明確則回報，不捏造。
 - 本排程獲授權在當日 Cumulative CSV、Top Gainers CSV 及新聞快照齊備後執行 Trigger C，取代舊有每日流程只執行 Trigger A 的限制。Trigger A 本身的累積模式及禁止評分規則維持；必要 Trigger B 由 Trigger C 正式準備流程執行。
 - 依現行 `prepare_trigger_c_managed_inputs.ps1` Initialize → 本期編輯及原生素材 → Finalize，完成 Managed Input Preflight、Atomic Production、Final Production Audit 及 Archive 全部驗證。只有 `DailyProductionComplete=true` 且 `DailyProductionPublishable=true` 才回報正式報告完成；每次交付前檢查已保存的交付參考圖並交齊發布素材連結，另附三份 CSV 及累積 TXT。
-- 不交易、不對外發布、不 Git 提交推送。同日重跑及衝突依現行工具保護處理；排程步驟失敗時保留已完成檔案，回報缺項，不聲稱整套完成。
+- 不交易、不對外發布。Git 僅依下列 Trigger A 跨電腦同步授權執行；文章、圖卡、每日輸入及其他修改不自動提交推送。同日重跑及衝突依現行工具保護處理；排程步驟失敗時保留已完成檔案，回報缺項，不聲稱整套完成。
+
+## Trigger A 跨電腦 Git 同步 — 2026-10-29 修訂
+
+使用者已明確授權：每次 Trigger A 執行前同步 Git 最新正式基準，驗證完成後立即提交及推送正式基準，讓其他電腦接續累積。此條取代舊有 Trigger A／每日排程一律禁止 Git 提交推送的說明；執行細節及衝突保護以 `docs/TRIGGER_A_EXECUTION_SPECIFICATION.md` 第 7 節為準。
+
+- 每次先核對 Deep-Scan Git Root、目前分支、upstream 及 origin；成功 fetch 後才能判斷是否最新。遠端存取失敗時不得憑舊的 origin 快取聲稱同步完成，也不得用未同步的舊基準開始新累積。
+- 其他電腦開始前必須取得已發布的最新 Git commit，核對正式名單及 manifest；不能只拿今天的 CSV 補一個月缺口。每日 CSV 並不保證包含中間曾出現的所有股票。
+- `dry-run` → `write-output` → 正式基準／manifest／TXT 的日期、數量、位元組與 SHA-256 核對 PASS 後，僅提交 `Assets/ReferenceData/Watchlists/APL_Quant_Cumulative_Watchlist.txt` 與 `Assets/ReferenceData/Watchlists/watchlist-manifest.json`，並立即普通 push。相同內容已在遠端則不製造空 commit。
+- Git 同步是執行代理必須完成的外層流程；`run_trigger_a.ps1` 本身仍只負責本機累積及驗證，不會自行連網或推送。手動執行該腳本後也必須補完本節同步才能回報跨電腦完成。
+- 不提交 `work/`、`outputs/`、每日 CSV、Macro6 request、登入資料或其他未獲授權修改；不 force-push、不 reset、不自動 stash。兩邊分歧或推送被拒時保留兩邊資料，查明差異並保持全部既有股票，不能以日期較新為由覆蓋另一邊。
+- 分開回報 `Trigger A 本機 PASS` 與 `Git 同步 PASS／待同步`；只有成功推送並重新 fetch 核對遠端 commit、名單及 manifest 後，才可回報跨電腦同步完成。同步失敗保留本機有效結果，明示具體阻礙及尚待上傳。
 
 ## 升幅統計時段 — 2026-10-06 修訂
 

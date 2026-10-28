@@ -34,7 +34,7 @@ For an unambiguous recognized input, Codex must not ask:
 希望如何處理這份 CSV？
 ```
 
-Uploading a recognized file is the user's authorization to start the mapped existing workflow. It is not authorization to Commit, Push, create a tag, overwrite production output, or bypass validation.
+Uploading a recognized file is the user's authorization to start the mapped existing workflow. The user's standing instruction of 2026-10-29 additionally authorizes Trigger A to synchronize Git before accumulation and, after integrity PASS, commit/push only the canonical watchlist and adjacent manifest under `Assets/ReferenceData/Watchlists/`, following section 7 of `docs/TRIGGER_A_EXECUTION_SPECIFICATION.md`. Other commits/pushes, tags, production overwrites and validation bypasses still require their own authorization.
 
 ## 3. Filename recognition
 

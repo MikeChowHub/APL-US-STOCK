@@ -8,7 +8,7 @@
 - Never use `work/`, `outputs/`, `Archive/`, `tmp/`, local logs, daily managed inputs, or conversation memory as Cross-PC runtime dependencies.
 - Repository-managed assets live under `Assets/`; production fonts must be declared in `tools/font-manifest.json` and render without system-font fallback.
 - Browser rendering is not a production dependency. Use the repository `resvg.exe` policy and fail on fallback or invalid geometry warnings.
-- Do not stage, commit, tag, or push until the requested Final Release Audit passes. Stage only the explicitly audited release scope.
+- Do not stage, commit, tag, or push until the requested Final Release Audit passes. Stage only the explicitly audited release scope. Exception: the user's standing authorization of 2026-10-29 requires Trigger A baseline Git synchronization before accumulation and a scoped commit/push after Trigger A integrity PASS; follow `docs/TRIGGER_A_EXECUTION_SPECIFICATION.md` section 7. This does not authorize automatic article, output, or unrelated-file commits.
 
 ## Article completion metadata notification
 
