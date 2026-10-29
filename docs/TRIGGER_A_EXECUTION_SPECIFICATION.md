@@ -57,7 +57,7 @@ Assets/ReferenceData/Watchlists/watchlist-manifest.json
 Before merge, the implementation must validate at least:
 
 - `SchemaVersion` is supported;
-- `AsOfDate` is a strict real calendar date no later than `ScanDate`; when it equals `ScanDate`, the merged candidate must exactly match the verified canonical bytes so an identical same-day rerun is idempotent;
+- `AsOfDate` is a strict real calendar date no later than `ScanDate`; identical same-day reruns are idempotent; the latest user-supplied input may append symbols using `-LatestInput` while retaining every canonical symbol;
 - `File` resolves exactly to `APL_Quant_Cumulative_Watchlist.txt` inside the Watchlists directory;
 - `SymbolCount` equals the parsed baseline count;
 - `Bytes` equals the baseline file size;
@@ -127,7 +127,7 @@ The daily result is:
 outputs/trigger-a/APL_Quant_Cumulative_Watchlist_YYYY-MM-DD.txt
 ```
 
-The latest delivery lives directly under outputs/trigger-a. Before publishing a later date, verify the existing latest bytes against the canonical baseline and move that delivery into outputs/trigger-a/Archive/<BaselineAsOfDate>/. Same-day reruns require exact bytes and SHA-256 equality. Conflicting content fails without overwriting either file; preserve duplicate archive files under unique retained names. Historical dated folders belong under this local Archive. Never use these outputs as the runtime baseline.
+The latest delivery lives directly under outputs/trigger-a. Before publishing a later date, verify the existing latest bytes against the canonical baseline and move that delivery into outputs/trigger-a/Archive/<BaselineAsOfDate>/. Identical same-day reruns retain exact bytes and SHA-256. With `-LatestInput`, preserve the verified earlier same-day delivery in that Archive before publishing the revision; retain further revisions under unique names. Unverified conflicting output still fails. Never use these outputs as the runtime baseline.
 
 `outputs/` is an output destination only. A later Trigger A run must never read it as the previous baseline.
 
@@ -156,7 +156,7 @@ The adjacent `watchlist-manifest.json` must be updated to describe the promoted 
 
 Manifest publication occurs only after the canonical candidate bytes have passed verification. Completion is valid only when re-reading the final baseline and manifest reproduces matching file, count, bytes, and SHA-256 values.
 
-For an identical same-day rerun after promotion, retain the canonical watchlist bytes and verify that the latest output is byte-identical. A same-day input that would change the promoted canonical watchlist must fail rather than silently accumulate a conflicting second daily export.
+For an identical same-day rerun after promotion, retain the canonical watchlist bytes and verify that the latest output is byte-identical. For the latest user-supplied same-day CSV, the agent must pass `-LatestInput` to dry-run and write-output; new symbols are appended and the prior verified delivery is retained. Without explicit latest-input selection, a differing same-day candidate remains rejected.
 
 ## 6. Cross-PC requirements
 
@@ -190,7 +190,7 @@ The execution agent must perform this outer workflow for every Trigger A, includ
 ### 7.2 After local integrity PASS
 
 1. Verify the promoted canonical pair and latest dated TXT against each other: date, symbol count, bytes and SHA-256. Verify every prior canonical symbol is retained. Never publish a partial or conflicting pair.
-2. Fetch again and check history for concurrent remote changes. If remote advanced during processing, preserve the local result and report synchronization pending; inspect and reconcile the competing cumulative sets without losing symbols before continuing. Do not blindly retry a rejected push or bypass same-day rerun protection.
+2. Fetch again and check history for concurrent remote changes. If remote advanced during processing, preserve the local result and report synchronization pending; inspect and reconcile the competing cumulative sets without losing symbols before continuing. Do not blindly retry a rejected push or bypass baseline integrity verification.
 3. The standing automatic commit scope is exactly these two paths:
 
    ```text
@@ -204,3 +204,7 @@ The execution agent must perform this outer workflow for every Trigger A, includ
 6. Keep local evidence of local PASS, baseline date/count/hash, published commit and remote readback result. Report local production and Git synchronization separately. Claim cross-PC synchronization PASS only when both succeed. Other PCs must fetch/fast-forward before their next Trigger A; an already-open stale checkout does not update itself.
 
 This standing authorization supersedes older blanket no-Git language in Trigger A and daily schedules only for the canonical pair above. It does not authorize automatic commits of articles, renderer assets, unrelated edits, or changes to any other project.
+
+### 7.3 Latest supplied file takes precedence — 2026-10-29
+
+For the same ScanDate and input type, the file most recently supplied by the user becomes the active input on either computer. Use user submission order or a trusted receipt timestamp, not a copied modification time or filename suffix. Record selected path, receipt order/time and SHA-256 in managed intake evidence; retain earlier raw files. Pass `-LatestInput` to both Trigger A modes. A newer same-day CSV may add symbols without further confirmation; existing cumulative symbols remain retained even when absent from that CSV. Older ScanDates cannot replace newer baselines. Synchronize Git before processing and publish the revised canonical pair afterward; Git divergence still requires reconciliation.

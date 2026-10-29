@@ -38,6 +38,8 @@ Uploading a recognized file is the user's authorization to start the mapped exis
 
 ## 3. Filename recognition
 
+For the same ScanDate and input type, the latest user-supplied file supersedes the earlier active input (2026-10-29 standing instruction). Preserve earlier raw files and record submission order/receipt time and SHA-256. For Trigger A use `-LatestInput` for both dry-run and write-output, retaining every existing cumulative symbol; follow execution specification section 7.3.
+
 Recognition is case-insensitive on Windows. `YYYY-MM-DD` must be a valid calendar date. An optional suffix may follow the date, separated by `_`.
 
 ### Daily breakout screener

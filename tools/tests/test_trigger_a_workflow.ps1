@@ -124,6 +124,28 @@ try {
   Reject-Run $fixture $csvConflict 'Same-date Trigger A reruns' 'Same-day input that adds a new symbol is rejected'
   Check ((Snapshot $fixture) -ceq $conflictBefore) 'Same-day conflict preserves canonical, manifest, delivery, and input'
 
+  $latest = New-Fixture 'latest-input'
+  $latestFirst = Write-Daily $latest '2040-01-02' @('NVDA')
+  $null = Invoke-Run $latest $latestFirst 'write-output'
+  $oldLatestHash = FileHash $latest.Canonical
+  $latestCsv = Write-Daily $latest '2040-01-02' @('AMD','AMD')
+  $latestBefore = Snapshot $latest
+  $latestDry = & $latest.Entry -DailyScreenerCsv $latestCsv -Mode dry-run -LatestInput
+  Check ($latestDry.FinalSymbolCount -eq 5 -and (Snapshot $latest) -ceq $latestBefore) 'Latest same-day dry-run is read-only and retains prior symbols'
+  $latestWrite = & $latest.Entry -DailyScreenerCsv $latestCsv -Mode write-output -LatestInput
+  $latestMeta = Get-Content $latest.Manifest -Raw | ConvertFrom-Json
+  $latestArchived = Join-Path $latest.Outputs 'Archive\2040-01-02\APL_Quant_Cumulative_Watchlist_2040-01-02.txt'
+  Check ($latestWrite.AddedSymbolCount -eq 1 -and $latestWrite.FinalSymbolCount -eq 5 -and
+    [IO.File]::ReadAllText($latest.Canonical).Trim() -ceq 'AAPL,MSFT,MOG.A,NVDA,AMD' -and
+    $latestMeta.SHA256 -ceq (FileHash $latest.Canonical) -and (FileHash $latestArchived) -ceq $oldLatestHash) 'Latest same-day input updates baseline and retains previous verified delivery'
+  $latestAgainBefore = Snapshot $latest
+  $null = & $latest.Entry -DailyScreenerCsv $latestCsv -Mode write-output -LatestInput
+  Check ((Snapshot $latest) -ceq $latestAgainBefore) 'Latest input identical rerun is a no-op'
+  $latestThird = Write-Daily $latest '2040-01-02' @('ORCL')
+  $third = & $latest.Entry -DailyScreenerCsv $latestThird -Mode write-output -LatestInput
+  $retained = @(Get-ChildItem (Join-Path $latest.Outputs 'Archive\2040-01-02') -File)
+  Check ($third.FinalSymbolCount -eq 6 -and $retained.Count -eq 2 -and (FileHash $latestArchived) -ceq $oldLatestHash) 'Multiple same-day revisions retain all historical deliveries'
+
   $csv03 = Write-Daily $fixture '2040-01-03' @('ORCL', 'AAPL')
   $hash02 = FileHash $output02
   $next = Invoke-Run $fixture $csv03 'write-output'

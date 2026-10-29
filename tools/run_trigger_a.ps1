@@ -4,7 +4,10 @@ param(
   [string]$DailyScreenerCsv,
 
   [ValidateSet('dry-run','write-output')]
-  [string]$Mode = 'dry-run'
+  [string]$Mode = 'dry-run',
+
+  # The execution agent sets this only for the user's latest supplied input.
+  [switch]$LatestInput
 )
 
 $ErrorActionPreference = 'Stop'
@@ -164,7 +167,7 @@ foreach ($symbol in $baselineSymbols) {
 $previewText = ($mergedSymbols.ToArray() -join ',') + "`r`n"
 $previewBytes = Get-PreviewBytes $previewText
 $previewSha256 = Get-ByteArraySha256 $previewBytes
-if ($baselineDateValue -eq $scanDateValue -and $previewSha256 -cne $canonicalHashBefore) {
+if ($baselineDateValue -eq $scanDateValue -and $previewSha256 -cne $canonicalHashBefore -and -not $LatestInput) {
   throw 'Same-date Trigger A reruns are allowed only when the merged watchlist exactly matches the promoted canonical baseline.'
 }
 
@@ -189,7 +192,7 @@ if ($Mode -ceq 'write-output') {
   # The canonical manifest supplies the date; outputs never supply the baseline.
   if (Test-Path -LiteralPath $previousOutputPath) {
     $previousOutputHash = (Get-FileHash -LiteralPath $previousOutputPath -Algorithm SHA256).Hash.ToUpperInvariant()
-    if ($baselineDateValue -lt $scanDateValue) {
+    if ($baselineDateValue -lt $scanDateValue -or ($LatestInput -and $previewSha256 -cne $canonicalHashBefore)) {
       if ($previousOutputHash -cne $canonicalHashBefore) {
         throw 'Latest Trigger A delivery does not match the verified canonical baseline; preserve it for review.'
       }
@@ -203,7 +206,7 @@ if ($Mode -ceq 'write-output') {
       $historyPath = Join-Path $historyDateRoot (Split-Path $previousOutputPath -Leaf)
       if (Test-Path -LiteralPath $historyPath) {
         $historyPath = Assert-AplNoReparsePath -Path $historyPath -AllowedRoot $historyDateRoot -RequireFile
-        if ((Get-FileHash -LiteralPath $historyPath -Algorithm SHA256).Hash.ToUpperInvariant() -cne $previousOutputHash) {
+        if ((Get-FileHash -LiteralPath $historyPath -Algorithm SHA256).Hash.ToUpperInvariant() -cne $previousOutputHash -and -not ($LatestInput -and $baselineDateValue -eq $scanDateValue)) {
           throw 'Trigger A Archive conflict; existing and latest files are preserved.'
         }
         $historyPath = Join-Path $historyDateRoot ('APL_Quant_Cumulative_Watchlist.retained-{0}.txt' -f [guid]::NewGuid().ToString('N'))
@@ -241,8 +244,8 @@ if ($Mode -ceq 'write-output') {
     if ($outputSha256 -cne $previewSha256) { throw 'Trigger A final output SHA256 verification failed.' }
   }
 
-  # Verified same-day reruns must preserve the canonical manifest and its timestamp.
-  if ($baselineDateValue -lt $scanDateValue) {
+  # Identical reruns preserve timestamps; the latest supplied same-day input may append symbols.
+  if ($baselineDateValue -lt $scanDateValue -or ($LatestInput -and $previewSha256 -cne $canonicalHashBefore)) {
   $transactionId = [guid]::NewGuid().ToString('N')
   $stagedCanonicalPath = Join-Path $watchlistRoot ('.APL_Quant_Cumulative_Watchlist.{0}.stage' -f $transactionId)
   $stagedManifestPath = Join-Path $watchlistRoot ('.watchlist-manifest.{0}.stage' -f $transactionId)
