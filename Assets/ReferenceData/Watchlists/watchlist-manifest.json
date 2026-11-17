@@ -1,10 +1,10 @@
 {
     "SchemaVersion":  "APL Cumulative Watchlist Manifest v1.0",
-    "AsOfDate":  "2026-11-12",
+    "AsOfDate":  "2026-11-17",
     "File":  "APL_Quant_Cumulative_Watchlist.txt",
-    "SymbolCount":  986,
-    "Bytes":  4398,
-    "SHA256":  "572545A4788C372E5309A7ADA1C9F23EFAA6E16C532666748BFE0DA934583E2D",
+    "SymbolCount":  994,
+    "Bytes":  4435,
+    "SHA256":  "EBB2796F28141154D6643B8E5696B50CB71CACCAC3145F642EFCFC7657392C35",
     "SourceArchivePath":  "Archive/2026/07/2026-07-16/APL_Quant_Cumulative_Watchlist_2026-07-16.txt",
-    "UpdatedUtc":  "2026-11-12T10:06:07.2175199+00:00"
+    "UpdatedUtc":  "2026-11-17T13:22:29.9039232+00:00"
 }
