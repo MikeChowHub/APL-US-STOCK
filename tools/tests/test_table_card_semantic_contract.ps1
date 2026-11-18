@@ -32,6 +32,18 @@ Invoke-Case 'ExecutiveSummary two rows FAIL' $false { Assert-AplTableCardContrac
 Invoke-Case 'ExecutiveSummary six rows FAIL' $false { Assert-AplTableCardContract (Convert-Fixture '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"ExecutiveSummary","Title":"Executive","Rows":[{"observation":"One","meaning":"First"},{"observation":"Two","meaning":"Second"},{"observation":"Three","meaning":"Third"},{"observation":"Four","meaning":"Fourth"},{"observation":"Five","meaning":"Fifth"},{"observation":"Six","meaning":"Sixth"}]}') 'ExecutiveSummary' }
 Invoke-Case 'TopLeaders six-field mapping PASS' $true { $r=Assert-AplTableCardContract $leaders 'TopLeaders'; if($r.Columns-ne6){throw 'Column count mismatch'} }
 Invoke-Case 'TopLeaders rank restatement FAIL' $false { Assert-AplTableCardContract (Convert-Fixture '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"TopLeaders","Title":"Leaders","Rows":[{"rank":"#1","symbol":"PENG","companyName":"Penguin Solutions, Inc.","coreBusiness":"AI infrastructure","mainDriver":"量化相對強度排名居首","compositeScore":104.82}]}') 'TopLeaders' }
+Invoke-Case 'TopLeaders phase III clinical milestone PASS' $true {
+  $leaders.Rows[0].mainDriver='第三期臨床研發及審批'
+  Assert-AplTableCardContract $leaders 'TopLeaders'
+}
+Invoke-Case 'TopLeaders drug sales and acquisition PASS' $true {
+  $leaders.Rows[0].mainDriver='藥物銷售及收購交易'
+  Assert-AplTableCardContract $leaders 'TopLeaders'
+}
+Invoke-Case 'TopLeaders ordinal ranking with a business term FAIL' $false {
+  $leaders.Rows[0].mainDriver='位列第三名，產品需求'
+  Assert-AplTableCardContract $leaders 'TopLeaders'
+}
 Invoke-Case 'TopLeaders generic repeated driver FAIL' $false { Assert-AplTableCardContract (Convert-Fixture '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"TopLeaders","Title":"Leaders","Rows":[{"rank":"#1","symbol":"PENG","companyName":"Penguin Solutions, Inc.","coreBusiness":"AI infrastructure","mainDriver":"企業客戶需求與收入","compositeScore":104.82},{"rank":"#2","symbol":"TEST","companyName":"Test Company","coreBusiness":"Business","mainDriver":"企業客戶需求與收入","compositeScore":99.3}]}') 'TopLeaders' }
 Invoke-Case 'TopLeaders empty business variable FAIL' $false { Assert-AplTableCardContract (Convert-Fixture '{"SchemaVersion":"APL Table Card Input v1.1","CardType":"TopLeaders","Title":"Leaders","Rows":[{"rank":"#1","symbol":"PENG","companyName":"Penguin Solutions, Inc.","coreBusiness":"AI infrastructure","mainDriver":"市場表現值得關注","compositeScore":104.82}]}') 'TopLeaders' }
 Invoke-Case 'TopGainers four-field mapping PASS' $true { $r=Assert-AplTableCardContract $gainers 'TopGainers'; if($r.Columns-ne4){throw 'Column count mismatch'} }

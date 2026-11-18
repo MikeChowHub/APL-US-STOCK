@@ -1,18 +1,21 @@
 ﻿[CmdletBinding()]
 param(
-  [Parameter(Mandatory=$true)][ValidateSet('Initialize','Supersede','Finalize','Status')][string]$Mode,
+  [Parameter(Mandatory=$true)][ValidateSet('Initialize','Supersede','Review','Finalize','Produce','Status')][string]$Mode,
   [Parameter(Mandatory=$true)][string]$ScanDate,
   [string]$WeekLabel='',
   [string]$InputCsv='',
   [string]$TopGainersCsvPath='',
   [string]$MarketContextPath='',
-  [switch]$RegressionTest
+  [switch]$GenerateHtmlFromMarkdown,
+  [switch]$RegressionTest,
+  [string]$OutputRoot=''
 )
 
 $ErrorActionPreference='Stop'
 $ProjectRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 . (Join-Path $PSScriptRoot 'renderer_production_common.ps1')
 . (Join-Path $PSScriptRoot 'production_archive_common.ps1')
+. (Join-Path $PSScriptRoot 'article_reader_quality.ps1')
 
 function Assert-InputFile([string]$Path,[string]$Label){
   if([string]::IsNullOrWhiteSpace($Path)){throw "$Label is required for Initialize or Supersede."}
@@ -29,6 +32,38 @@ function Assert-ApprovedMarketContext([string]$Path){
   $thesis=$matches[0].Groups[1].Value.Trim()
   if($thesis.Length-lt40){throw 'Approved Market Context 本期核心市場命題 must be substantive.'}
   return $thesis
+}
+
+function Export-AplTop30Industries([string]$SourcePath,[string]$RankingPath,[string]$OutputPath,[string]$Root){
+  Add-Type -AssemblyName Microsoft.VisualBasic
+  $parser=New-Object Microsoft.VisualBasic.FileIO.TextFieldParser -ArgumentList @($SourcePath,[Text.Encoding]::UTF8,$true)
+  $bySymbol=@{}
+  try {
+    $parser.TextFieldType=[Microsoft.VisualBasic.FileIO.FieldType]::Delimited
+    $parser.SetDelimiters(',');$parser.HasFieldsEnclosedInQuotes=$true;$parser.TrimWhiteSpace=$false
+    if($parser.EndOfData){throw 'Cumulative CSV is empty.'}
+    $headers=@($parser.ReadFields())
+    $symbolIndexes=@(for($i=0;$i-lt$headers.Count;$i++){if(([string]$headers[$i]).TrimStart([char]0xFEFF)-ceq'Symbol'){$i}})
+    $industryIndexes=@(for($i=0;$i-lt$headers.Count;$i++){if(([string]$headers[$i]).TrimStart([char]0xFEFF)-ceq'Industry'){$i}})
+    if($symbolIndexes.Count-ne1-or$industryIndexes.Count-ne1){throw 'Cumulative CSV requires exactly one Symbol and one Industry column.'}
+    $line=1
+    while(-not$parser.EndOfData){
+      $line++;$fields=@($parser.ReadFields())
+      if($fields.Count-ne$headers.Count){throw "Cumulative CSV row $line has an invalid field count."}
+      $symbol=([string]$fields[$symbolIndexes[0]]).Trim().ToUpperInvariant()
+      if([string]::IsNullOrWhiteSpace($symbol)-or$bySymbol.ContainsKey($symbol)){throw "Cumulative CSV has an empty or duplicate symbol at row $line."}
+      $bySymbol[$symbol]=([string]$fields[$industryIndexes[0]]).Trim()
+    }
+  }finally{$parser.Close();$parser.Dispose()}
+  $ranking=@(Import-Csv -LiteralPath $RankingPath|Select-Object -First 30)
+  if($ranking.Count-ne30){throw 'Top 30 ranking is incomplete for Industry evidence.'}
+  $rows=@(foreach($row in $ranking){
+    $symbol=([string]$row.Symbol).Trim().ToUpperInvariant()
+    if(-not$bySymbol.ContainsKey($symbol)-or[string]::IsNullOrWhiteSpace([string]$bySymbol[$symbol])){throw "Industry missing for Top 30 symbol '$symbol'."}
+    [ordered]@{Rank=[int]$row.Rank;Symbol=$symbol;Name=[string]$row.Name;SourceIndustry=[string]$bySymbol[$symbol]}
+  })
+  $evidence=[ordered]@{SchemaVersion='APL Top 30 Industry Evidence v1.0';SourceSHA256=(Get-FileHash -LiteralPath $SourcePath -Algorithm SHA256).Hash;RankingSHA256=(Get-FileHash -LiteralPath $RankingPath -Algorithm SHA256).Hash;Note='Industry is the source label; verify business and use editorial judgment for sector classification.';Rows=$rows}
+  Write-Utf8 $OutputPath ($evidence|ConvertTo-Json -Depth 8) $Root
 }
 
 function Write-Utf8([string]$Path,[string]$Text,[string]$AllowedRoot){
@@ -52,7 +87,27 @@ function Assert-Record([object]$Record,[string]$Root){
   return $path
 }
 
+function Get-ManagedInputArguments([string]$Root,[string]$Date){
+  return @(
+    '-InputCsv',(Join-Path $Root 'source.csv'),
+    '-TopGainersCsvPath',(Join-Path $Root 'top-gainers.csv'),
+    '-MarketContextPath',(Join-Path $Root 'market-context.md'),
+    '-TriggerBMetaPath',(Join-Path $Root "trigger-b\$Date\APL_Momentum_Leaders_Meta_$Date.json"),
+    '-ScanDate',$Date,
+    '-TableCardManifestPath',(Join-Path $Root 'table-card-manifest.json'),
+    '-CoverBriefPath',(Join-Path $Root 'cover-brief.json'),
+    '-CoverBackgroundPath',(Join-Path $Root 'cover-background.png'),
+    '-SeoBackgroundPath',(Join-Path $Root 'seo-background.png'),
+    '-CoverNativeContractPath',(Join-Path $Root 'cover-native-contract.json'),
+    '-SeoNativeContractPath',(Join-Path $Root 'seo-native-contract.json'),
+    '-PublishingArtifactsRoot',(Join-Path $Root 'publishing')
+  )
+}
+
 Assert-AplScanDate $ScanDate|Out-Null
+$currentArticle=(Get-AplReaderQualityPolicy -ScanDate $ScanDate).Enabled
+if($GenerateHtmlFromMarkdown-and($Mode-cne'Finalize'-or-not$currentArticle)){throw 'GenerateHtmlFromMarkdown requires Finalize for an issue dated 2026-11-12 or later.'}
+if($OutputRoot-and(-not$RegressionTest-or$Mode-cne'Produce')){throw 'OutputRoot is available only for Produce in RegressionTest mode.'}
 $gitRoot=(& git -C $ProjectRoot rev-parse --show-toplevel 2>$null)
 if($LASTEXITCODE-ne0-or[string]::IsNullOrWhiteSpace([string]$gitRoot)-or(Get-AplFullPath ([string]$gitRoot))-ne(Get-AplFullPath $ProjectRoot)){throw 'Project Root/Git Root mismatch.'}
 
@@ -64,7 +119,7 @@ $allowedContainer=if($RegressionTest){$regressionRoot}else{$formalWorkRoot}
 # Check both complete parent chains before the first filesystem mutation.
 $stagingParent=Assert-AplNoReparsePath -Path $stagingParent -AllowedRoot $allowedContainer
 $managedParent=Assert-AplNoReparsePath -Path $managedParent -AllowedRoot $allowedContainer
-if($Mode-cne'Status'){
+if($Mode-cnotin@('Status','Review','Produce')){
   foreach($root in @($stagingParent,$managedParent)){
     if(!(Test-Path -LiteralPath $root)){New-Item -ItemType Directory -Path $root -Force|Out-Null}
     Assert-AplNoReparsePath -Path $root -AllowedRoot $allowedContainer -RequireDirectory|Out-Null
@@ -73,9 +128,29 @@ if($Mode-cne'Status'){
 $stagingDate=Join-Path $stagingParent $ScanDate
 $managedDate=Join-Path $managedParent $ScanDate
 $statePath=Join-Path $stagingDate 'trigger-c-preparation.json'
+$produceCommand="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File .\tools\prepare_trigger_c_managed_inputs.ps1 -Mode Produce -ScanDate $ScanDate"
+
+if($Mode-ceq'Produce'){
+  $finalStatePath=Join-Path $managedDate 'trigger-c-preparation.json'
+  if(-not(Test-Path -LiteralPath $finalStatePath -PathType Leaf)){throw "No finalized Trigger C bundle for $ScanDate. Run Finalize before Produce."}
+  $finalState=Read-AplStrictJson $finalStatePath $managedDate
+  if([string]$finalState.SchemaVersion-cne'APL Trigger C Preparation v1.0'-or[string]$finalState.ScanDate-cne$ScanDate-or[string]$finalState.Status-cne'PREFLIGHT_PASS'-or[string]::IsNullOrWhiteSpace([string]$finalState.WeekLabel)){
+    throw "Trigger C bundle for $ScanDate has no matching finalized preflight state and WeekLabel."
+  }
+  $requiredRoles=@('cumulative-screener','top-gainers','market-context','trigger-b-ranking','trigger-b-meta')
+  foreach($role in $requiredRoles){
+    if(@($finalState.SourceEvidence|Where-Object{$_.Role-ceq$role}).Count-ne1){throw "Finalized Trigger C bundle requires one source record: $role"}
+  }
+  foreach($record in @($finalState.SourceEvidence)){Assert-Record $record $managedDate|Out-Null}
+  $runnerArgs=(Get-ManagedInputArguments $managedDate $ScanDate)+@('-WeekLabel',([string]$finalState.WeekLabel))
+  if($RegressionTest){$runnerArgs+='-RegressionTest'}
+  if($OutputRoot){$runnerArgs+=@('-OutputRoot',$OutputRoot)}
+  & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'run_daily_production.ps1') @runnerArgs
+  exit $LASTEXITCODE
+}
 
 if($Mode-ceq'Status'){
-  if(Test-Path -LiteralPath $managedDate -PathType Container){[pscustomobject]@{Status='FINALIZED';ScanDate=$ScanDate;ManagedInputsRoot=$managedDate};exit 0}
+  if(Test-Path -LiteralPath $managedDate -PathType Container){[pscustomobject]@{Status='FINALIZED';ScanDate=$ScanDate;ManagedInputsRoot=$managedDate;ProduceCommand=$produceCommand};exit 0}
   if(!(Test-Path -LiteralPath $statePath -PathType Leaf)){throw "Trigger C preparation state not found: $statePath"}
   $state=Read-AplStrictJson $statePath $stagingDate
   [pscustomobject]@{Status=[string]$state.Status;ScanDate=$ScanDate;StagingRoot=$stagingDate;ManagedInputsRoot=$managedDate;WorkOrder=$state.WorkOrder}
@@ -136,6 +211,12 @@ if($Mode-ceq'Initialize'-or$Mode-ceq'Supersede'){
     $meta.top30Txt=(Split-Path $top30Path -Leaf)
     Write-Utf8 $metaPath ($meta|ConvertTo-Json -Depth 6) $buildDate
 
+    $industryPath=$null
+    if([datetime]::ParseExact($ScanDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)-ge[datetime]'2026-11-11'){
+      $industryPath=Join-Path $buildDate 'top30-industry-evidence.json'
+      Export-AplTop30Industries $sourcePath $rankingPath $industryPath $buildDate
+    }
+
     foreach($directory in @('table-cards','publishing\production-package\table-card-log')){New-Item -ItemType Directory -Path (Join-Path $buildDate $directory) -Force|Out-Null}
     $workOrder=[ordered]@{
       Rule='Complete issue-specific content; do not create placeholders or copy template instructions.'
@@ -164,6 +245,19 @@ if($Mode-ceq'Initialize'-or$Mode-ceq'Supersede'){
         SeoNativeContract='seo-native-contract.json'
       }
       FinalizeCommand="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File .\tools\prepare_trigger_c_managed_inputs.ps1 -Mode Finalize -ScanDate $ScanDate"
+      ProduceCommand=$produceCommand
+    }
+    if($null-ne$industryPath){$workOrder['IndustryEvidence']='top30-industry-evidence.json'}
+    if($currentArticle){
+      $workOrder['FinalizeCommand']+=' -GenerateHtmlFromMarkdown'
+      $workOrder['EditorialOrder']=@(
+        'Read KnowledgeBase/Rules/APL_US_Stock_Blog_Rules.md and KnowledgeBase/Templates/Blog_Template.md.',
+        'Research each Top 30 company using Industry and company evidence; choose the primary recommendations with reasons.',
+        'Draft Markdown and company analysis; compare available recent issues and complete factual then reader review in existing editorial evidence.',
+        'Run Review before rendering. It rejects known textual defects; it does not approve facts or replace editorial judgment.',
+        'Derive WhatsApp and visual content from the reviewed manuscript. Finalize generates the HTML from that manuscript and runs preflight; Produce runs production and Archive verification.'
+      )
+      $workOrder['ReviewCommand']="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File .\tools\prepare_trigger_c_managed_inputs.ps1 -Mode Review -ScanDate $ScanDate"
     }
     $records=@(
       (Get-Record $sourcePath 'cumulative-screener' $buildDate),
@@ -172,6 +266,7 @@ if($Mode-ceq'Initialize'-or$Mode-ceq'Supersede'){
       (Get-Record $rankingPath 'trigger-b-ranking' $buildDate),
       (Get-Record $metaPath 'trigger-b-meta' $buildDate)
     )
+    if($null-ne$industryPath){$records+=Get-Record $industryPath 'top30-industry-evidence' $buildDate}
     $state=[ordered]@{
       SchemaVersion='APL Trigger C Preparation v1.0'
       ScanDate=$ScanDate
@@ -202,30 +297,32 @@ if(Test-Path -LiteralPath $managedDate){throw "Managed input bundle already exis
 $state=Read-AplStrictJson $statePath $stagingDate
 if([string]$state.SchemaVersion-cne'APL Trigger C Preparation v1.0'-or[string]$state.ScanDate-cne$ScanDate-or[string]$state.Status-cne'AWAITING_EDITORIAL_AND_NATIVE'){throw 'Trigger C preparation state is not finalizable.'}
 foreach($record in @($state.SourceEvidence)){Assert-Record $record $stagingDate|Out-Null}
+if($Mode-ceq'Review'){
+  if(-not$currentArticle){throw 'Draft reader checks apply from 2026-11-12; use the historical preflight for earlier dates.'}
+  $draftPath=Assert-AplNoReparsePath -Path (Join-Path $stagingDate ([string]$state.WorkOrder.PublishingArtifacts.BlogMarkdown)) -AllowedRoot $stagingDate -RequireFile
+  $companyPath=Assert-AplNoReparsePath -Path (Join-Path $stagingDate ([string]$state.WorkOrder.PublishingArtifacts.CompanyBusinessAnalysis)) -AllowedRoot $stagingDate -RequireFile
+  $rankingPath=Assert-AplNoReparsePath -Path (Join-Path $stagingDate "trigger-b/$ScanDate/APL_Momentum_Score_Full_Ranking_$ScanDate.csv") -AllowedRoot $stagingDate -RequireFile
+  $review=Assert-AplArticleReaderQuality -Markdown ([IO.File]::ReadAllText($draftPath,[Text.Encoding]::UTF8)) -Company ([IO.File]::ReadAllText($companyPath,[Text.Encoding]::UTF8)) -Top30Symbols @((Import-Csv -LiteralPath $rankingPath)|Select-Object -First 30|ForEach-Object{[string]$_.Symbol})
+  [pscustomobject]@{Status='DRAFT_READER_CHECKS_PASS';ScanDate=$ScanDate;MechanicalOnly=$true;FullPreflightStillRequired=$true;ReaderQuality=$review}
+  exit 0
+}
 if(Test-AplStyledArticleDate $ScanDate){
   $htmlPath=Join-Path $stagingDate ([string]$state.WorkOrder.PublishingArtifacts.BlogHtmlSource)
-  $htmlPath=Assert-AplNoReparsePath -Path $htmlPath -AllowedRoot $stagingDate -RequireFile
+  $htmlPath=Assert-AplNoReparsePath -Path $htmlPath -AllowedRoot $stagingDate
   $symbols=@(Get-AplArticleSymbols (Join-Path $stagingDate "trigger-b/$ScanDate/APL_Momentum_Score_Full_Ranking_$ScanDate.csv") (Join-Path $stagingDate 'top-gainers.csv'))
-  $raw=[IO.File]::ReadAllText($htmlPath,[Text.Encoding]::UTF8)
+  if($currentArticle-and($GenerateHtmlFromMarkdown-or-not(Test-Path -LiteralPath $htmlPath -PathType Leaf))){
+    $markdownPath=Assert-AplNoReparsePath -Path (Join-Path $stagingDate ([string]$state.WorkOrder.PublishingArtifacts.BlogMarkdown)) -AllowedRoot $stagingDate -RequireFile
+    $markdown=[IO.File]::ReadAllText($markdownPath,[Text.Encoding]::UTF8)
+    $raw=ConvertTo-AplArticleHtmlFromMarkdown $markdown (Get-AplBlogHeadingMap -ScanDate $ScanDate).ExecutiveSummary
+  }else{
+    $htmlPath=Assert-AplNoReparsePath -Path $htmlPath -AllowedRoot $stagingDate -RequireFile
+    $raw=[IO.File]::ReadAllText($htmlPath,[Text.Encoding]::UTF8)
+  }
   $styled=ConvertTo-AplStyledArticle -Html $raw -Symbols $symbols
   Assert-AplStyledArticle -Html $styled -Symbols $symbols|Out-Null
   Write-Utf8 $htmlPath $styled $stagingDate
 }
-$validatorArgs=@(
-  '-InputCsv',(Join-Path $stagingDate 'source.csv'),
-  '-TopGainersCsvPath',(Join-Path $stagingDate 'top-gainers.csv'),
-  '-MarketContextPath',(Join-Path $stagingDate 'market-context.md'),
-  '-TriggerBMetaPath',(Join-Path $stagingDate "trigger-b\$ScanDate\APL_Momentum_Leaders_Meta_$ScanDate.json"),
-  '-ScanDate',$ScanDate,
-  '-TableCardManifestPath',(Join-Path $stagingDate 'table-card-manifest.json'),
-  '-CoverBriefPath',(Join-Path $stagingDate 'cover-brief.json'),
-  '-CoverBackgroundPath',(Join-Path $stagingDate 'cover-background.png'),
-  '-SeoBackgroundPath',(Join-Path $stagingDate 'seo-background.png'),
-  '-CoverNativeContractPath',(Join-Path $stagingDate 'cover-native-contract.json'),
-  '-SeoNativeContractPath',(Join-Path $stagingDate 'seo-native-contract.json'),
-  '-PublishingArtifactsRoot',(Join-Path $stagingDate 'publishing'),
-  '-ManagedInputsRoot',$stagingParent
-)
+$validatorArgs=(Get-ManagedInputArguments $stagingDate $ScanDate)+@('-ManagedInputsRoot',$stagingParent)
 if($RegressionTest){$validatorArgs+='-RegressionTest'}
 $validation=@(& powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'validate_managed_inputs.ps1') @validatorArgs 2>&1)
 if($LASTEXITCODE-ne0){throw "Trigger C managed-input finalization failed preflight: $($validation-join' ')"}
@@ -234,4 +331,4 @@ $state|Add-Member -NotePropertyName FinalizedUtc -NotePropertyValue ([datetime]:
 $state|Add-Member -NotePropertyName FinalManagedRoot -NotePropertyValue $managedDate -Force
 Write-Utf8 $statePath ($state|ConvertTo-Json -Depth 10) $stagingDate
 Move-Item -LiteralPath $stagingDate -Destination $managedDate
-[pscustomobject]@{Status='MANAGED_INPUT_BUNDLE_PASS';ScanDate=$ScanDate;ManagedInputsRoot=$managedDate;Preflight=($validation-join[Environment]::NewLine)}
+[pscustomobject]@{Status='MANAGED_INPUT_BUNDLE_PASS';ScanDate=$ScanDate;ManagedInputsRoot=$managedDate;ProduceCommand=$produceCommand;Preflight=($validation-join[Environment]::NewLine)}

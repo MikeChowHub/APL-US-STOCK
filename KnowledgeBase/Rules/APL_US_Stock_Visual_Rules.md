@@ -1,4 +1,4 @@
-﻿# APL US Stock Visual Rules
+# APL US Stock Visual Rules
 
 This document defines the visual philosophy and role boundaries for all APL US Stock production assets.
 
@@ -424,3 +424,8 @@ Renderers and scripts implement the rules but must not become rule sources.
 ## Answer-led headline rule (effective 2026-09-06)
 
 Cover／SEO 必須遵循 Blog Rules 的 answer-led headline 規則：前半句交代事件，後半句給出具體研究發現、受惠機制或正文回答的問題。禁止以「領導結構待確認」「有待觀察」結尾，也不可改成無證據的保證升跌。精簡標題不可改變研究結論。Subtitle 解釋發現為何重要，不重複品牌、日期或空泛等待句。Kicker、renderer 與版面規格不變。
+# 板塊分類先核實 — 2026-11-10
+
+每期製作前逐一核對 Top 30 是否在 `tools/sector_map.json` 有明確分類。未列股票須先查核公司主要業務，記錄來源，按現有分類補上；不得因未查而直接歸入 `Others`。若現有分類確實不適合，查核後可明確標記 `Others` 並記錄原因。由 2026-11-11 起，managed input preflight 對缺少明確映射的 Top 30 股票報錯。修正分類不改動評分或排名；既有正式輸出和 Archive 保留，當期更正版另存。
+
+由 2026-11-11 起，累積 Screener 必須提供唯一的 `Industry` 欄位；準備 Trigger C 時按股票代碼把原始行業名稱連同排名保存為 `top30-industry-evidence.json`，並綁定輸入及排名雜湊。Top 30 行業缺失須先處理，重複非必要欄名不應阻止讀取。原始 Industry 是分析線索，不等於本專案的較廣板塊分類；例如公司業務與來源標籤不一致時，以公司資料核實並記錄分類理由。圖卡及文章應善用細分行業，評分與排名邏輯維持不變。

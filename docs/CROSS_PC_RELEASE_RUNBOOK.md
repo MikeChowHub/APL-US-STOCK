@@ -37,7 +37,7 @@ powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass `
 
 Initialize copies and hashes the three sources, runs the repository Trigger B implementation in isolated staging, preserves the dated ranking／metadata inside the preparation bundle, and writes `trigger-c-preparation.json`. It creates directories and an exact work order only; it never creates placeholder publishing or native files.
 
-Codex then completes the work order inside the reported staging root using the current Rules and Templates. This is the explicit editorial／image-generation boundary: issue-specific Blog／HTML／WhatsApp／Company Analysis and semantic cards require editorial judgment, while Cover／SEO require two image-generation calls. PowerShell must not invent this content.
+Codex then completes the work order inside the reported staging root using the current Rules and Templates. The Blog Markdown, WhatsApp, Company Analysis and semantic cards require editorial judgment. Cover and SEO require two image-generation calls. For issues dated 2026-11-12 or later, the work order's Finalize command generates the full HTML from the reviewed Markdown.
 
 After every work-order artifact is complete, finalize the bundle:
 
@@ -45,10 +45,11 @@ After every work-order artifact is complete, finalize the bundle:
 powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass `
   -File .\tools\prepare_trigger_c_managed_inputs.ps1 `
   -Mode Finalize `
-  -ScanDate "<ScanDate>"
+  -ScanDate "<ScanDate>" `
+  -GenerateHtmlFromMarkdown
 ```
 
-Finalize verifies the original source hashes, executes the full managed-input preflight against staging, and only after PASS atomically publishes `work/managed-inputs/<ScanDate>/`. On failure it leaves staging intact, does not create the final managed-input directory and does not start Production. `work/` remains local and must never be committed.
+Use the date-specific command from the work order for historical issues. Finalize verifies the original source hashes and executes the full managed-input preflight against staging. After PASS, it atomically publishes `work/managed-inputs/<ScanDate>/`. On failure, the staging materials remain available for correction. `work/` stays local.
 
 If an approved intake source is corrected after Initialize, do not edit the hash-bound staging copy. Use `-Mode Supersede` with all three replacement inputs and the same ScanDate／WeekLabel. It first validates the new Market Context has exactly one substantive `本期核心市場命題：...` line, moves the matching old builder staging directory intact to `work/.staging/trigger-c/rejected/`, then creates a new source-bound staging bundle. It refuses to supersede a managed bundle or a directory without matching builder state.
 
@@ -73,6 +74,15 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\validate_managed
 Only `MANAGED INPUT PREFLIGHT PASS` with `EditorialCompletion=PASS`, `ProductionReadiness=PASS` and `DailyProductionPublishableCandidate=true` may proceed. The preflight writes deterministic v1.1 readiness evidence into the publishing package. The Production runner repeats this same fail-closed gate before scoring and verifies that its generated Trigger B ranking matches the managed editorial evidence; the standalone command is not a bypass token.
 
 ## Atomic Production
+
+```powershell
+powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass `
+  -File .\tools\prepare_trigger_c_managed_inputs.ps1 `
+  -Mode Produce `
+  -ScanDate "<ScanDate>"
+```
+
+Produce uses the finalized bundle and its recorded WeekLabel. It verifies the source hashes before starting the full runner. The explicit runner command is also available for integrations that supply each path:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run_daily_production.ps1 `

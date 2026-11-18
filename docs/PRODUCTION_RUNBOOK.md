@@ -27,6 +27,23 @@ Cover／SEO overlay 的指定字型為中文 `Alibaba Sans HK`、英文／數字
 
 For a fresh date or fresh clone, create the complete managed bundle through `tools/prepare_trigger_c_managed_inputs.ps1 -Mode Initialize`, complete its Codex editorial／native work order, and run `-Mode Finalize`. Finalize is the only normal path that publishes `work/managed-inputs/<ScanDate>/`; it performs the same fail-closed preflight before the directory becomes authoritative. The daily runner consumes that finalized bundle and does not generate editorial content or native backgrounds itself.
 
+### 2026-11-12 起：先審稿，再製作圖像
+
+1. Initialize 綁定當期 CSV、新聞及排名，讀取 Top 30 的 Industry 證據；完成公司業務、需求及風險研究後才選本期主要關注公司。
+2. 依現行 `KnowledgeBase/Templates/Blog_Template.md` 完成 Markdown 與逐家公司分析。先審事實（期間、方向、分母、來源、公司身份），再連續讀全文（首選及理由、每節新增資訊、重複、風險機制）。在既有內部編輯記錄寫下具體發現及修正；有前期文章便比較最近三期，缺少便記錄限制。
+3. 圖像及 HTML 尚未完成時，先執行以下唯讀檢查，及早找出模板複製、公司段落缺失及內部分類說明外洩：
+
+   ```powershell
+   .\tools\prepare_trigger_c_managed_inputs.ps1 -Mode Review -ScanDate YYYY-MM-DD
+   ```
+
+   `DRAFT_READER_CHECKS_PASS` 只代表已知文字缺陷檢查通過，不是事實核實、語義審稿或正式完成。Review 不建立發布檔、不改 preparation 狀態；稿件改動後應再審。
+4. 從定稿製作 WhatsApp、摘要圖卡及其他視覺材料，完成原生背景與視覺檢查。使用工作單的 `FinalizeCommand`（含 `-GenerateHtmlFromMarkdown`）從最新 Markdown 產生完整 HTML；重試同一命令會依修訂稿重建暫存 HTML。Finalize 及 runner 均重新檢查讀稿及 Markdown／HTML 對等。
+   如已有人工製作的 HTML 並須保留，在 Finalize 省略 `-GenerateHtmlFromMarkdown`；照常套用樣式及核對對等。未提供 HTML 時，2026-11-12 起的稿件會自動從 Markdown 產生。
+5. 新日期取消五段／650 字投資啟示及因果關鍵字湊數門檻：摘要三段、背景至少兩段、投資啟示兩至三段；內容底線依次為 180／240／180 字符，只用於攔截空殼。句子是否有研究價值須由編輯判斷。不得為達門檻補寫重複話。歷史日期仍用原合約。
+
+正式 audit 的 `ReaderQuality` 是有界的機械檢查結果及閱讀提示，與當期稿件雜湊一起保存。它不另立生產完成標準；後續 Atomic Production、Final Audit、Archive 及 manifest 完成條件照常執行。
+
 | Parameter | Required | Meaning |
 |---|---:|---|
 | `InputCsv` | Yes | 原始 scoring input CSV |
@@ -80,7 +97,13 @@ Image generation 與 PowerShell runner 是兩個明確 stages：runner 不應內
 
 ## 4. Production command
 
-Execution Policy 可能阻擋直接執行 `.ps1`，因此最外層也必須明確使用 Windows PowerShell 5.1：
+日常製作在 Finalize 通過後使用工作單或狀態回報的 `ProduceCommand`。只需指定日期，會從該期已定版資料讀取週期標籤及素材，核對來源後啟動完整生產及歸檔。
+
+```powershell
+powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File .\tools\prepare_trigger_c_managed_inputs.ps1 -Mode Produce -ScanDate YYYY-MM-DD
+```
+
+原有明確傳入路徑的入口可繼續使用。Execution Policy 可能阻擋直接執行 `.ps1`，最外層使用 Windows PowerShell 5.1：
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run_daily_production.ps1 `

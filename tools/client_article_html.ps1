@@ -1,6 +1,34 @@
 ﻿# Repository-owned shared HTML presentation. No external runtime dependencies.
 function Test-AplStyledArticleDate([string]$ScanDate) { return $ScanDate -cge '2026-10-20' }
 
+function Remove-AplArticleMarkdownEmphasis([string]$Text) {
+  return [regex]::Replace($Text,'(?<![\\*])(\*\*|\*)(?!\*|\s)([^*\r\n]+?)(?<!\s)\1(?!\*)','$2')
+}
+
+function ConvertTo-AplArticleHtmlFromMarkdown([string]$Markdown,[string]$ExecutiveHeading) {
+  $start=[regex]::Match($Markdown,'(?m)^##[ \t]+'+[regex]::Escape($ExecutiveHeading)+'[ \t]*\r?$')
+  if(-not $start.Success){throw "Blog Markdown cannot generate HTML without section: $ExecutiveHeading"}
+  $scope='Scope: SPX／NDX／DJI constituents.'
+  $scopeMarkup="<sup><small>$scope</small></sup>"
+  $section=$ExecutiveHeading
+  $lines=foreach($block in ($Markdown.Substring($start.Index).Trim() -split '\r?\n(?:[ \t]*\r?\n)+')){
+    $value=$block.Trim()
+    if($value -match '^(#{2,3})[ \t]+([^\r\n]+)$'){
+      $tag=if($Matches[1].Length -eq 2){$section=$Matches[2].Trim();'h3'}else{'h4'}
+      $label=[Net.WebUtility]::HtmlEncode($Matches[2].Trim())
+      "<$tag>$label</$tag>"
+      continue
+    }
+    if($value -ceq $scope -or $value -ceq $scopeMarkup){"<p>$scopeMarkup</p>";continue}
+    if($value -match '(?m)^\s*(?:#|>|\x60{3}|~~~|\||[-*+][ \t]|\d+[.)][ \t]|(?:-{3,}|\*{3,}|_{3,})[ \t]*$)|!?\[[^\]\r\n]+\]\s*(?:\(|\[)|<[/!?]?[a-zA-Z][^>]*>'){
+      throw "Blog Markdown cannot generate HTML for unsupported markup in section: $section"
+    }
+    $plain=Remove-AplArticleMarkdownEmphasis ($value -replace '\r?\n[ \t]*',' ')
+    "<p>$([Net.WebUtility]::HtmlEncode([Net.WebUtility]::HtmlDecode($plain)))</p>"
+  }
+  return ($lines -join [Environment]::NewLine)
+}
+
 function Get-AplArticleSymbols([string]$RankingPath,[string]$GainersPath) {
   $symbols=@(Import-Csv -LiteralPath $RankingPath -Encoding UTF8 | Select-Object -First 30 | ForEach-Object { [string]$_.Symbol })
   Add-Type -AssemblyName Microsoft.VisualBasic
@@ -44,7 +72,7 @@ function ConvertTo-AplStyledArticle([string]$Html,[string[]]$Symbols=@()) {
   $first=[regex]::Match($body,'(?is)<p style="[^"]*">(.*?)</p>')
   if(-not$first.Success){throw 'Article opening paragraph missing.'}
   $intro=$first.Groups[1].Value
-  $judgement=[regex]::Match($intro,'[^。！？]*(?:主要關注|重點關注|首選|看好)[^。！？]*(?:[。！？]|$)')
+  $judgement=[regex]::Match($intro,'[^。！？]*(?:主要關注|重點關注|優先關注|首選|看好)[^。！？]*(?:[。！？]|$)')
   if(-not$judgement.Success){$judgement=[regex]::Match($intro,'[^。！？]+(?:[。！？]|$)')}
   $intro=$intro.Substring(0,$judgement.Index)+'<span style="color:#e3c37b;">'+$judgement.Value+'</span>'+$intro.Substring($judgement.Index+$judgement.Length)
   $replacement='<p style="'+$callout+'">'+$intro+'</p>'
